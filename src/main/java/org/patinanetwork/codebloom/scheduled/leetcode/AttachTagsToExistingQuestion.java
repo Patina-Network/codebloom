@@ -33,7 +33,7 @@ public class AttachTagsToExistingQuestion {
         this.leetcodeClient = throttledLeetcodeClient;
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 120, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(initialDelay = 15, fixedDelay = 120, timeUnit = TimeUnit.MINUTES)
     void attachTagsToExistingQuestions() {
         log.info("Attempting to attach tags to existing questions that are missing any...");
         List<Question> questions = questionRepository.getAllQuestionsWithNoTopics();

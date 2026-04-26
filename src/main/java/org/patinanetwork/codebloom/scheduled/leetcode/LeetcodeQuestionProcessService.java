@@ -79,7 +79,7 @@ public class LeetcodeQuestionProcessService {
         return jobRepository.findIncompleteJobs(maxSize);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(initialDelay = 15, fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
     @Async
     public CompletableFuture<Empty> drainQueue() {
         if (!LOCK.tryLock()) {

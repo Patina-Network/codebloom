@@ -1,6 +1,7 @@
 package org.patinanetwork.codebloom.scheduled.discord;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.patinanetwork.codebloom.common.components.DiscordClubManager;
 import org.patinanetwork.codebloom.common.db.models.weekly.WeeklyMessage;
@@ -23,7 +24,7 @@ public class WeeklyLeaderboard {
         this.weeklyMessageRepository = weeklyMessageRepository;
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60 * 60)
+    @Scheduled(initialDelay = 0, fixedDelay = 1, timeUnit = TimeUnit.HOURS)
     public void sendWeeklyLeaderboard() {
         WeeklyMessage weeklyMessage = weeklyMessageRepository.getLatestWeeklyMessage();
 
