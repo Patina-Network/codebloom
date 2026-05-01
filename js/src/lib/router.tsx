@@ -3,6 +3,7 @@ import ClubSignUp from "@/app/club/[clubSlug]/ClubSignUp.page";
 import DashboardPage from "@/app/dashboard/Dashboard.page";
 import DuelPage from "@/app/duel/[lobbyCode]/Duel.page";
 import CurrentDuelPage from "@/app/duel/current/CurrentDuel.page";
+import DuelTimer from "@/app/duel/current/DuelTimer";
 import PartyEntryPage from "@/app/duel/PartyEntry.page";
 import LeaderboardEmbed from "@/app/embed/leaderboard/LeaderboardEmbed";
 import PotdEmbed from "@/app/embed/potd/PotdEmbed";
@@ -235,6 +236,15 @@ export const router = createBrowserRouter([
     element: (
       <PageShell>
         <ReportIssuePage />
+      </PageShell>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/timer",
+    element: (
+      <PageShell>
+        <DuelTimer endTime={Date.now() + 10000} />
       </PageShell>
     ),
     errorElement: <ErrorPage />,
