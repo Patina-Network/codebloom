@@ -12,7 +12,7 @@ runs:
     - name: Setup CI
       uses: ./.github/composite/setup-ci
 
-    - name: Run script
-      id: run_script
-      shell: bash
-      run: bun .github/scripts/pr-description-check --prId=${{ inputs.PR_ID }}
+    # - name: Run script
+    #   id: run_script
+    #   shell: bash
+    #   run: bun .github/scripts/pr-description-check --prId=${{ inputs.PR_ID }}

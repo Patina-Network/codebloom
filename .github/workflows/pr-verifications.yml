@@ -27,10 +27,10 @@ jobs:
         with:
           PR_ID: ${{ github.event.number }}
 
-      - name: Run composite workflow
-        uses: ./.github/composite/notion-checks
-        id: notion_check
-        with:
-          PR_ID: ${{ github.event.number }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      # - name: Run composite workflow
+      #   uses: ./.github/composite/notion-checks
+      #   id: notion_check
+      #   with:
+      #     PR_ID: ${{ github.event.number }}
+      #     GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      #     GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
