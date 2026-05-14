@@ -1,6 +1,12 @@
 ff:
   user-metrics: true
 
+codebloom:
+  scheduling:
+    enabled: false
+  notify:
+    enabled: false
+
 # todo: re-enable this once inside of k8s cluster
 # logging:
 #   structured:
