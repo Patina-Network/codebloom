@@ -12,34 +12,7 @@
     <springProfile name="prod,stg">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="LOKI" />
         </root>
 
-        <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
-            <http>
-                <url>${LOKI_URL}</url>
-                <auth>
-                    <username>${LOKI_USERNAME}</username>
-                    <password>${LOKI_PASSWORD}</password>
-                </auth>
-            </http>
-            <format>
-                <label>
-                    <pattern>app=${LOKI_SERVER_DOMAIN},level=%level,sha=@commit.sha@</pattern>
-                </label>
-                <message class="com.github.loki4j.logback.JsonLayout"/>
-                <sortByTime>true</sortByTime>
-            </format>
-            <batchMaxItems>${LOKI_BATCH_SIZE}</batchMaxItems>
-            <batchTimeoutMs>${LOKI_BATCH_TIMEOUT_MS}</batchTimeoutMs>
-            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-                <level>INFO</level>
-            </filter>
-        </appender>
-
-        <!-- debug log fwding -->
-        <logger name="com.github.loki4j" level="DEBUG" additivity="false">
-            <appender-ref ref="CONSOLE"/>
-        </logger>
-    </springProfile>
+    </springProfile>    
 </configuration>
