@@ -144,15 +144,10 @@ public class LeaderboardRepositoryRankTest extends BaseRepositoryTest {
         var patinaOpts = LeaderboardFilterOptions.builder().patina(true).build();
         var baruchOpts = LeaderboardFilterOptions.builder().baruch(true).build();
 
-        System.out.println("start ur engines");
-
         var patinaResult =
                 leaderboardRepository.getFilteredRankedUserById(EXPIRED_LEADERBOARD_ID, multiTagUserId, patinaOpts);
         var baruchResult =
                 leaderboardRepository.getFilteredRankedUserById(EXPIRED_LEADERBOARD_ID, multiTagUserId, baruchOpts);
-
-        System.out.println(patinaResult);
-        System.out.println(baruchResult);
 
         assertNotNull(patinaResult, "User with Patina tag should appear in Patina filter");
         assertNotNull(baruchResult, "User with Baruch tag should appear in Baruch filter");

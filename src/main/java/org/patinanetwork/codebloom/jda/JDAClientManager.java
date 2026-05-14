@@ -34,7 +34,7 @@ public class JDAClientManager {
     }
 
     public JDA initializeJda() {
-        IO.println("does token exist? " + String.valueOf(!Strings.isNullOrEmpty(jdaProperties.getToken())));
+        log.info("JDA Token Exists: " + String.valueOf(!Strings.isNullOrEmpty(jdaProperties.getToken())));
         final JDA jda = JDABuilder.createDefault(jdaProperties.getToken())
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .setChunkingFilter(ChunkingFilter.ALL)
