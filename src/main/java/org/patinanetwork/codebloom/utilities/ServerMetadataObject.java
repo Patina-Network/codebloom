@@ -25,7 +25,8 @@ public class ServerMetadataObject {
                 "Haoking Luo",
                 "Maliha Tasnim",
                 "Randy Dean",
-                "Andrew Yu"));
+                "Andrew Yu",
+                "Isabella Lam"));
     }
 
     public ServerMetadataObject() {
