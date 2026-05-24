@@ -2,14 +2,17 @@
 
 <img src="./dashboard.png" alt="Grafana">
 
-Codebloom uses Spring Boot Actuator and Prometheus to provide operational insights into the running application. We also collect logs via OpenSearch, which is setup through the DigitalOcean App Platform [(view app spec here)](../../.do/specs.ts). Both of these data sources are then fed to a Grafana instance hosted on [monitor.tahmid.io](https://monitor.tahmid.io)
+Codebloom uses Spring Boot Actuator and Prometheus to provide operational insights (metrics) into the running application. 
+Promtail also pulls logs directly from the K8s instance.
+
+Both of these data sources are then fed to a Grafana instance hosted on [grafana.patinanetwork.org](https://grafana.patinanetwork.org)
 
 ## Grafana
 
-All metrics for production & staging can be viewed on [monitor.tahmid.io](https://monitor.tahmid.io).
+All metrics for production & staging can be viewed on [grafana.patinanetwork.org](https://grafana.patinanetwork.org).
 
 > [!NOTE]
-> Please reach out to [@tahminator](https://github.com/tahminator) if you are on the Codebloom dev team & need the credentials to login & view the dashboard
+> Please reach out to Henry [@arklian](https://github.com/arklian) if you are on the dev team & need the credentials to login & view the dashboard
 
 ## Actuator Endpoints
 
