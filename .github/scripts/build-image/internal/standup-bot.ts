@@ -47,9 +47,9 @@ async function main() {
   const gitSha = (await $`git rev-parse --short HEAD`.text()).trim();
 
   const tags = [
-    `tahminator/codebloom-standup-bot:latest`,
-    `tahminator/codebloom-standup-bot:${timestamp}`,
-    `tahminator/codebloom-standup-bot:${gitSha}`,
+    `patinanetwork/codebloom-standup-bot:latest`,
+    `patinanetwork/codebloom-standup-bot:${timestamp}`,
+    `patinanetwork/codebloom-standup-bot:${gitSha}`,
   ];
 
   console.log("Building image with following tags:");
@@ -61,7 +61,7 @@ async function main() {
     console.log("DOCKER_HUB_PAT missing or empty");
   }
 
-  await $`echo ${dockerHubPat} | docker login -u tahminator --password-stdin`;
+  await $`echo ${dockerHubPat} | docker login -u patinanetwork --password-stdin`;
 
   try {
     await $`docker buildx create --use --name codebloom-standup-bot-builder`;
