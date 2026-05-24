@@ -71,7 +71,6 @@ This repository is a monorepo that contains many different pieces of Codebloom, 
 - Our service gets deployed to two environments (production & staging) in [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform), which is defined using infrastructure-as-code. We containerize the main application with [Docker](https://www.docker.com/) and monitor metrics & logs with [Prometheus](https://prometheus.io/) & [OpenSearch](https://opensearch.org/) which get fed to [Grafana](https://grafana.com/).
   - [Goto `.github/scripts/redeploy/` to view Bun Shell redeploy scripts](./.github/scripts/redeploy/)
   - [Goto `infra/`](./infra/)
-  - [View DigitalOcean spec](./.do/README.md)
   - [View detailed documentation](./infra/README.md)
   - [View observability documentation](./docs/observability/README.md)
 - Our internal tools (e.g. custom Ink CLI scripts & our internal standup bot) are currently being written in [Rust](https://rust-lang.org/) and [TypeScript](https://typescriptlang.org)
