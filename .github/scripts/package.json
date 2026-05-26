@@ -1,6 +1,7 @@
 {
     "name": "scripts",
     "version": "1.0.0",
+    "type": "module",
     "description": "CodeBloom CI Scripts",
     "scripts": {
         "coolify-lib-hack": "find node_modules/coolify -type f -name '*.ts' -exec sh -c 'echo \"// @ts-nocheck\" > /tmp/file.tmp && cat \"$1\" >> /tmp/file.tmp && mv /tmp/file.tmp \"$1\"' _ {} \\;",
