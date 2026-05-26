@@ -30,10 +30,10 @@ async function main() {
 
   if (type === "web") {
     await ghClient.updateK8sTagWithPR({
-      manifestRepo: ["tahminator", "k8s-personal"],
-      originRepo: ["tahminator", "codebloom"],
+      manifestRepo: ["Patina-Network", "k8s-personal"],
+      originRepo: ["Patina-Network", "codebloom"],
       kustomizationFilePath: `apps/${environment}/codebloom/kustomization.yaml`,
-      imageName: "tahminator/codebloom",
+      imageName: "Patina-Network/codebloom",
       newTag: newTagVersion,
       environment,
     });
@@ -41,10 +41,10 @@ async function main() {
 
   if (type === "standup-bot") {
     await ghClient.updateK8sTagWithPR({
-      manifestRepo: ["tahminator", "k8s-personal"],
-      originRepo: ["tahminator", "codebloom"],
+      manifestRepo: ["Patina-Network", "k8s-personal"],
+      originRepo: ["Patina-Network", "codebloom"],
       kustomizationFilePath: `apps/${environment}/codebloom-standup-bot/kustomization.yaml`,
-      imageName: "tahminator/codebloom-standup-bot",
+      imageName: "Patina-Network/codebloom-standup-bot",
       newTag: newTagVersion,
       environment,
     });
