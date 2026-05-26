@@ -21,16 +21,18 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v6
+        
+# Removing these checks for now, as we restructure workflows with the change of people.
 
-      - name: Verify PR description is filled out
-        uses: ./.github/composite/pr-description-check
-        with:
-          PR_ID: ${{ github.event.number }}
+#      - name: Verify PR description is filled out
+#        uses: ./.github/composite/pr-description-check
+#        with:
+#          PR_ID: ${{ github.event.number }}
 
-      - name: Run composite workflow
-        uses: ./.github/composite/notion-checks
-        id: notion_check
-        with:
-          PR_ID: ${{ github.event.number }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#      - name: Run composite workflow
+#        uses: ./.github/composite/notion-checks
+#        id: notion_check
+#        with:
+#          PR_ID: ${{ github.event.number }}
+#          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
