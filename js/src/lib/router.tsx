@@ -1,6 +1,7 @@
 import AdminPage from "@/app/admin/admin.page";
 import ClubSignUp from "@/app/club/[clubSlug]/ClubSignUp.page";
 import DashboardPage from "@/app/dashboard/Dashboard.page";
+import DuelTimer from "@/app/duel/_components/current/DuelTimer";
 import DuelPage from "@/app/duel/[lobbyCode]/Duel.page";
 import CurrentDuelPage from "@/app/duel/current/CurrentDuel.page";
 import PartyEntryPage from "@/app/duel/PartyEntry.page";
@@ -235,6 +236,15 @@ export const router = createBrowserRouter([
     element: (
       <PageShell>
         <ReportIssuePage />
+      </PageShell>
+    ),
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/timer",
+    element: (
+      <PageShell>
+        <DuelTimer endTime={Date.now() + 10000} />
       </PageShell>
     ),
     errorElement: <ErrorPage />,
