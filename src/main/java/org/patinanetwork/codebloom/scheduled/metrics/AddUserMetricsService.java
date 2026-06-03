@@ -38,7 +38,7 @@ public class AddUserMetricsService {
         this.userMetricsRepository = userMetricsRepository;
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(initialDelay = 15, fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
     public void congregateUserMetrics() {
         try {
             Optional<BackgroundTask> recentMetricsTask =

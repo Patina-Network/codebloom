@@ -68,7 +68,7 @@ public class LeetcodeAuthStealer {
      * authentication key from Leetcode. That code is stored in the database and can then be used to run authenticated
      * queries such as being used to retrieve code from our user submissions.
      */
-    @Scheduled(initialDelay = 0, fixedDelay = 1, timeUnit = TimeUnit.HOURS)
+    @Scheduled(initialDelay = 0, fixedDelay = 60, timeUnit = TimeUnit.MINUTES)
     public void stealAuthCookie() {
         boolean acquired = LOCK.writeLock().tryLock();
         if (!acquired) {

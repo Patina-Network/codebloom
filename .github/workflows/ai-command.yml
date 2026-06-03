@@ -1,93 +1,93 @@
-name: AI Command Handler
-run-name: Triggering AI review commands on PR #${{ inputs.prId }}
+# name: AI Command Handler
+# run-name: Triggering AI review commands on PR #${{ inputs.prId }}
 
-concurrency:
-  group: ai-command-${{ github.event.inputs.prId }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ai-command-${{ github.event.inputs.prId }}
+#   cancel-in-progress: true
 
-on:
-  workflow_dispatch:
-    inputs:
-      prId:
-        description: "PR to deploy"
-        required: true
-      repository:
-        description: "The repository from which the slash command was dispatched"
-        required: true
-      comment-id:
-        description: "The comment-id of the slash command"
-        required: true
-      author:
-        description: "The author that triggered this actions"
-        required: true
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       prId:
+#         description: "PR to deploy"
+#         required: true
+#       repository:
+#         description: "The repository from which the slash command was dispatched"
+#         required: true
+#       comment-id:
+#         description: "The comment-id of the slash command"
+#         required: true
+#       author:
+#         description: "The author that triggered this actions"
+#         required: true
 
-permissions:
-  contents: read
-  pull-requests: write
+# permissions:
+#   contents: read
+#   pull-requests: write
 
-jobs:
-  getPRHead:
-    name: Get PR head SHA
-    runs-on: ubuntu-latest
-    outputs:
-      sha: ${{ steps.pr-head.outputs.result }}
-    steps:
-      - name: Get PR head SHA
-        id: pr-head
-        uses: actions/github-script@v8
-        with:
-          result-encoding: string
-          script: |
-            const prId = ${{ inputs.prId }};
-            const { data: pr } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: parseInt(prId, 10)
-            });
-            return pr.head.sha;
+# jobs:
+#   getPRHead:
+#     name: Get PR head SHA
+#     runs-on: ubuntu-latest
+#     outputs:
+#       sha: ${{ steps.pr-head.outputs.result }}
+#     steps:
+#       - name: Get PR head SHA
+#         id: pr-head
+#         uses: actions/github-script@v8
+#         with:
+#           result-encoding: string
+#           script: |
+#             const prId = ${{ inputs.prId }};
+#             const { data: pr } = await github.rest.pulls.get({
+#                 owner: context.repo.owner,
+#                 repo: context.repo.repo,
+#                 pull_number: parseInt(prId, 10)
+#             });
+#             return pr.head.sha;
 
-  triggerAiReview:
-    name: Trigger AI Review Commands
-    runs-on: ubuntu-latest
+#   triggerAiReview:
+#     name: Trigger AI Review Commands
+#     runs-on: ubuntu-latest
 
-    needs: getPRHead
+#     needs: getPRHead
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.getPRHead.outputs.sha }}
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v6
+#         with:
+#           ref: ${{ needs.getPRHead.outputs.sha }}
 
-      - name: Setup CI
-        uses: ./.github/composite/setup-ci
-        with:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#       - name: Setup CI
+#         uses: ./.github/composite/setup-ci
+#         with:
+#           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+#           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Load secrets
-        uses: ./.github/composite/load-secrets
-        with:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          UNLOAD_ENVIRONMENTS: ci
+#       - name: Load secrets
+#         uses: ./.github/composite/load-secrets
+#         with:
+#           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+#           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#           UNLOAD_ENVIRONMENTS: ci
 
-      - name: Post /review command
-        uses: ./.github/composite/send-message
-        with:
-          prId: ${{ inputs.prId }}
-          message: "/review"
-          token: ${{ env.GH_PAT }}
+#       - name: Post /review command
+#         uses: ./.github/composite/send-message
+#         with:
+#           prId: ${{ inputs.prId }}
+#           message: "/review"
+#           token: ${{ env.GH_PAT }}
 
-      - name: Post /describe command
-        uses: ./.github/composite/send-message
-        with:
-          prId: ${{ inputs.prId }}
-          message: "/describe"
-          token: ${{ env.GH_PAT }}
+#       - name: Post /describe command
+#         uses: ./.github/composite/send-message
+#         with:
+#           prId: ${{ inputs.prId }}
+#           message: "/describe"
+#           token: ${{ env.GH_PAT }}
 
-      - name: Post /improve command
-        uses: ./.github/composite/send-message
-        with:
-          prId: ${{ inputs.prId }}
-          message: "/improve"
-          token: ${{ env.GH_PAT }}
+#       - name: Post /improve command
+#         uses: ./.github/composite/send-message
+#         with:
+#           prId: ${{ inputs.prId }}
+#           message: "/improve"
+#           token: ${{ env.GH_PAT }}
