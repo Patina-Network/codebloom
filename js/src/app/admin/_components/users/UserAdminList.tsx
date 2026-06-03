@@ -43,6 +43,12 @@ export default function UserAdminList() {
 
   const pageData = data.payload;
 
+  // Sort users so admins appear first
+  const sortedItems = [...pageData.items].sort((a, b) => {
+    if (a.admin === b.admin) return 0;
+    return a.admin ? -1 : 1;
+  });
+
   const onToggle = (userId: string, currentAdminStatus: boolean) => {
     // Check the mutate function origin on why we
     // need this metadata object as well.
@@ -112,7 +118,7 @@ export default function UserAdminList() {
                 </Table.Td>
               </Table.Tr>
             )}
-            {pageData.items.map((user, index) => {
+            {sortedItems.map((user, index) => {
               const adminBadgeColor = (() => {
                 if (user.admin) {
                   return undefined;
