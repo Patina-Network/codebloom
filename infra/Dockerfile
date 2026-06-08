@@ -1,4 +1,4 @@
-FROM mirror.gcr.io/library/node:20 AS frontend-build
+FROM mirror.gcr.io/library/node:22 AS frontend-build
 
 WORKDIR /js
 
@@ -16,7 +16,7 @@ ARG VITE_STAGING
 ENV VITE_STAGING=${VITE_STAGING}
 RUN pnpm run build
 
-FROM mirror.gcr.io/library/node:20 AS email-build
+FROM mirror.gcr.io/library/node:22 AS email-build
 
 WORKDIR /email
 
