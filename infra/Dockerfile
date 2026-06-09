@@ -8,7 +8,7 @@ RUN npm i -g corepack@latest
 COPY js/package.json js/pnpm-lock.yaml ./
 COPY js/patches/ ./patches/
 
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN corepack enable pnpm && corepack use $(node -p "require('./package.json').packageManager") && pnpm i --frozen-lockfile
 
 COPY js/ ./
 
@@ -23,7 +23,7 @@ WORKDIR /email
 COPY email/package.json email/pnpm-lock.yaml ./
 
 RUN npm i -g corepack@latest
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN corepack enable pnpm && corepack use $(node -p "require('./package.json').packageManager") && pnpm i --frozen-lockfile
 
 COPY email/ ./
 
