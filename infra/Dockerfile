@@ -1,4 +1,4 @@
-FROM mirror.gcr.io/library/node:20 AS frontend-build
+FROM mirror.gcr.io/library/node:22 AS frontend-build
 
 WORKDIR /js
 
@@ -8,7 +8,7 @@ RUN npm i -g corepack@latest
 COPY js/package.json js/pnpm-lock.yaml ./
 COPY js/patches/ ./patches/
 
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN corepack enable pnpm && corepack use $(node -p "require('./package.json').packageManager") && pnpm i --frozen-lockfile
 
 COPY js/ ./
 
@@ -16,14 +16,14 @@ ARG VITE_STAGING
 ENV VITE_STAGING=${VITE_STAGING}
 RUN pnpm run build
 
-FROM mirror.gcr.io/library/node:20 AS email-build
+FROM mirror.gcr.io/library/node:22 AS email-build
 
 WORKDIR /email
 
 COPY email/package.json email/pnpm-lock.yaml ./
 
 RUN npm i -g corepack@latest
-RUN corepack enable pnpm && pnpm i --frozen-lockfile
+RUN corepack enable pnpm && corepack use $(node -p "require('./package.json').packageManager") && pnpm i --frozen-lockfile
 
 COPY email/ ./
 

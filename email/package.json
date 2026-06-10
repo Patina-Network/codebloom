@@ -13,6 +13,7 @@
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
     },
+    "packageManager": "pnpm@10.24.0",
     "devDependencies": {
         "@react-email/components": "0.5.1",
         "@react-email/preview-server": "^5",
