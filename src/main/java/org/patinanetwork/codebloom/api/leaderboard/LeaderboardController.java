@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.patinanetwork.codebloom.common.components.LeaderboardManager;
 import org.patinanetwork.codebloom.common.db.models.leaderboard.Leaderboard;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
@@ -93,6 +94,9 @@ public class LeaderboardController {
             })
     public ResponseEntity<ApiResponder<Page<Indexed<UserWithScoreDto>>>> getLeaderboardUsersById(
             @PathVariable final String leaderboardId,
+            @Parameter(description = "Comma-separated list of active filters.", example = "nyu,hunter,globalIndex")
+                    @RequestParam(required = false)
+                    final Set<String> filters,
             @Parameter(description = "Page index", example = "1") @RequestParam(required = false, defaultValue = "1")
                     final int page,
             @Parameter(description = "Page size (maximum of " + MAX_LEADERBOARD_PAGE_SIZE)
@@ -133,29 +137,30 @@ public class LeaderboardController {
                     final boolean globalIndex,
             final HttpServletRequest request) {
         FakeLag.sleep(800);
-
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
+        final Set<String> activeFilters = filters != null ? filters : Set.of();
+        final boolean useFilters = !activeFilters.isEmpty();
+        final boolean globalIndexNew = useFilters ? activeFilters.contains("globalIndex") : globalIndex;
 
-        LeaderboardFilterOptions options = LeaderboardFilterOptions.builder()
+        final LeaderboardFilterOptions options = LeaderboardFilterOptions.builder()
                 .page(page)
                 .pageSize(parsedPageSize)
                 .query(query)
-                .patina(patina)
-                .hunter(hunter)
-                .nyu(nyu)
-                .baruch(baruch)
-                .rpi(rpi)
-                .gwc(gwc)
-                .sbu(sbu)
-                .ccny(ccny)
-                .columbia(columbia)
-                .cornell(cornell)
-                .bmcc(bmcc)
-                .mhcplusplus(mhcplusplus)
+                .patina(useFilters ? activeFilters.contains("patina") : patina)
+                .hunter(useFilters ? activeFilters.contains("hunter") : hunter)
+                .nyu(useFilters ? activeFilters.contains("nyu") : nyu)
+                .baruch(useFilters ? activeFilters.contains("baruch") : baruch)
+                .rpi(useFilters ? activeFilters.contains("rpi") : rpi)
+                .gwc(useFilters ? activeFilters.contains("gwc") : gwc)
+                .sbu(useFilters ? activeFilters.contains("sbu") : sbu)
+                .ccny(useFilters ? activeFilters.contains("ccny") : ccny)
+                .columbia(useFilters ? activeFilters.contains("columbia") : columbia)
+                .cornell(useFilters ? activeFilters.contains("cornell") : cornell)
+                .bmcc(useFilters ? activeFilters.contains("bmcc") : bmcc)
+                .mhcplusplus(useFilters ? activeFilters.contains("mhcplusplus") : mhcplusplus)
                 .build();
-
         Page<Indexed<UserWithScoreDto>> createdPage =
-                leaderboardManager.getLeaderboardUsers(leaderboardId, options, globalIndex);
+                leaderboardManager.getLeaderboardUsers(leaderboardId, options, globalIndexNew);
 
         return ResponseEntity.ok().body(ApiResponder.success("All leaderboards found!", createdPage));
     }

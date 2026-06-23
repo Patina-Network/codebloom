@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +55,7 @@ public class LeaderboardControllerTest {
     void testGetLeaderboardUsersByIdMhcPlusPlus() {
         leaderboardController.getLeaderboardUsersById(
                 LEADERBOARD_ID,
+                null,
                 PAGE,
                 PAGE_SIZE,
                 "",
@@ -135,6 +137,7 @@ public class LeaderboardControllerTest {
     void capsPageSize() {
         leaderboardController.getLeaderboardUsersById(
                 LEADERBOARD_ID,
+                null,
                 1,
                 999,
                 "",
@@ -164,6 +167,7 @@ public class LeaderboardControllerTest {
     void passesAllFilters() {
         leaderboardController.getLeaderboardUsersById(
                 LEADERBOARD_ID,
+                null,
                 2,
                 10,
                 "tahmid",
@@ -201,6 +205,96 @@ public class LeaderboardControllerTest {
         assertTrue(opts.isCornell());
         assertTrue(opts.isBmcc());
         assertTrue(opts.isMhcplusplus());
+    }
+
+    @Test
+    @DisplayName("uses filters Set when provided, ignoring individual boolean params")
+    void usesFiltersSetWhenProvided() {
+        leaderboardController.getLeaderboardUsersById(
+                LEADERBOARD_ID,
+                Set.of("nyu", "hunter"),
+                PAGE,
+                PAGE_SIZE,
+                "",
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                null);
+
+        ArgumentCaptor<LeaderboardFilterOptions> captor = ArgumentCaptor.forClass(LeaderboardFilterOptions.class);
+        verify(leaderboardManager).getLeaderboardUsers(eq(LEADERBOARD_ID), captor.capture(), eq(false));
+        var opts = captor.getValue();
+        assertTrue(opts.isNyu());
+        assertTrue(opts.isHunter());
+        assertFalse(opts.isPatina());
+    }
+
+    @Test
+    @DisplayName("sets globalIndex from filters Set when it contains globalIndex")
+    void setsGlobalIndexFromFiltersSet() {
+        leaderboardController.getLeaderboardUsersById(
+                LEADERBOARD_ID,
+                Set.of("nyu", "globalIndex"),
+                PAGE,
+                PAGE_SIZE,
+                "",
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                null);
+
+        ArgumentCaptor<LeaderboardFilterOptions> captor = ArgumentCaptor.forClass(LeaderboardFilterOptions.class);
+        verify(leaderboardManager).getLeaderboardUsers(eq(LEADERBOARD_ID), captor.capture(), eq(true));
+        assertTrue(captor.getValue().isNyu());
+    }
+
+    @Test
+    @DisplayName("falls back to boolean params when filters Set is empty")
+    void fallsBackToBooleansWhenFiltersEmpty() {
+        leaderboardController.getLeaderboardUsersById(
+                LEADERBOARD_ID,
+                Set.of(),
+                PAGE,
+                PAGE_SIZE,
+                "",
+                true,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                null);
+
+        ArgumentCaptor<LeaderboardFilterOptions> captor = ArgumentCaptor.forClass(LeaderboardFilterOptions.class);
+        verify(leaderboardManager).getLeaderboardUsers(eq(LEADERBOARD_ID), captor.capture(), eq(false));
+        assertTrue(captor.getValue().isPatina());
     }
 
     @Test
