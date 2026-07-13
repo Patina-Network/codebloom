@@ -12,10 +12,7 @@ pub fn is_time_to_send_standup_message(last_standup_time: Option<DateTime<Utc>>)
     let weekday = now.weekday();
     let hour = now.hour();
 
-    let is_standup_day = matches!(
-        weekday,
-        Weekday::Mon | Weekday::Tue | Weekday::Wed | Weekday::Thu | Weekday::Sat
-    );
+    let is_standup_day = weekday == Weekday::Sat;
     let is_standup_time = hour >= 12;
 
     if !(is_standup_day && is_standup_time) {
