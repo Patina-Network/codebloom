@@ -1,5 +1,6 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
 import { ApiUtils } from "@/lib/api/utils";
+import { sleep } from "@/lib/api/utils/lag";
 import { useFilters } from "@/lib/hooks/useFilters";
 import { usePagination } from "@/lib/hooks/usePagination";
 import { useURLState } from "@/lib/hooks/useUrlState";
@@ -421,6 +422,8 @@ async function fetchLeaderboardUsers({
     method,
   });
 
+  await sleep(800);
+
   const json = res(await response.json());
 
   return json;
@@ -434,6 +437,8 @@ async function fetchLeaderboardUsersByLeaderboardId({
   const response = await fetch(url, {
     method,
   });
+
+  await sleep(800);
 
   const json = res(await response.json());
 
@@ -449,6 +454,8 @@ async function getCurrentLeaderboardMetadata({
     method,
   });
 
+  await sleep(650);
+
   const json = res(await response.json());
 
   return json;
@@ -462,6 +469,8 @@ async function getLeaderboardMetadataById({
   const response = await fetch(url, {
     method,
   });
+
+  await sleep(650);
 
   const json = res(await response.json());
 
@@ -496,6 +505,8 @@ export async function getMyRecentLeaderboardData({
     method,
   });
 
+  await sleep(650);
+
   const json = res(await response.json());
 
   return json;
@@ -509,6 +520,8 @@ async function fetchAllLeaderboardsMetadata({
   const response = await fetch(url, {
     method,
   });
+
+  await sleep(650);
 
   const json = res(await response.json());
 

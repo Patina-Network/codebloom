@@ -13,7 +13,6 @@ import org.patinanetwork.codebloom.common.db.repos.user.UserRepository;
 import org.patinanetwork.codebloom.common.dto.ApiResponder;
 import org.patinanetwork.codebloom.common.dto.autogen.UnsafeGenericFailureResponse;
 import org.patinanetwork.codebloom.common.dto.user.UserDto;
-import org.patinanetwork.codebloom.common.lag.FakeLag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +53,6 @@ public class UserV2Controller {
     @GetMapping("{leetcodeUsername}/profile")
     public ResponseEntity<ApiResponder<UserDto>> getUserProfileByLeetcodeUsername(
             final HttpServletRequest request, @PathVariable final String leetcodeUsername) {
-        FakeLag.sleep(650);
 
         User user = userRepository.getUserByLeetcodeUsername(leetcodeUsername);
 

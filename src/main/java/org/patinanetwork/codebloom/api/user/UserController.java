@@ -27,7 +27,6 @@ import org.patinanetwork.codebloom.common.dto.question.QuestionDto;
 import org.patinanetwork.codebloom.common.dto.user.UserDto;
 import org.patinanetwork.codebloom.common.dto.user.metrics.MetricsDto;
 import org.patinanetwork.codebloom.common.ff.annotation.FF;
-import org.patinanetwork.codebloom.common.lag.FakeLag;
 import org.patinanetwork.codebloom.common.page.Page;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.http.HttpStatus;
@@ -85,7 +84,6 @@ public class UserController {
     @GetMapping("{userId}/profile")
     public ResponseEntity<ApiResponder<UserDto>> getUserProfileByUserId(
             final HttpServletRequest request, @PathVariable final String userId) {
-        FakeLag.sleep(650);
 
         User user = userRepository.getUserById(userId);
 
@@ -137,7 +135,6 @@ public class UserController {
                     @RequestParam(required = false)
                     final OffsetDateTime endDate,
             @PathVariable final String userId) {
-        FakeLag.sleep(500);
 
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "startDate cannot be after endDate.");
@@ -189,7 +186,6 @@ public class UserController {
             @Parameter(description = "Page size (maximum of " + SUBMISSIONS_PAGE_SIZE)
                     @RequestParam(required = false, defaultValue = "" + SUBMISSIONS_PAGE_SIZE)
                     final int pageSize) {
-        FakeLag.sleep(650);
 
         final int parsedPageSize = Math.min(pageSize, SUBMISSIONS_PAGE_SIZE);
 
@@ -239,8 +235,6 @@ public class UserController {
             @Parameter(description = "End date to filter metrics by createdAt (inclusive)")
                     @RequestParam(required = false)
                     final OffsetDateTime endDate) {
-
-        FakeLag.sleep(500);
 
         if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "startDate cannot be after endDate.");

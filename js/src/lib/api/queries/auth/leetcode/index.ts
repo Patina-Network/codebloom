@@ -1,4 +1,5 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
+import { sleep } from "@/lib/api/utils/lag";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -45,6 +46,8 @@ async function updateLeetcodeUsername({
     }),
   });
 
+  await sleep(350);
+
   return res(await response.json());
 }
 
@@ -56,6 +59,8 @@ async function getLeetcodeQueryKey({
   const response = await fetch(url, {
     method,
   });
+
+  await sleep(350);
 
   return res(await response.json());
 }

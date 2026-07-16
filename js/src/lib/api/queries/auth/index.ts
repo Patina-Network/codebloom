@@ -1,4 +1,5 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
+import { sleep } from "@/lib/api/utils/lag";
 import { useQuery } from "@tanstack/react-query";
 
 /**
@@ -28,6 +29,7 @@ async function validateAuthentication({
   const json = res(await response.json());
 
   if (json.success) {
+    await sleep(350);
     return {
       session: json.payload.session,
       user: json.payload.user,

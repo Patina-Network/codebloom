@@ -21,7 +21,6 @@ import org.patinanetwork.codebloom.common.dto.ApiResponder;
 import org.patinanetwork.codebloom.common.dto.autogen.UnsafeGenericFailureResponse;
 import org.patinanetwork.codebloom.common.dto.leaderboard.LeaderboardDto;
 import org.patinanetwork.codebloom.common.dto.user.UserWithScoreDto;
-import org.patinanetwork.codebloom.common.lag.FakeLag;
 import org.patinanetwork.codebloom.common.page.Indexed;
 import org.patinanetwork.codebloom.common.page.Page;
 import org.patinanetwork.codebloom.common.security.AuthenticationObject;
@@ -68,7 +67,6 @@ public class LeaderboardController {
             })
     public ResponseEntity<ApiResponder<LeaderboardDto>> getLeaderboardMetadataByLeaderboardId(
             final @PathVariable String leaderboardId, final HttpServletRequest request) {
-        FakeLag.sleep(650);
 
         Optional<Leaderboard> leaderboardData = leaderboardManager.getLeaderboardMetadata(leaderboardId);
 
@@ -132,7 +130,6 @@ public class LeaderboardController {
                     @RequestParam(required = false, defaultValue = "false")
                     final boolean globalIndex,
             final HttpServletRequest request) {
-        FakeLag.sleep(800);
 
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
 
@@ -173,7 +170,6 @@ public class LeaderboardController {
             })
     public ResponseEntity<ApiResponder<LeaderboardDto>> getCurrentLeaderboardMetadata(
             final HttpServletRequest request) {
-        FakeLag.sleep(650);
 
         var current = leaderboardRepository
                 .getRecentLeaderboardMetadata()
@@ -240,7 +236,6 @@ public class LeaderboardController {
             @Parameter(description = "Enable global leaderboard index")
                     @RequestParam(required = false, defaultValue = "false")
                     final boolean globalIndex) {
-        FakeLag.sleep(800);
 
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
 
@@ -284,7 +279,6 @@ public class LeaderboardController {
             })
     public ResponseEntity<ApiResponder<UserWithScoreDto>> getUserCurrentLeaderboardFull(
             final HttpServletRequest request, @PathVariable final String userId) {
-        FakeLag.sleep(650);
 
         Optional<Leaderboard> leaderboardData = leaderboardRepository.getRecentLeaderboardMetadata();
 
@@ -345,7 +339,6 @@ public class LeaderboardController {
                     final boolean columbia,
             @Parameter(description = "Filter for BMCC users") @RequestParam(required = false, defaultValue = "false")
                     final boolean bmcc) {
-        FakeLag.sleep(650);
 
         String userId = authenticationObject.getUser().getId();
 
@@ -411,7 +404,6 @@ public class LeaderboardController {
             @Parameter(description = "Page size (maximum of " + MAX_LEADERBOARD_PAGE_SIZE)
                     @RequestParam(required = false, defaultValue = "" + MAX_LEADERBOARD_PAGE_SIZE)
                     final int pageSize) {
-        FakeLag.sleep(650);
 
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
 

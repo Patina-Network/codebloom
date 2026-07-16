@@ -1,4 +1,5 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
+import { sleep } from "@/lib/api/utils/lag";
 import { useQuery } from "@tanstack/react-query";
 
 /**
@@ -32,6 +33,8 @@ async function fetchSubmissionDetails({
   const response = await fetch(url, {
     method,
   });
+
+  await sleep(750);
   const json = res(await response.json());
 
   return json;

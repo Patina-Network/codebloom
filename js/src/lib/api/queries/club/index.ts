@@ -1,4 +1,5 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
+import { sleep } from "@/lib/api/utils/lag";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useClubQuery = ({ clubSlug }: { clubSlug: string }) => {
@@ -24,6 +25,8 @@ async function fetchClubDto({
   const response = await fetch(url, {
     method,
   });
+
+  await sleep(650);
 
   return res(await response.json());
 }

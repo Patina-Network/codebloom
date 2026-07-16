@@ -1,7 +1,6 @@
 package org.patinanetwork.codebloom.api.submission;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.patinanetwork.codebloom.api.submission.body.LeetcodeUsernameObject;
 import org.patinanetwork.codebloom.common.db.models.potd.POTD;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionWithUser;
@@ -23,7 +21,6 @@ import org.patinanetwork.codebloom.common.dto.ApiResponder;
 import org.patinanetwork.codebloom.common.dto.Empty;
 import org.patinanetwork.codebloom.common.dto.potd.PotdDto;
 import org.patinanetwork.codebloom.common.dto.question.QuestionWithUserDto;
-import org.patinanetwork.codebloom.common.lag.FakeLag;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeSubmission;
 import org.patinanetwork.codebloom.common.leetcode.models.UserProfile;
 import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
@@ -105,20 +102,16 @@ public class SubmissionControllerTest {
 
         when(userRepository.userExistsByLeetcodeUsername("leetcodeUser")).thenReturn(false);
 
-        try (MockedStatic<FakeLag> fakeLag = mockStatic(FakeLag.class)) {
-            fakeLag.when(() -> FakeLag.sleep(anyInt())).thenAnswer(inv -> null);
+        ResponseEntity<ApiResponder<Empty>> response = submissionController.setLeetcodeUsername(auth, body);
 
-            ResponseEntity<ApiResponder<Empty>> response = submissionController.setLeetcodeUsername(auth, body);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Leetcode username has been set!", response.getBody().getMessage());
 
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertNotNull(response.getBody());
-            assertTrue(response.getBody().isSuccess());
-            assertEquals("Leetcode username has been set!", response.getBody().getMessage());
-
-            verify(user).setLeetcodeUsername("leetcodeUser");
-            verify(user).setProfileUrl("avatar-url");
-            verify(userRepository).updateUser(user);
-        }
+        verify(user).setLeetcodeUsername("leetcodeUser");
+        verify(user).setProfileUrl("avatar-url");
+        verify(userRepository).updateUser(user);
     }
 
     @Test
@@ -200,17 +193,12 @@ public class SubmissionControllerTest {
         when(questionRepository.getQuestionBySlugAndUserId("two-sum", "abcdefg123456"))
                 .thenReturn(Optional.empty());
 
-        try (MockedStatic<FakeLag> fakeLag = mockStatic(FakeLag.class)) {
-            fakeLag.when(() -> FakeLag.sleep(anyInt())).thenAnswer(inv -> null);
+        ResponseEntity<ApiResponder<PotdDto>> response = submissionController.getCurrentPotd(auth);
 
-            ResponseEntity<ApiResponder<PotdDto>> response = submissionController.getCurrentPotd(auth);
-
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertTrue(response.getBody().isSuccess());
-            assertEquals(
-                    "Problem of the day has been fetched!", response.getBody().getMessage());
-            assertNotNull(response.getBody().getPayload());
-        }
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Problem of the day has been fetched!", response.getBody().getMessage());
+        assertNotNull(response.getBody().getPayload());
     }
 
     @Test
@@ -258,18 +246,13 @@ public class SubmissionControllerTest {
 
         when(questionRepository.getQuestionWithUserById("abc123")).thenReturn(Optional.of(question));
 
-        try (MockedStatic<FakeLag> fakeLag = mockStatic(FakeLag.class)) {
-            fakeLag.when(() -> FakeLag.sleep(anyInt())).thenAnswer(inv -> null);
+        ResponseEntity<ApiResponder<QuestionWithUserDto>> response =
+                submissionController.getSubmissionBySubmissionId(request, "abc123");
 
-            ResponseEntity<ApiResponder<QuestionWithUserDto>> response =
-                    submissionController.getSubmissionBySubmissionId(request, "abc123");
-
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertTrue(response.getBody().isSuccess());
-            assertEquals(
-                    "Problem of the day has been fetched!", response.getBody().getMessage());
-            assertNotNull(response.getBody().getPayload());
-        }
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Problem of the day has been fetched!", response.getBody().getMessage());
+        assertNotNull(response.getBody().getPayload());
 
         verify(questionRepository).getQuestionWithUserById("abc123");
     }
