@@ -14,4 +14,6 @@ export const backendExclusions = [
 export const frontendExclusions = [
   `${frontendBaseDir}/**/*.test.ts`,
   `${frontendBaseDir}/**/*.test.tsx`,
+  `${frontendBaseDir}/lib/api/queries/**/*.ts`,
+  `${frontendBaseDir}/lib/api/schema/**/*.ts`,
 ];
