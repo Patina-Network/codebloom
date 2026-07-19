@@ -1,3 +1,5 @@
+use chrono::Utc;
+use chrono_tz::US;
 use serenity::{
     all::{
         Command,
@@ -7,6 +9,7 @@ use serenity::{
         EventHandler,
         GuildId,
         Interaction,
+        Message,
         Ready,
     },
     async_trait,
@@ -17,6 +20,7 @@ use crate::{
         commands,
         credentials,
     },
+    redis,
     utils::latch::base::{
         CountdownLatch,
         Latch as _,
@@ -48,6 +52,31 @@ impl EventHandler for Handler {
                     eprintln!("Cannot respond to slash command: {why}");
                 }
             }
+        }
+    }
+
+    async fn message(&self, _ctx: Context, new_message: Message) {
+        if new_message.author.bot {
+            return;
+        }
+
+        let thread_id = match redis::client::get_standup_thread_id().await {
+            Ok(Some(id)) => id,
+            Ok(None) => return,
+            Err(e) => {
+                eprintln!("Failed to get standup thread id: {e:#?}");
+                return;
+            }
+        };
+
+        if new_message.channel_id.get() != thread_id {
+            return;
+        }
+
+        let today = Utc::now().with_timezone(&US::Eastern).date_naive();
+        if let Err(e) = redis::client::add_standup_reply(today, new_message.author.id.get()).await
+        {
+            eprintln!("Failed to record standup reply: {e:#?}");
         }
     }
 

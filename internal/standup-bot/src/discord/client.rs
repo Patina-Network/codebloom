@@ -14,6 +14,10 @@ use serenity::{
         CreateMessage,
         CreateThread,
         GatewayIntents,
+        GuildId,
+        Member,
+        RoleId,
+        UserId,
     },
     http::Http,
 };
@@ -23,13 +27,14 @@ use crate::{
         credentials::DiscordCredentials,
         handlers::Handler,
     },
+    redis,
     utils::latch::base::{
         CountdownLatch,
         Latch,
     },
 };
 
-const INTENTS: GatewayIntents = GatewayIntents::GUILD_MEMBERS;
+const INTENTS: GatewayIntents = GatewayIntents::GUILD_MEMBERS.union(GatewayIntents::GUILD_MESSAGES);
 const ROLE_ID: u64 = 1391944565409316944;
 
 static HTTP: OnceLock<Arc<Http>> = OnceLock::new();
@@ -87,9 +92,45 @@ pub async fn send_standup_message(discord_creds: &DiscordCredentials) -> Result<
 
     let thread_builder = CreateThread::new("Daily Standup Thread");
 
-    channel
+    let thread = channel
         .create_thread_from_message(get_http().as_ref(), msg.id, thread_builder)
         .await
-        .inspect_err(|e| println!("Error creating thread: {e:#?}"))
-        .map(|_| ())
+        .inspect_err(|e| println!("Error creating thread: {e:#?}"))?;
+
+    if let Err(e) = redis::client::set_standup_thread_id(thread.id.get()).await {
+        println!("Failed to persist standup thread id: {e:#?}");
+    }
+
+    Ok(())
+}
+
+pub async fn get_standup_role_members(guild_id: u64) -> Result<Vec<Member>, Error> {
+    let guild = GuildId::new(guild_id);
+    let role = RoleId::new(ROLE_ID);
+    let mut result = Vec::new();
+    let mut after: Option<UserId> = None;
+
+    loop {
+        let batch = guild.members(get_http().as_ref(), Some(1000), after).await?;
+        let batch_len = batch.len();
+        after = batch.last().map(|m| m.user.id);
+
+        result.extend(batch.into_iter().filter(|m| m.roles.contains(&role)));
+
+        if batch_len < 1000 {
+            break;
+        }
+    }
+
+    Ok(result)
+}
+
+pub async fn send_eod_reminder_dm(user_id: u64) -> Result<(), Error> {
+    let user = UserId::new(user_id).to_user(get_http().as_ref()).await?;
+
+    let message = CreateMessage::new().content(
+        "Reminder: you haven't posted your update in today's standup thread yet. Please add one before end of day!",
+    );
+
+    user.dm(get_http().as_ref(), message).await.map(|_| ())
 }
