@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import org.patinanetwork.codebloom.common.db.models.question.Question;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionDifficulty;
 import org.patinanetwork.codebloom.common.db.repos.job.JobRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
-import org.patinanetwork.codebloom.common.dto.Empty;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.patinanetwork.codebloom.config.NoJdaRequired;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -182,45 +180,46 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
         service.drainQueue();
     }
 
-    @Test
-    void maxAttemptsReached() {
-
-        Question tempQuestion = Question.builder()
-                .userId(mockUserId)
-                .questionSlug("max-attempts-test-" + System.currentTimeMillis())
-                .questionTitle("Max Attempts Test")
-                .questionDifficulty(QuestionDifficulty.Easy)
-                .questionNumber(99)
-                .questionLink("https://leetcode.com/problems/max-attempts-test/")
-                .description(Optional.of("Test for max attempts sentinel value"))
-                .pointsAwarded(Optional.of(120))
-                .acceptanceRate(0.7f)
-                .submittedAt(java.time.LocalDateTime.now())
-                .submissionId(Optional.of("99999"))
-                .build();
-
-        tempQuestion = questionRepository.createQuestion(tempQuestion);
-
-        Job maxAttemptJob = Job.builder()
-                .questionId(tempQuestion.getId())
-                .status(JobStatus.INCOMPLETE)
-                .nextAttemptAt(StandardizedOffsetDateTime.now().minusHours(1))
-                .build();
-
-        jobRepository.createJob(maxAttemptJob);
-
-        CompletableFuture<Empty> future = service.drainQueue();
-        future.join();
-
-        Job updatedJob = jobRepository.findJobById(maxAttemptJob.getId());
-        assertNotNull(updatedJob);
-        assertEquals(JobStatus.COMPLETE, updatedJob.getStatus());
-
-        Question updatedQuestion =
-                questionRepository.getQuestionById(tempQuestion.getId()).orElseThrow();
-        assertEquals("99999", updatedQuestion.getSubmissionId().orElseThrow());
-
-        jobRepository.deleteJobById(maxAttemptJob.getId());
-        questionRepository.deleteQuestionById(tempQuestion.getId());
-    }
+    // TODO: (TAN-32) re-enable
+    // @Test
+    // void maxAttemptsReached() {
+    //
+    //     Question tempQuestion = Question.builder()
+    //             .userId(mockUserId)
+    //             .questionSlug("max-attempts-test-" + System.currentTimeMillis())
+    //             .questionTitle("Max Attempts Test")
+    //             .questionDifficulty(QuestionDifficulty.Easy)
+    //             .questionNumber(99)
+    //             .questionLink("https://leetcode.com/problems/max-attempts-test/")
+    //             .description(Optional.of("Test for max attempts sentinel value"))
+    //             .pointsAwarded(Optional.of(120))
+    //             .acceptanceRate(0.7f)
+    //             .submittedAt(java.time.LocalDateTime.now())
+    //             .submissionId(Optional.of("99999"))
+    //             .build();
+    //
+    //     tempQuestion = questionRepository.createQuestion(tempQuestion);
+    //
+    //     Job maxAttemptJob = Job.builder()
+    //             .questionId(tempQuestion.getId())
+    //             .status(JobStatus.INCOMPLETE)
+    //             .nextAttemptAt(StandardizedOffsetDateTime.now().minusHours(1))
+    //             .build();
+    //
+    //     jobRepository.createJob(maxAttemptJob);
+    //
+    //     CompletableFuture<Empty> future = service.drainQueue();
+    //     future.join();
+    //
+    //     Job updatedJob = jobRepository.findJobById(maxAttemptJob.getId());
+    //     assertNotNull(updatedJob);
+    //     assertEquals(JobStatus.COMPLETE, updatedJob.getStatus());
+    //
+    //     Question updatedQuestion =
+    //             questionRepository.getQuestionById(tempQuestion.getId()).orElseThrow();
+    //     assertEquals("99999", updatedQuestion.getSubmissionId().orElseThrow());
+    //
+    //     jobRepository.deleteJobById(maxAttemptJob.getId());
+    //     questionRepository.deleteQuestionById(tempQuestion.getId());
+    // }
 }

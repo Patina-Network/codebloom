@@ -11,7 +11,6 @@ import org.patinanetwork.codebloom.common.db.models.usertag.UserTag;
 import org.patinanetwork.codebloom.common.db.repos.club.ClubRepository;
 import org.patinanetwork.codebloom.common.db.repos.usertag.UserTagRepository;
 import org.patinanetwork.codebloom.common.dto.ApiResponder;
-import org.patinanetwork.codebloom.common.lag.FakeLag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +42,6 @@ public class ClubController {
 
     @GetMapping("/{clubSlug}")
     public ResponseEntity<ApiResponder<ClubDto>> getClubDataBySlug(@PathVariable final String clubSlug) {
-        FakeLag.sleep(650);
 
         ClubDto club = clubService.getClubDtoBySlug(clubSlug);
 

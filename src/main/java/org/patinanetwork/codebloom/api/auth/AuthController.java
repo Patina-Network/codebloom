@@ -29,7 +29,6 @@ import org.patinanetwork.codebloom.common.email.error.EmailException;
 import org.patinanetwork.codebloom.common.email.options.SendEmailOptions;
 import org.patinanetwork.codebloom.common.email.template.ReactEmailTemplater;
 import org.patinanetwork.codebloom.common.jwt.JWTClient;
-import org.patinanetwork.codebloom.common.lag.FakeLag;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
 import org.patinanetwork.codebloom.common.reporter.report.Report;
 import org.patinanetwork.codebloom.common.schools.SchoolEnum;
@@ -107,7 +106,6 @@ public class AuthController {
     @GetMapping("/validate")
     public ResponseEntity<ApiResponder<AuthenticationObjectDto>> validateAuth(
             @Protected final AuthenticationObject authenticationObject) {
-        FakeLag.sleep(350);
 
         return ResponseEntity.ok()
                 .body(ApiResponder.success(

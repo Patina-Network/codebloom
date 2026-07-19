@@ -25,7 +25,6 @@ import org.patinanetwork.codebloom.common.dto.autogen.UnsafeGenericFailureRespon
 import org.patinanetwork.codebloom.common.dto.autogen.UnsafeRateLimitResponse;
 import org.patinanetwork.codebloom.common.dto.potd.PotdDto;
 import org.patinanetwork.codebloom.common.dto.question.QuestionWithUserDto;
-import org.patinanetwork.codebloom.common.lag.FakeLag;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeSubmission;
 import org.patinanetwork.codebloom.common.leetcode.models.UserProfile;
 import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
@@ -108,7 +107,6 @@ public class SubmissionController {
     @GetMapping("/key")
     public ResponseEntity<ApiResponder<String>> getVerificationKey(
             @Protected final AuthenticationObject authenticationObject) {
-        FakeLag.sleep(350);
 
         User user = authenticationObject.getUser();
 
@@ -144,7 +142,6 @@ public class SubmissionController {
     public ResponseEntity<ApiResponder<Empty>> setLeetcodeUsername(
             @Protected final AuthenticationObject authenticationObject,
             @Valid @RequestBody final LeetcodeUsernameObject leetcodeUsernameObject) {
-        FakeLag.sleep(350);
 
         User user = authenticationObject.getUser();
 
@@ -256,7 +253,6 @@ public class SubmissionController {
     @GetMapping("/potd")
     public ResponseEntity<ApiResponder<PotdDto>> getCurrentPotd(
             @Protected final AuthenticationObject authenticationObject) {
-        FakeLag.sleep(750);
 
         User user = authenticationObject.getUser();
 
@@ -296,8 +292,6 @@ public class SubmissionController {
             })
     @GetMapping("/potd/embed")
     public ResponseEntity<ApiResponder<PotdDto>> getCurrentPotdEmbed() {
-        FakeLag.sleep(750);
-
         POTD potd = potdRepository
                 .getCurrentPOTD()
                 .filter(p -> isSameDay(p.getCreatedAt()))
@@ -329,7 +323,6 @@ public class SubmissionController {
     @GetMapping("/submission/{submissionId}")
     public ResponseEntity<ApiResponder<QuestionWithUserDto>> getSubmissionBySubmissionId(
             final HttpServletRequest request, @PathVariable final String submissionId) {
-        FakeLag.sleep(750);
 
         var question = questionRepository.getQuestionWithUserById(submissionId);
 

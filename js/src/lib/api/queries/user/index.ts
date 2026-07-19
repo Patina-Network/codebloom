@@ -1,5 +1,6 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
 import { LeetcodeTopicEnum } from "@/lib/api/types/schema";
+import { sleep } from "@/lib/api/utils/lag";
 import { usePagination } from "@/lib/hooks/usePagination";
 import useURLDateRange from "@/lib/hooks/useURLDateRange";
 import { useURLState } from "@/lib/hooks/useUrlState";
@@ -312,6 +313,8 @@ async function fetchUserProfile({
     method,
   });
 
+  await sleep(650);
+
   const json = res(await response.json());
 
   return json;
@@ -326,6 +329,8 @@ async function fetchUserSubmissions({
     method,
   });
 
+  await sleep(500);
+
   const json = res(await response.json());
   return json;
 }
@@ -338,6 +343,8 @@ async function fetchAllUsers({
   const response = await fetch(url, {
     method,
   });
+
+  await sleep(650);
 
   const json = res(await response.json());
 
