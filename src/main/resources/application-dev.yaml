@@ -1,0 +1,9 @@
+ff:
+  duels: true
+  user-metrics: true
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true

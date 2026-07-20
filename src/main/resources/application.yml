@@ -53,11 +53,12 @@ spring:
           max-age: 30m
           public: true
 
+# change per env
 springdoc:
   swagger-ui:
-    enabled: ${ENABLE_DOCUMENTATION}
+    enabled: true
   api-docs:
-    enabled: ${ENABLE_DOCUMENTATION}
+    enabled: true
     version: OPENAPI_3_0
 
 github:
@@ -124,10 +125,12 @@ jedis:
   url: ${REDIS_URL}
 
 playwright:
-  headless: ${PLAYWRIGHT_HEADLESS:true}
+  # change to false in application-dev.yaml to see Playwright browser attempting auth
+  headless: true
 
 ff:
-  duels: true
+  # override per environment as needed
+  duels: false
   user-metrics: false
 
 resilience4j:
