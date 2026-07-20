@@ -89,7 +89,7 @@ async function uploadToSonar(token: string, loc: Location) {
   };
 
   const args = [
-    "sonar",
+    "sonar-scanner-npm",
     "-Dsonar.host.url=https://sonarcloud.io",
     `-Dsonar.token=${token}`,
     `-Dsonar.projectKey=Patina-Network_codebloom_${loc}`,
