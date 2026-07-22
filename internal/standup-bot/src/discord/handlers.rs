@@ -2,6 +2,7 @@ use chrono::Utc;
 use chrono_tz::US;
 use serenity::{
     all::{
+        ChunkGuildFilter,
         Command,
         Context,
         CreateInteractionResponse,
@@ -89,6 +90,18 @@ impl EventHandler for Handler {
         println!("I now have the following guild slash commands: {commands:#?}");
 
         self.latch.count_down();
+    }
+
+    async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
+        let creds = credentials::get_discord_credentials();
+
+        ctx.shard.chunk_guild(
+            GuildId::new(creds.guild_id),
+            None,
+            false,
+            ChunkGuildFilter::None,
+            None,
+        );
     }
 }
 
