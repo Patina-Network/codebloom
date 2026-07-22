@@ -1,25 +1,16 @@
 package org.patinanetwork.codebloom.common.db.repos.discord.club.metadata;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.discord.DiscordClubMetadata;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DiscordClubMetadataSqlRepository implements DiscordClubMetadataRepository {
 
-    private DataSource ds;
-
-    public DiscordClubMetadataSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
-
-    private DiscordClubMetadata parseResultSetToDiscordClubMetadata(final ResultSet rs) throws SQLException {
+    private static final RowMapper<DiscordClubMetadata> DISCORD_CLUB_METADATA_ROW_MAPPER = (rs, rowNum) -> {
         var id = rs.getString("id");
         var guildId = Optional.ofNullable(rs.getString("guildId"));
         var leaderboardChannelId = Optional.ofNullable(rs.getString("leaderboardChannelId"));
@@ -31,6 +22,12 @@ public class DiscordClubMetadataSqlRepository implements DiscordClubMetadataRepo
                 .leaderboardChannelId(leaderboardChannelId)
                 .discordClubId(discordClubId)
                 .build();
+    };
+
+    private final JdbcClient jdbcClient;
+
+    public DiscordClubMetadataSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -43,19 +40,15 @@ public class DiscordClubMetadataSqlRepository implements DiscordClubMetadataRepo
                 (:id, :guildId, :leaderboardChannelId, :discordClubId)
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(discordClubMetadata.getId()));
-            stmt.setString("guildId", discordClubMetadata.getGuildId().orElse(null));
-            stmt.setString(
-                    "leaderboardChannelId",
-                    discordClubMetadata.getLeaderboardChannelId().orElse(null));
-            stmt.setObject("discordClubId", UUID.fromString(discordClubMetadata.getDiscordClubId()));
-
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create DiscordClubMetadata", e);
-        }
+        jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(discordClubMetadata.getId()))
+                .param("guildId", discordClubMetadata.getGuildId().orElse(null))
+                .param(
+                        "leaderboardChannelId",
+                        discordClubMetadata.getLeaderboardChannelId().orElse(null))
+                .param("discordClubId", UUID.fromString(discordClubMetadata.getDiscordClubId()))
+                .update();
     }
 
     @Override
@@ -71,18 +64,12 @@ public class DiscordClubMetadataSqlRepository implements DiscordClubMetadataRepo
             WHERE
                 id = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToDiscordClubMetadata(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get DiscordClubMetadata by id", e);
-        }
-        return Optional.empty();
+
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(DISCORD_CLUB_METADATA_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -98,19 +85,17 @@ public class DiscordClubMetadataSqlRepository implements DiscordClubMetadataRepo
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(discordClubMetadata.getId()));
-            stmt.setString("guildId", discordClubMetadata.getGuildId().orElse(null));
-            stmt.setString(
-                    "leaderboardChannelId",
-                    discordClubMetadata.getLeaderboardChannelId().orElse(null));
-            stmt.setObject("discordClubId", UUID.fromString(discordClubMetadata.getDiscordClubId()));
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update DiscordClubMetadata", e);
-        }
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("guildId", discordClubMetadata.getGuildId().orElse(null))
+                .param(
+                        "leaderboardChannelId",
+                        discordClubMetadata.getLeaderboardChannelId().orElse(null))
+                .param("discordClubId", UUID.fromString(discordClubMetadata.getDiscordClubId()))
+                .param("id", UUID.fromString(discordClubMetadata.getId()))
+                .update();
+
+        return rowsAffected == 1;
     }
 
     @Override
@@ -119,14 +104,9 @@ public class DiscordClubMetadataSqlRepository implements DiscordClubMetadataRepo
             DELETE FROM "DiscordClubMetadata"
             WHERE id = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete DiscordClubMetadata by id", e);
-        }
+
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected > 0;
     }
 
     @Override
@@ -142,17 +122,11 @@ public class DiscordClubMetadataSqlRepository implements DiscordClubMetadataRepo
             WHERE
                 "discordClubId" = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToDiscordClubMetadata(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get metadata by club id", e);
-        }
-        return Optional.empty();
+
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(DISCORD_CLUB_METADATA_ROW_MAPPER)
+                .optional();
     }
 }

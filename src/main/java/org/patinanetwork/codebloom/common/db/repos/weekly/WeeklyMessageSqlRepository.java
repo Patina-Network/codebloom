@@ -1,34 +1,24 @@
 package org.patinanetwork.codebloom.common.db.repos.weekly;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
 import org.patinanetwork.codebloom.common.db.models.weekly.WeeklyMessage;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
 
-    private DataSource ds;
+    private static final RowMapper<WeeklyMessage> WEEKLY_MESSAGE_ROW_MAPPER = (rs, rowNum) -> WeeklyMessage.builder()
+            .id(rs.getString("id"))
+            .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
+            .build();
 
-    public WeeklyMessageSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private WeeklyMessage parseResultSetToWeeklyMessage(final ResultSet resultSet) throws SQLException {
-        return WeeklyMessage.builder()
-                .id(resultSet.getString("id"))
-                .createdAt(resultSet.getTimestamp("createdAt").toLocalDateTime())
-                .build();
-    }
-
-    private void updateWeeklyMessageWithResultSet(final WeeklyMessage message, final ResultSet resultSet)
-            throws SQLException {
-        message.setId(resultSet.getString("id"));
-        message.setCreatedAt(resultSet.getTimestamp("createdAt").toLocalDateTime());
+    public WeeklyMessageSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -44,18 +34,7 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
             LIMIT 1
                                 """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToWeeklyMessage(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving latest weekly message", e);
-        }
-
-        return null;
+        return jdbcClient.sql(sql).query(WEEKLY_MESSAGE_ROW_MAPPER).optional().orElse(null);
     }
 
     @Override
@@ -71,19 +50,12 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
             LIMIT 1
                                 """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToWeeklyMessage(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get weekly message by ID", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param(1, UUID.fromString(id))
+                .query(WEEKLY_MESSAGE_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -97,18 +69,16 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
                     id, "createdAt"
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.randomUUID());
+        Optional<WeeklyMessage> created = jdbcClient
+                .sql(sql)
+                .param(1, UUID.randomUUID())
+                .query(WEEKLY_MESSAGE_ROW_MAPPER)
+                .optional();
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    updateWeeklyMessageWithResultSet(message, rs);
-                    return true;
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create new latest weekly message", e);
+        if (created.isPresent()) {
+            message.setId(created.get().getId());
+            message.setCreatedAt(created.get().getCreatedAt());
+            return true;
         }
 
         return false;
@@ -123,16 +93,9 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
                     (?)
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.randomUUID());
+        int rowsAffected = jdbcClient.sql(sql).param(1, UUID.randomUUID()).update();
 
-            int rowsAffected = stmt.executeUpdate();
-
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create new latest weekly message", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -144,15 +107,9 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
                 id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected = jdbcClient.sql(sql).param(1, UUID.fromString(id)).update();
 
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete weekly message", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -169,13 +126,8 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
             WHERE wm.id = td.id
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected = jdbcClient.sql(sql).update();
 
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete weekly message", e);
-        }
+        return rowsAffected > 0;
     }
 }

@@ -1,32 +1,23 @@
 package org.patinanetwork.codebloom.common.db.repos.achievements;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.achievements.Achievement;
 import org.patinanetwork.codebloom.common.db.models.achievements.AchievementPlaceEnum;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AchievementSqlRepository implements AchievementRepository {
 
-    private final DataSource ds;
-
-    public AchievementSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
-
-    private Achievement parseResultSetToAchievement(final ResultSet rs) throws SQLException {
+    private static final RowMapper<Achievement> ACHIEVEMENT_ROW_MAPPER = (rs, rowNum) -> {
         var id = rs.getString("id");
         var userId = rs.getString("userId");
         var place = AchievementPlaceEnum.valueOf(rs.getString("place"));
@@ -50,6 +41,12 @@ public class AchievementSqlRepository implements AchievementRepository {
                 .createdAt(createdAt)
                 .deletedAt(deletedAt)
                 .build();
+    };
+
+    private final JdbcClient jdbcClient;
+
+    public AchievementSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -63,31 +60,28 @@ public class AchievementSqlRepository implements AchievementRepository {
             RETURNING
                 "createdAt"
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(achievement.getId()));
-            stmt.setObject("userId", UUID.fromString(achievement.getUserId()));
-            stmt.setObject("place", achievement.getPlace().name(), java.sql.Types.OTHER);
-            stmt.setObject(
-                    "leaderboard",
-                    Optional.ofNullable(achievement.getLeaderboard())
-                            .map(Enum::name)
-                            .orElse(null),
-                    java.sql.Types.OTHER);
-            stmt.setString("title", achievement.getTitle());
-            stmt.setString("description", achievement.getDescription());
-            stmt.setBoolean("isActive", achievement.isActive());
-            stmt.setObject("deletedAt", achievement.getDeletedAt());
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    achievement.setCreatedAt(
-                            StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create achievement", e);
-        }
+        OffsetDateTime createdAt = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(achievement.getId()))
+                .param("userId", UUID.fromString(achievement.getUserId()))
+                .param("place", achievement.getPlace().name(), Types.OTHER)
+                .param(
+                        "leaderboard",
+                        Optional.ofNullable(achievement.getLeaderboard())
+                                .map(Enum::name)
+                                .orElse(null),
+                        Types.OTHER)
+                .param("title", achievement.getTitle())
+                .param("description", achievement.getDescription())
+                .param("isActive", achievement.isActive())
+                .param("deletedAt", achievement.getDeletedAt())
+                .query((rs, rowNum) ->
+                        StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
+                .optional()
+                .orElse(null);
+
+        achievement.setCreatedAt(createdAt);
     }
 
     @Override
@@ -106,26 +100,23 @@ public class AchievementSqlRepository implements AchievementRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("place", achievement.getPlace().name(), java.sql.Types.OTHER);
-            stmt.setObject(
-                    "leaderboard",
-                    Optional.ofNullable(achievement.getLeaderboard())
-                            .map(Enum::name)
-                            .orElse(null),
-                    java.sql.Types.OTHER);
-            stmt.setString("title", achievement.getTitle());
-            stmt.setString("description", achievement.getDescription());
-            stmt.setBoolean("isActive", achievement.isActive());
-            stmt.setObject("deletedAt", achievement.getDeletedAt());
-            stmt.setObject("id", UUID.fromString(achievement.getId()));
+        jdbcClient
+                .sql(sql)
+                .param("place", achievement.getPlace().name(), Types.OTHER)
+                .param(
+                        "leaderboard",
+                        Optional.ofNullable(achievement.getLeaderboard())
+                                .map(Enum::name)
+                                .orElse(null),
+                        Types.OTHER)
+                .param("title", achievement.getTitle())
+                .param("description", achievement.getDescription())
+                .param("isActive", achievement.isActive())
+                .param("deletedAt", achievement.getDeletedAt())
+                .param("id", UUID.fromString(achievement.getId()))
+                .update();
 
-            stmt.executeUpdate();
-            return getAchievementById(achievement.getId());
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update achievement", e);
-        }
+        return getAchievementById(achievement.getId());
     }
 
     @Override
@@ -139,16 +130,13 @@ public class AchievementSqlRepository implements AchievementRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("deletedAt", LocalDateTime.now());
-            stmt.setObject("id", UUID.fromString(id));
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("deletedAt", LocalDateTime.now())
+                .param("id", UUID.fromString(id))
+                .update();
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete achievement by ID", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -171,24 +159,16 @@ public class AchievementSqlRepository implements AchievementRepository {
                 AND "deletedAt" IS NULL
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToAchievement(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get achievement by ID", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(ACHIEVEMENT_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
     public List<Achievement> getAchievementsByUserId(final String userId) {
-        List<Achievement> achievements = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -210,19 +190,10 @@ public class AchievementSqlRepository implements AchievementRepository {
                 (leaderboard IS NULL) DESC
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("userId", UUID.fromString(userId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    var achievement = parseResultSetToAchievement(rs);
-                    achievements.add(achievement);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get achievements by user ID", e);
-        }
-
-        return achievements;
+        return jdbcClient
+                .sql(sql)
+                .param("userId", UUID.fromString(userId))
+                .query(ACHIEVEMENT_ROW_MAPPER)
+                .list();
     }
 }

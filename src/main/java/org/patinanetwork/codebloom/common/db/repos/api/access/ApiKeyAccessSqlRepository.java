@@ -1,31 +1,27 @@
 package org.patinanetwork.codebloom.common.db.repos.api.access;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.api.ApiKeyAccessEnum;
 import org.patinanetwork.codebloom.common.db.models.api.access.ApiKeyAccess;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
 
-    private DataSource ds;
+    private static final RowMapper<ApiKeyAccess> API_KEY_ACCESS_ROW_MAPPER = (rs, rowNum) -> ApiKeyAccess.builder()
+            .id(rs.getString("id"))
+            .apiKeyId(rs.getString("apiKeyId"))
+            .access(ApiKeyAccessEnum.valueOf(rs.getString("access")))
+            .build();
 
-    public ApiKeyAccessSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private JdbcClient jdbcClient;
 
-    private ApiKeyAccess parseResultSetToApiKeyAccess(final ResultSet rs) throws SQLException {
-        return ApiKeyAccess.builder()
-                .id(rs.getString("id"))
-                .apiKeyId(rs.getString("apiKeyId"))
-                .access(ApiKeyAccessEnum.valueOf(rs.getString("access")))
-                .build();
+    public ApiKeyAccessSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -41,19 +37,12 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet resultSet = stmt.executeQuery()) {
-                if (resultSet.next()) {
-                    return parseResultSetToApiKeyAccess(resultSet);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch apiKeyAccess by ID", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(API_KEY_ACCESS_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -69,19 +58,11 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
                 "apiKeyId" = :apiKeyId
             """;
 
-        final ArrayList<ApiKeyAccess> results = new java.util.ArrayList<>();
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("apiKeyId", java.util.UUID.fromString(apiKeyId));
-            try (ResultSet resultSet = stmt.executeQuery()) {
-                while (resultSet.next()) {
-                    results.add(parseResultSetToApiKeyAccess(resultSet));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch apiKeyAccesses by apiKeyId", e);
-        }
-        return results;
+        return new ArrayList<>(jdbcClient
+                .sql(sql)
+                .param("apiKeyId", java.util.UUID.fromString(apiKeyId))
+                .query(API_KEY_ACCESS_ROW_MAPPER)
+                .list());
     }
 
     @Override
@@ -93,16 +74,12 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
                 (:id, :apiKeyId, :access)
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", java.util.UUID.fromString(apiKeyAccess.getId()));
-            stmt.setObject("apiKeyId", java.util.UUID.fromString(apiKeyAccess.getApiKeyId()));
-            stmt.setObject("access", apiKeyAccess.getAccess().name(), java.sql.Types.OTHER);
-
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create ApiKeyAccess", e);
-        }
+        jdbcClient
+                .sql(sql)
+                .param("id", java.util.UUID.fromString(apiKeyAccess.getId()))
+                .param("apiKeyId", java.util.UUID.fromString(apiKeyAccess.getApiKeyId()))
+                .param("access", apiKeyAccess.getAccess().name(), Types.OTHER)
+                .update();
     }
 
     @Override
@@ -117,17 +94,13 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(apiKeyAccess.getId()));
-            stmt.setObject("apiKeyId", UUID.fromString(apiKeyAccess.getApiKeyId()));
-            stmt.setObject("access", apiKeyAccess.getAccess().name(), java.sql.Types.OTHER);
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update ApiKeyAccess by ID", e);
-        }
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(apiKeyAccess.getId()))
+                .param("apiKeyId", UUID.fromString(apiKeyAccess.getApiKeyId()))
+                .param("access", apiKeyAccess.getAccess().name(), Types.OTHER)
+                .update();
+        return rowsAffected > 0;
     }
 
     @Override
@@ -139,15 +112,9 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
                 "apiKeyId" = :apiKeyId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("apiKeyId", UUID.fromString(apiKeyId));
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete ApiKeyAccess rows by apiKeyId", e);
-        }
+        int rowsAffected =
+                jdbcClient.sql(sql).param("apiKeyId", UUID.fromString(apiKeyId)).update();
+        return rowsAffected > 0;
     }
 
     @Override
@@ -159,14 +126,7 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete ApiKeyAccess by ID: " + id, e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected > 0;
     }
 }

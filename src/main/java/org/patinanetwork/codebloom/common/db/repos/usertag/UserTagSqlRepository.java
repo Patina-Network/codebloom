@@ -1,34 +1,31 @@
 package org.patinanetwork.codebloom.common.db.repos.usertag;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
 import org.patinanetwork.codebloom.common.db.models.usertag.UserTag;
 import org.patinanetwork.codebloom.common.db.repos.usertag.options.UserTagFilterOptions;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserTagSqlRepository implements UserTagRepository {
 
-    private DataSource ds;
-
-    public UserTagSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
-
-    private UserTag parseResultSetToTag(final ResultSet rs) throws SQLException {
+    private static final RowMapper<UserTag> USER_TAG_ROW_MAPPER = (rs, rowNum) -> {
         var id = rs.getString("id");
         var createdAt = rs.getTimestamp("createdAt").toLocalDateTime();
         var userId = rs.getString("userId");
         var tag = Tag.valueOf(rs.getString("tag"));
         return new UserTag(id, createdAt, userId, tag);
+    };
+
+    private final JdbcClient jdbcClient;
+
+    public UserTagSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -45,19 +42,11 @@ public class UserTagSqlRepository implements UserTagRepository {
                 id = :id
                     """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(tagId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToTag(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch user tag by tag ID", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(tagId))
+                .query(USER_TAG_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -76,25 +65,16 @@ public class UserTagSqlRepository implements UserTagRepository {
                 "userId" = :userId
                     """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("tag", tag.name(), java.sql.Types.OTHER);
-            stmt.setObject("userId", UUID.fromString(userId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToTag(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch user tag by user ID and tag", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("tag", tag.name(), Types.OTHER)
+                .param("userId", UUID.fromString(userId))
+                .query(USER_TAG_ROW_MAPPER)
+                .optional();
     }
 
     @Override
     public ArrayList<UserTag> findTagsByUserId(final String userId) {
-        ArrayList<UserTag> tags = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -107,27 +87,15 @@ public class UserTagSqlRepository implements UserTagRepository {
                 "userId" = :userId
                     """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("userId", UUID.fromString(userId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    var tag = parseResultSetToTag(rs);
-                    if (tag != null) {
-                        tags.add(tag);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch user tag by user ID and tag", e);
-        }
-
-        return tags;
+        return new ArrayList<>(jdbcClient
+                .sql(sql)
+                .param("userId", UUID.fromString(userId))
+                .query(USER_TAG_ROW_MAPPER)
+                .list());
     }
 
     @Override
     public ArrayList<UserTag> findTagsByUserId(final String userId, final UserTagFilterOptions options) {
-        ArrayList<UserTag> tags = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -142,27 +110,12 @@ public class UserTagSqlRepository implements UserTagRepository {
                 (cast(:pointOfTime AS timestamptz) IS NULL OR "createdAt" <= :pointOfTime)
                     """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("userId", UUID.fromString(userId));
-            if (options.getPointOfTime() == null) {
-                stmt.setNull("pointOfTime", Types.TIMESTAMP_WITH_TIMEZONE);
-            } else {
-                stmt.setObject("pointOfTime", options.getPointOfTime());
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    var tag = parseResultSetToTag(rs);
-                    if (tag != null) {
-                        tags.add(tag);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch user tags by user ID with filter options", e);
-        }
-
-        return tags;
+        return new ArrayList<>(jdbcClient
+                .sql(sql)
+                .param("userId", UUID.fromString(userId))
+                .param("pointOfTime", options.getPointOfTime(), Types.TIMESTAMP_WITH_TIMEZONE)
+                .query(USER_TAG_ROW_MAPPER)
+                .list());
     }
 
     @Override
@@ -176,20 +129,17 @@ public class UserTagSqlRepository implements UserTagRepository {
                 RETURNING
                     "createdAt"
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(userTag.getId()));
-            stmt.setObject("userId", UUID.fromString(userTag.getUserId()));
-            stmt.setObject("tag", userTag.getTag().name(), java.sql.Types.OTHER);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    userTag.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create user tag by user ID", e);
-        }
+        var createdAt = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(userTag.getId()))
+                .param("userId", UUID.fromString(userTag.getUserId()))
+                .param("tag", userTag.getTag().name(), Types.OTHER)
+                .query((rs, rowNum) -> rs.getTimestamp("createdAt").toLocalDateTime())
+                .optional()
+                .orElse(null);
+
+        userTag.setCreatedAt(createdAt);
     }
 
     @Override
@@ -201,15 +151,10 @@ public class UserTagSqlRepository implements UserTagRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(tagId));
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected =
+                jdbcClient.sql(sql).param("id", UUID.fromString(tagId)).update();
 
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete tag by tag ID", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -223,16 +168,12 @@ public class UserTagSqlRepository implements UserTagRepository {
                     tag = :tag
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("userId", UUID.fromString(userId));
-            stmt.setObject("tag", tag.name(), java.sql.Types.OTHER);
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("userId", UUID.fromString(userId))
+                .param("tag", tag.name(), Types.OTHER)
+                .update();
 
-            int rowsAffected = stmt.executeUpdate();
-
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete tag by user ID and tag", e);
-        }
+        return rowsAffected > 0;
     }
 }
