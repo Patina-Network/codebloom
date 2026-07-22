@@ -1,5 +1,8 @@
+use chrono::Utc;
+use chrono_tz::US;
 use serenity::{
     all::{
+        ChunkGuildFilter,
         Command,
         Context,
         CreateInteractionResponse,
@@ -7,6 +10,7 @@ use serenity::{
         EventHandler,
         GuildId,
         Interaction,
+        Message,
         Ready,
     },
     async_trait,
@@ -17,6 +21,7 @@ use crate::{
         commands,
         credentials,
     },
+    redis,
     utils::latch::base::{
         CountdownLatch,
         Latch as _,
@@ -51,6 +56,31 @@ impl EventHandler for Handler {
         }
     }
 
+    async fn message(&self, _ctx: Context, new_message: Message) {
+        if new_message.author.bot {
+            return;
+        }
+
+        let thread_id = match redis::client::get_standup_thread_id().await {
+            Ok(Some(id)) => id,
+            Ok(None) => return,
+            Err(e) => {
+                eprintln!("Failed to get standup thread id: {e:#?}");
+                return;
+            }
+        };
+
+        if new_message.channel_id.get() != thread_id {
+            return;
+        }
+
+        let today = Utc::now().with_timezone(&US::Eastern).date_naive();
+        if let Err(e) = redis::client::add_standup_reply(today, new_message.author.id.get()).await
+        {
+            eprintln!("Failed to record standup reply: {e:#?}");
+        }
+    }
+
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
@@ -60,6 +90,18 @@ impl EventHandler for Handler {
         println!("I now have the following guild slash commands: {commands:#?}");
 
         self.latch.count_down();
+    }
+
+    async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
+        let creds = credentials::get_discord_credentials();
+
+        ctx.shard.chunk_guild(
+            GuildId::new(creds.guild_id),
+            None,
+            false,
+            ChunkGuildFilter::None,
+            None,
+        );
     }
 }
 

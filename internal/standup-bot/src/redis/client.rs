@@ -9,8 +9,10 @@ use bb8_redis::{
 };
 use chrono::{
     DateTime,
+    NaiveDate,
     Utc,
 };
+use std::collections::HashSet;
 use std::sync::OnceLock;
 
 use crate::redis::{
@@ -57,4 +59,55 @@ pub async fn get_last_standup() -> Result<Option<DateTime<Utc>>, RedisClientErro
         .map(|v| v.parse::<DateTime<Utc>>())
         .transpose()
         .map_err(RedisClientError::from)
+}
+
+pub async fn set_standup_thread_id(thread_id: u64) -> Result<(), RedisClientError> {
+    let mut conn = get_pool().await?;
+
+    Ok(conn
+        .set("standup:current_thread_id", thread_id.to_string())
+        .await?)
+}
+
+pub async fn get_standup_thread_id() -> Result<Option<u64>, RedisClientError> {
+    let mut conn = get_pool().await?;
+
+    let value: Option<String> = conn.get("standup:current_thread_id").await?;
+
+    Ok(value.and_then(|v| v.parse::<u64>().ok()))
+}
+
+pub async fn add_standup_reply(date: NaiveDate, user_id: u64) -> Result<(), RedisClientError> {
+    let mut conn = get_pool().await?;
+
+    Ok(conn
+        .sadd(format!("standup:{date}:replied"), user_id.to_string())
+        .await?)
+}
+
+pub async fn get_standup_replies(date: NaiveDate) -> Result<HashSet<u64>, RedisClientError> {
+    let mut conn = get_pool().await?;
+
+    let members: Vec<String> = conn.smembers(format!("standup:{date}:replied")).await?;
+
+    Ok(members
+        .into_iter()
+        .filter_map(|v| v.parse::<u64>().ok())
+        .collect())
+}
+
+pub async fn set_eod_reminder_sent(date: NaiveDate) -> Result<(), RedisClientError> {
+    let mut conn = get_pool().await?;
+
+    Ok(conn
+        .set(format!("standup:{date}:eod_reminder_sent"), "1")
+        .await?)
+}
+
+pub async fn get_eod_reminder_sent(date: NaiveDate) -> Result<bool, RedisClientError> {
+    let mut conn = get_pool().await?;
+
+    let value: Option<String> = conn.get(format!("standup:{date}:eod_reminder_sent")).await?;
+
+    Ok(value.is_some())
 }

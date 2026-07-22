@@ -30,3 +30,15 @@ pub fn is_time_to_send_standup_message(last_standup_time: Option<DateTime<Utc>>)
         None => true,
     }
 }
+
+pub fn is_time_to_send_eod_reminder(already_sent_today: bool) -> bool {
+    let now = Utc::now().with_timezone(&US::Eastern);
+    let is_reminder_day = now.weekday() == Weekday::Sat;
+    let is_reminder_time = now.hour() >= 17;
+
+    if !(is_reminder_day && is_reminder_time) {
+        return false;
+    }
+
+    !already_sent_today
+}
