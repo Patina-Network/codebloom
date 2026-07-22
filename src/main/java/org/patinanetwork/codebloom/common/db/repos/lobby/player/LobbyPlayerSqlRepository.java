@@ -1,33 +1,27 @@
 package org.patinanetwork.codebloom.common.db.repos.lobby.player;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.lobby.player.LobbyPlayer;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
 
-    private DataSource ds;
+    private static final RowMapper<LobbyPlayer> LOBBY_PLAYER_ROW_MAPPER = (rs, rowNum) -> LobbyPlayer.builder()
+            .id(rs.getString("id"))
+            .lobbyId(rs.getString("lobbyId"))
+            .playerId(rs.getString("playerId"))
+            .points(rs.getInt("points"))
+            .build();
 
-    public LobbyPlayerSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private LobbyPlayer parseResultSetToLobbyPlayer(final ResultSet resultSet) throws SQLException {
-        return LobbyPlayer.builder()
-                .id(resultSet.getString("id"))
-                .lobbyId(resultSet.getString("lobbyId"))
-                .playerId(resultSet.getString("playerId"))
-                .points(resultSet.getInt("points"))
-                .build();
+    public LobbyPlayerSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -41,17 +35,13 @@ public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
 
         lobbyPlayer.setId(UUID.randomUUID().toString());
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(lobbyPlayer.getId()));
-            stmt.setObject("lobbyId", UUID.fromString(lobbyPlayer.getLobbyId()));
-            stmt.setObject("playerId", UUID.fromString(lobbyPlayer.getPlayerId()));
-            stmt.setInt("points", lobbyPlayer.getPoints());
-
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create lobby player", e);
-        }
+        jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(lobbyPlayer.getId()))
+                .param("lobbyId", UUID.fromString(lobbyPlayer.getLobbyId()))
+                .param("playerId", UUID.fromString(lobbyPlayer.getPlayerId()))
+                .param("points", lobbyPlayer.getPoints())
+                .update();
     }
 
     @Override
@@ -68,19 +58,11 @@ public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobbyPlayer(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobby player by id", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(LOBBY_PLAYER_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -103,24 +85,15 @@ public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
                 (l.status = 'AVAILABLE' OR l.status = 'ACTIVE')
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("playerId", UUID.fromString(playerId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobbyPlayer(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobby player by player id", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("playerId", UUID.fromString(playerId))
+                .query(LOBBY_PLAYER_ROW_MAPPER)
+                .optional();
     }
 
     @Override
     public List<LobbyPlayer> findPlayersByLobbyId(final String lobbyId) {
-        List<LobbyPlayer> result = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -135,20 +108,11 @@ public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
                 points DESC
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("lobbyId", UUID.fromString(lobbyId));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobbyPlayer(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find players by lobby id", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("lobbyId", UUID.fromString(lobbyId))
+                .query(LOBBY_PLAYER_ROW_MAPPER)
+                .list();
     }
 
     @Override
@@ -161,16 +125,13 @@ public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setInt("points", lobbyPlayer.getPoints());
-            stmt.setObject("id", UUID.fromString(lobbyPlayer.getId()));
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("points", lobbyPlayer.getPoints())
+                .param("id", UUID.fromString(lobbyPlayer.getId()))
+                .update();
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update lobby player", e);
-        }
+        return rowsAffected == 1;
     }
 
     @Override
@@ -180,15 +141,9 @@ public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
             WHERE "lobbyId" = :lobbyId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("lobbyId", UUID.fromString(lobbyId));
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete players by lobby id", e);
-        }
+        int rowsAffected =
+                jdbcClient.sql(sql).param("lobbyId", UUID.fromString(lobbyId)).update();
+        return rowsAffected > 0;
     }
 
     @Override
@@ -198,14 +153,7 @@ public class LobbyPlayerSqlRepository implements LobbyPlayerRepository {
             WHERE id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete lobby player by id", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected == 1;
     }
 }

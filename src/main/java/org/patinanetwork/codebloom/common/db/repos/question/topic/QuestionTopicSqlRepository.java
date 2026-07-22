@@ -1,42 +1,36 @@
 package org.patinanetwork.codebloom.common.db.repos.question.topic;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.question.topic.LeetcodeTopicEnum;
 import org.patinanetwork.codebloom.common.db.models.question.topic.QuestionTopic;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class QuestionTopicSqlRepository implements QuestionTopicRepository {
 
-    private final DataSource ds;
+    private static final RowMapper<QuestionTopic> QUESTION_TOPIC_ROW_MAPPER = (rs, rowNum) -> QuestionTopic.builder()
+            .id(rs.getString("id"))
+            .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
+            .questionId(rs.getString("questionId"))
+            .questionBankId(rs.getString("questionBankId"))
+            .topicSlug(rs.getString("topicSlug"))
+            .topic(LeetcodeTopicEnum.fromValue(rs.getString("topic")))
+            .build();
 
-    public QuestionTopicSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private QuestionTopic mapResultSetToQuestionTopic(final ResultSet rs) throws SQLException {
-        return QuestionTopic.builder()
-                .id(rs.getString("id"))
-                .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
-                .questionId(rs.getString("questionId"))
-                .questionBankId(rs.getString("questionBankId"))
-                .topicSlug(rs.getString("topicSlug"))
-                .topic(LeetcodeTopicEnum.fromValue(rs.getString("topic")))
-                .build();
+    public QuestionTopicSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
     public List<QuestionTopic> findQuestionTopicsByQuestionId(final String questionId) {
-        List<QuestionTopic> result = new ArrayList<>();
-
         String sql = """
                 SELECT
                     id,
@@ -51,26 +45,15 @@ public class QuestionTopicSqlRepository implements QuestionTopicRepository {
                     qt."questionId" = :questionId
                 """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("questionId", UUID.fromString(questionId));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(mapResultSetToQuestionTopic(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find question topics by question ID", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("questionId", UUID.fromString(questionId))
+                .query(QUESTION_TOPIC_ROW_MAPPER)
+                .list();
     }
 
     @Override
     public List<QuestionTopic> findQuestionTopicsByQuestionBankId(final String questionBankId) {
-        List<QuestionTopic> result = new ArrayList<>();
-
         String sql = """
                 SELECT
                     id,
@@ -85,20 +68,11 @@ public class QuestionTopicSqlRepository implements QuestionTopicRepository {
                     qt."questionBankId" = :questionBankId
                 """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("questionBankId", UUID.fromString(questionBankId));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(mapResultSetToQuestionTopic(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find question topics by question bank ID", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("questionBankId", UUID.fromString(questionBankId))
+                .query(QUESTION_TOPIC_ROW_MAPPER)
+                .list();
     }
 
     @Override
@@ -117,20 +91,11 @@ public class QuestionTopicSqlRepository implements QuestionTopicRepository {
                     qt.id = :id
                 """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToQuestionTopic(rs));
-                }
-            }
-
-            return Optional.empty();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get question topic by ID", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(QUESTION_TOPIC_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -152,21 +117,12 @@ public class QuestionTopicSqlRepository implements QuestionTopicRepository {
                     qt.topic = :topic
                 """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("questionId", UUID.fromString(questionId));
-            stmt.setObject("topic", topicEnum.getLeetcodeEnum(), java.sql.Types.OTHER);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToQuestionTopic(rs));
-                }
-            }
-
-            return Optional.empty();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to get question topic by question ID and topic enum", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("questionId", UUID.fromString(questionId))
+                .param("topic", topicEnum.getLeetcodeEnum(), Types.OTHER)
+                .query(QUESTION_TOPIC_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -179,26 +135,22 @@ public class QuestionTopicSqlRepository implements QuestionTopicRepository {
 
         questionTopic.setId(UUID.randomUUID().toString());
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(questionTopic.getId()));
-            stmt.setObject(
-                    "questionId",
-                    questionTopic.getQuestionId().map(UUID::fromString).orElse(null));
-            stmt.setObject(
-                    "questionBankId",
-                    questionTopic.getQuestionBankId().map(UUID::fromString).orElse(null));
-            stmt.setString("topicSlug", questionTopic.getTopicSlug());
-            stmt.setObject("topic", questionTopic.getTopic().getLeetcodeEnum(), java.sql.Types.OTHER);
+        LocalDateTime createdAt = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(questionTopic.getId()))
+                .param(
+                        "questionId",
+                        questionTopic.getQuestionId().map(UUID::fromString).orElse(null))
+                .param(
+                        "questionBankId",
+                        questionTopic.getQuestionBankId().map(UUID::fromString).orElse(null))
+                .param("topicSlug", questionTopic.getTopicSlug())
+                .param("topic", questionTopic.getTopic().getLeetcodeEnum(), Types.OTHER)
+                .query((rs, rowNum) -> rs.getTimestamp("createdAt").toLocalDateTime())
+                .optional()
+                .orElse(null);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    questionTopic.setCreatedAt(rs.getTimestamp("createdAt").toLocalDateTime());
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create question topic", e);
-        }
+        questionTopic.setCreatedAt(createdAt);
     }
 
     @Override
@@ -213,22 +165,20 @@ public class QuestionTopicSqlRepository implements QuestionTopicRepository {
                 WHERE id = :id
                 """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(questionTopic.getId()));
-            stmt.setObject(
-                    "questionId",
-                    questionTopic.getQuestionId().map(UUID::fromString).orElse(null));
-            stmt.setObject(
-                    "questionBankId",
-                    questionTopic.getQuestionBankId().map(UUID::fromString).orElse(null));
-            stmt.setString("topicSlug", questionTopic.getTopicSlug());
-            stmt.setObject("topic", questionTopic.getTopic().getLeetcodeEnum(), java.sql.Types.OTHER);
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(questionTopic.getId()))
+                .param(
+                        "questionId",
+                        questionTopic.getQuestionId().map(UUID::fromString).orElse(null))
+                .param(
+                        "questionBankId",
+                        questionTopic.getQuestionBankId().map(UUID::fromString).orElse(null))
+                .param("topicSlug", questionTopic.getTopicSlug())
+                .param("topic", questionTopic.getTopic().getLeetcodeEnum(), Types.OTHER)
+                .update();
 
-            return stmt.executeUpdate() > 0;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to update question topic by ID", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -238,12 +188,8 @@ public class QuestionTopicSqlRepository implements QuestionTopicRepository {
                 WHERE id = :id
                 """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete tag by tag ID", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+
+        return rowsAffected > 0;
     }
 }

@@ -28,6 +28,7 @@ import org.patinanetwork.codebloom.common.db.repos.BaseRepositoryTest;
 import org.patinanetwork.codebloom.common.db.repos.user.options.UserMetricsFilterOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -384,7 +385,7 @@ public class UserMetricsRepositoryTest extends BaseRepositoryTest {
     void testFindUserMetricsSqlExceptionWrapped() throws SQLException {
         DataSource ds = mock(DataSource.class);
         when(ds.getConnection()).thenThrow(new SQLException("Connection failed"));
-        UserMetricsSqlRepository repo = new UserMetricsSqlRepository(ds);
+        UserMetricsSqlRepository repo = new UserMetricsSqlRepository(JdbcClient.create(ds));
         assertThrows(
                 RuntimeException.class, () -> repo.findUserMetrics(testUser.getId(), UserMetricsFilterOptions.DEFAULT));
     }
@@ -394,7 +395,7 @@ public class UserMetricsRepositoryTest extends BaseRepositoryTest {
     void testCountUserMetricsSqlExceptionWrapped() throws SQLException {
         DataSource ds = mock(DataSource.class);
         when(ds.getConnection()).thenThrow(new SQLException("Connection failed"));
-        UserMetricsSqlRepository repo = new UserMetricsSqlRepository(ds);
+        UserMetricsSqlRepository repo = new UserMetricsSqlRepository(JdbcClient.create(ds));
         assertThrows(
                 RuntimeException.class,
                 () -> repo.countUserMetrics(testUser.getId(), UserMetricsFilterOptions.DEFAULT));
@@ -413,7 +414,7 @@ public class UserMetricsRepositoryTest extends BaseRepositoryTest {
         when(ps.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(false);
 
-        UserMetricsSqlRepository repo = new UserMetricsSqlRepository(ds);
+        UserMetricsSqlRepository repo = new UserMetricsSqlRepository(JdbcClient.create(ds));
         int count = repo.countUserMetrics(testUser.getId(), UserMetricsFilterOptions.DEFAULT);
 
         assertEquals(0, count);

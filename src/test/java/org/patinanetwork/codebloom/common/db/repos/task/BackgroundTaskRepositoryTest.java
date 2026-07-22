@@ -24,6 +24,8 @@ public class BackgroundTaskRepositoryTest extends BaseRepositoryTest {
 
     private BackgroundTaskRepository backgroundTaskRepository;
     private BackgroundTask testTask;
+    private BackgroundTask anotherTask;
+    private BackgroundTask taskWithNullCompletedAt;
 
     @Autowired
     public BackgroundTaskRepositoryTest(final BackgroundTaskSqlRepository backgroundTaskSqlRepository) {
@@ -47,11 +49,13 @@ public class BackgroundTaskRepositoryTest extends BaseRepositoryTest {
 
     @AfterAll
     void cleanUp() {
-        if (testTask != null && testTask.getId() != null) {
-            boolean isSuccessful = backgroundTaskRepository.deleteBackgroundTaskById(testTask.getId());
-            if (!isSuccessful) {
-                throw new RuntimeException(
-                        "Test task still exists after test completion: %s".formatted(testTask.getId()));
+        for (BackgroundTask task : List.of(testTask, anotherTask, taskWithNullCompletedAt)) {
+            if (task != null && task.getId() != null) {
+                boolean isSuccessful = backgroundTaskRepository.deleteBackgroundTaskById(task.getId());
+                if (!isSuccessful) {
+                    throw new RuntimeException(
+                            "Test task still exists after test completion: %s".formatted(task.getId()));
+                }
             }
         }
     }
@@ -107,7 +111,7 @@ public class BackgroundTaskRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(5)
     void testCreateAnotherBackgroundTask() {
-        BackgroundTask anotherTask = BackgroundTask.builder()
+        anotherTask = BackgroundTask.builder()
                 .task(BackgroundTaskEnum.LEETCODE_QUESTION_BANK)
                 .completedAt(OffsetDateTime.now().minusHours(1))
                 .build();
@@ -145,7 +149,7 @@ public class BackgroundTaskRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(8)
     void testCreateBackgroundTaskWithNullCompletedAt() {
-        BackgroundTask taskWithNullCompletedAt = BackgroundTask.builder()
+        taskWithNullCompletedAt = BackgroundTask.builder()
                 .task(BackgroundTaskEnum.LEETCODE_QUESTION_BANK)
                 .completedAt(null)
                 .build();
