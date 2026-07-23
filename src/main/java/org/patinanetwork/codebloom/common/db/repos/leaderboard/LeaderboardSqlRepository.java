@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -583,7 +584,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                 })
                 .list();
 
-        return users.stream().filter(user -> user != null).collect(Collectors.toList());
+        return users.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Override
@@ -683,7 +684,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                 })
                 .list();
 
-        return users.stream().filter(user -> user != null).collect(Collectors.toList());
+        return users.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Override
