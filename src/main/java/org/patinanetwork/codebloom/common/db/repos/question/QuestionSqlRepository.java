@@ -2,8 +2,6 @@ package org.patinanetwork.codebloom.common.db.repos.question;
 
 import java.sql.Array;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.OffsetDateTime;
@@ -14,104 +12,108 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.question.Question;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionDifficulty;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionWithUser;
 import org.patinanetwork.codebloom.common.db.models.question.topic.LeetcodeTopicEnum;
 import org.patinanetwork.codebloom.common.db.repos.question.topic.QuestionTopicRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.topic.service.QuestionTopicService;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class QuestionSqlRepository implements QuestionRepository {
 
-    private DataSource ds;
+    private final DataSource ds;
+    private final JdbcClient jdbcClient;
     private final QuestionTopicRepository questionTopicRepository;
     private final QuestionTopicService questionTopicService;
-
-    private Question mapResultSetToQuestion(final ResultSet rs) throws SQLException {
-        var questionId = rs.getString("id");
-        var userId = rs.getString("userId");
-        var questionSlug = rs.getString("questionSlug");
-        var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
-        var questionNumber = rs.getInt("questionNumber");
-        var questionLink = rs.getString("questionLink");
-        int points = rs.getInt("pointsAwarded");
-        Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
-        var questionTitle = rs.getString("questionTitle");
-        var acceptanceRate = rs.getFloat("acceptanceRate");
-        var createdAt = rs.getTimestamp("createdAt").toLocalDateTime();
-        var submittedAt = rs.getTimestamp("submittedAt").toLocalDateTime();
-
-        return Question.builder()
-                .id(questionId)
-                .userId(userId)
-                .questionSlug(questionSlug)
-                .questionDifficulty(questionDifficulty)
-                .questionNumber(questionNumber)
-                .questionLink(questionLink)
-                .pointsAwarded(pointsAwarded)
-                .questionTitle(questionTitle)
-                .description(Optional.ofNullable(rs.getString("description")))
-                .acceptanceRate(acceptanceRate)
-                .createdAt(createdAt)
-                .submittedAt(submittedAt)
-                .runtime(Optional.ofNullable(rs.getString("runtime")))
-                .memory(Optional.ofNullable(rs.getString("memory")))
-                .code(Optional.ofNullable(rs.getString("code")))
-                .language(Optional.ofNullable(rs.getString("language")))
-                .submissionId(Optional.ofNullable(rs.getString("submissionId")))
-                .topics(questionTopicRepository.findQuestionTopicsByQuestionId(questionId))
-                .build();
-    }
-
-    private QuestionWithUser mapResultSetToQuestionWithUser(final ResultSet rs) throws SQLException {
-        var questionId = rs.getString("id");
-        var userId = rs.getString("userId");
-        var questionSlug = rs.getString("questionSlug");
-        var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
-        var questionNumber = rs.getInt("questionNumber");
-        var questionLink = rs.getString("questionLink");
-        int points = rs.getInt("pointsAwarded");
-        Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
-        var questionTitle = rs.getString("questionTitle");
-        var acceptanceRate = rs.getFloat("acceptanceRate");
-        var createdAt = rs.getTimestamp("createdAt").toLocalDateTime();
-        var submittedAt = rs.getTimestamp("submittedAt").toLocalDateTime();
-
-        return QuestionWithUser.builder()
-                .id(questionId)
-                .userId(userId)
-                .questionSlug(questionSlug)
-                .questionDifficulty(questionDifficulty)
-                .questionNumber(questionNumber)
-                .questionLink(questionLink)
-                .pointsAwarded(pointsAwarded)
-                .questionTitle(questionTitle)
-                .description(Optional.ofNullable(rs.getString("description")))
-                .acceptanceRate(acceptanceRate)
-                .createdAt(createdAt)
-                .submittedAt(submittedAt)
-                .runtime(Optional.ofNullable(rs.getString("runtime")))
-                .memory(Optional.ofNullable(rs.getString("memory")))
-                .code(Optional.ofNullable(rs.getString("code")))
-                .language(Optional.ofNullable(rs.getString("language")))
-                .submissionId(Optional.ofNullable(rs.getString("submissionId")))
-                .discordName(Optional.ofNullable(rs.getString("discordName")))
-                .leetcodeUsername(Optional.ofNullable(rs.getString("leetcodeUsername")))
-                .nickname(Optional.ofNullable(rs.getString("nickname")))
-                .topics(questionTopicRepository.findQuestionTopicsByQuestionId(questionId))
-                .build();
-    }
+    private final RowMapper<Question> questionRowMapper;
+    private final RowMapper<QuestionWithUser> questionWithUserRowMapper;
 
     public QuestionSqlRepository(
             final DataSource ds,
+            final JdbcClient jdbcClient,
             final QuestionTopicRepository questionTopicRepository,
             final QuestionTopicService questionTopicService) {
         this.ds = ds;
+        this.jdbcClient = jdbcClient;
         this.questionTopicRepository = questionTopicRepository;
         this.questionTopicService = questionTopicService;
+        this.questionRowMapper = (rs, rowNum) -> {
+            var questionId = rs.getString("id");
+            var userId = rs.getString("userId");
+            var questionSlug = rs.getString("questionSlug");
+            var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
+            var questionNumber = rs.getInt("questionNumber");
+            var questionLink = rs.getString("questionLink");
+            int points = rs.getInt("pointsAwarded");
+            Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
+            var questionTitle = rs.getString("questionTitle");
+            var acceptanceRate = rs.getFloat("acceptanceRate");
+            var createdAt = rs.getTimestamp("createdAt").toLocalDateTime();
+            var submittedAt = rs.getTimestamp("submittedAt").toLocalDateTime();
+
+            return Question.builder()
+                    .id(questionId)
+                    .userId(userId)
+                    .questionSlug(questionSlug)
+                    .questionDifficulty(questionDifficulty)
+                    .questionNumber(questionNumber)
+                    .questionLink(questionLink)
+                    .pointsAwarded(pointsAwarded)
+                    .questionTitle(questionTitle)
+                    .description(Optional.ofNullable(rs.getString("description")))
+                    .acceptanceRate(acceptanceRate)
+                    .createdAt(createdAt)
+                    .submittedAt(submittedAt)
+                    .runtime(Optional.ofNullable(rs.getString("runtime")))
+                    .memory(Optional.ofNullable(rs.getString("memory")))
+                    .code(Optional.ofNullable(rs.getString("code")))
+                    .language(Optional.ofNullable(rs.getString("language")))
+                    .submissionId(Optional.ofNullable(rs.getString("submissionId")))
+                    .topics(questionTopicRepository.findQuestionTopicsByQuestionId(questionId))
+                    .build();
+        };
+        this.questionWithUserRowMapper = (rs, rowNum) -> {
+            var questionId = rs.getString("id");
+            var userId = rs.getString("userId");
+            var questionSlug = rs.getString("questionSlug");
+            var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
+            var questionNumber = rs.getInt("questionNumber");
+            var questionLink = rs.getString("questionLink");
+            int points = rs.getInt("pointsAwarded");
+            Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
+            var questionTitle = rs.getString("questionTitle");
+            var acceptanceRate = rs.getFloat("acceptanceRate");
+            var createdAt = rs.getTimestamp("createdAt").toLocalDateTime();
+            var submittedAt = rs.getTimestamp("submittedAt").toLocalDateTime();
+
+            return QuestionWithUser.builder()
+                    .id(questionId)
+                    .userId(userId)
+                    .questionSlug(questionSlug)
+                    .questionDifficulty(questionDifficulty)
+                    .questionNumber(questionNumber)
+                    .questionLink(questionLink)
+                    .pointsAwarded(pointsAwarded)
+                    .questionTitle(questionTitle)
+                    .description(Optional.ofNullable(rs.getString("description")))
+                    .acceptanceRate(acceptanceRate)
+                    .createdAt(createdAt)
+                    .submittedAt(submittedAt)
+                    .runtime(Optional.ofNullable(rs.getString("runtime")))
+                    .memory(Optional.ofNullable(rs.getString("memory")))
+                    .code(Optional.ofNullable(rs.getString("code")))
+                    .language(Optional.ofNullable(rs.getString("language")))
+                    .submissionId(Optional.ofNullable(rs.getString("submissionId")))
+                    .discordName(Optional.ofNullable(rs.getString("discordName")))
+                    .leetcodeUsername(Optional.ofNullable(rs.getString("leetcodeUsername")))
+                    .nickname(Optional.ofNullable(rs.getString("nickname")))
+                    .topics(questionTopicRepository.findQuestionTopicsByQuestionId(questionId))
+                    .build();
+        };
     }
 
     @Override
@@ -141,42 +143,31 @@ public class QuestionSqlRepository implements QuestionRepository {
 
         question.setId(UUID.randomUUID().toString());
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(question.getId()));
-            stmt.setObject(2, UUID.fromString(question.getUserId()));
-            stmt.setString(3, question.getQuestionSlug());
-            stmt.setObject(4, question.getQuestionDifficulty().name(), java.sql.Types.OTHER);
-            stmt.setInt(5, question.getQuestionNumber());
-            stmt.setString(6, question.getQuestionLink());
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param(1, UUID.fromString(question.getId()))
+                .param(2, UUID.fromString(question.getUserId()))
+                .param(3, question.getQuestionSlug())
+                .param(4, question.getQuestionDifficulty().name(), Types.OTHER)
+                .param(5, question.getQuestionNumber())
+                .param(6, question.getQuestionLink())
+                .param(7, question.getPointsAwarded().orElse(null), Types.INTEGER)
+                .param(8, question.getQuestionTitle())
+                .param(9, question.getDescription().orElse(null))
+                .param(10, question.getAcceptanceRate())
+                .param(11, question.getSubmittedAt())
+                .param(12, question.getRuntime().orElse(null))
+                .param(13, question.getMemory().orElse(null))
+                .param(14, question.getCode().orElse(null))
+                .param(15, question.getLanguage().orElse(null))
+                .param(16, question.getSubmissionId().orElse(null))
+                .update();
 
-            if (question.getPointsAwarded().isPresent()) {
-                stmt.setInt(7, question.getPointsAwarded().get());
-            } else {
-                stmt.setNull(7, java.sql.Types.INTEGER);
-            }
-
-            stmt.setString(8, question.getQuestionTitle());
-            stmt.setString(9, question.getDescription().orElse(null));
-
-            stmt.setFloat(10, question.getAcceptanceRate());
-            stmt.setObject(11, question.getSubmittedAt());
-            stmt.setString(12, question.getRuntime().orElse(null));
-            stmt.setString(13, question.getMemory().orElse(null));
-            stmt.setString(14, question.getCode().orElse(null));
-            stmt.setString(15, question.getLanguage().orElse(null));
-            stmt.setString(16, question.getSubmissionId().orElse(null));
-
-            int rowsAffected = stmt.executeUpdate();
-
-            if (rowsAffected > 0) {
-                return getQuestionById(question.getId())
-                        .orElseThrow(() -> new RuntimeException("Failed to retrieve created question."));
-            } else {
-                throw new RuntimeException("Failed to create question.");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create question", e);
+        if (rowsAffected > 0) {
+            return getQuestionById(question.getId())
+                    .orElseThrow(() -> new RuntimeException("Failed to retrieve created question."));
+        } else {
+            throw new RuntimeException("Failed to create question.");
         }
     }
 
@@ -207,19 +198,11 @@ public class QuestionSqlRepository implements QuestionRepository {
                     id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToQuestion(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve question", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param(UUID.fromString(id))
+                .query(questionRowMapper)
+                .optional();
     }
 
     @Override
@@ -251,19 +234,11 @@ public class QuestionSqlRepository implements QuestionRepository {
                 WHERE q.id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToQuestionWithUser(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve question", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param(UUID.fromString(id))
+                .query(questionWithUserRowMapper)
+                .optional();
     }
 
     @Override
@@ -276,7 +251,6 @@ public class QuestionSqlRepository implements QuestionRepository {
             final LeetcodeTopicEnum[] topics,
             final OffsetDateTime startDate,
             final OffsetDateTime endDate) {
-        ArrayList<Question> questions = new ArrayList<>();
         String sql = """
             SELECT *
             FROM (
@@ -318,40 +292,27 @@ public class QuestionSqlRepository implements QuestionRepository {
             LIMIT :pageSize OFFSET :offset;
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("userId", UUID.fromString(userId));
-            stmt.setString("query", "%" + query + "%");
-            stmt.setBoolean("pointFilter", pointFilter);
+        String[] sqlValues =
+                Arrays.stream(topics).map(LeetcodeTopicEnum::getLeetcodeEnum).toArray(String[]::new);
 
-            String[] sqlValues = Arrays.stream(topics)
-                    .map(LeetcodeTopicEnum::getLeetcodeEnum)
-                    .toArray(String[]::new);
+        try (Connection conn = ds.getConnection()) {
             Array topicsArray = conn.createArrayOf("\"LeetcodeTopicEnum\"", sqlValues);
-            stmt.setArray("topics", topicsArray);
-            if (startDate == null) {
-                stmt.setNull("startDate", Types.TIMESTAMP_WITH_TIMEZONE);
-            } else {
-                stmt.setObject("startDate", startDate);
-            }
-            if (endDate == null) {
-                stmt.setNull("endDate", Types.TIMESTAMP_WITH_TIMEZONE);
-            } else {
-                stmt.setObject("endDate", endDate);
-            }
-            stmt.setInt("pageSize", pageSize);
-            stmt.setInt("offset", (page - 1) * pageSize);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Question question = mapResultSetToQuestion(rs);
-                    questions.add(question);
-                }
-            }
+            List<Question> questions = jdbcClient
+                    .sql(sql)
+                    .param("userId", UUID.fromString(userId))
+                    .param("query", "%" + query + "%")
+                    .param("pointFilter", pointFilter)
+                    .param("topics", topicsArray)
+                    .param("startDate", startDate, Types.TIMESTAMP_WITH_TIMEZONE)
+                    .param("endDate", endDate, Types.TIMESTAMP_WITH_TIMEZONE)
+                    .param("pageSize", pageSize)
+                    .param("offset", (page - 1) * pageSize)
+                    .query(questionRowMapper)
+                    .list();
+            return new ArrayList<>(questions);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve questions", e);
+            throw new RuntimeException("Failed to create SQL array", e);
         }
-
-        return questions;
     }
 
     @Override
@@ -378,52 +339,37 @@ public class QuestionSqlRepository implements QuestionRepository {
                     id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(inputQuestion.getUserId()));
-            stmt.setString(2, inputQuestion.getQuestionSlug());
-            stmt.setObject(3, inputQuestion.getQuestionDifficulty().name(), java.sql.Types.OTHER);
-            stmt.setInt(4, inputQuestion.getQuestionNumber());
-            stmt.setString(5, inputQuestion.getQuestionLink());
+        jdbcClient
+                .sql(sql)
+                .param(1, UUID.fromString(inputQuestion.getUserId()))
+                .param(2, inputQuestion.getQuestionSlug())
+                .param(3, inputQuestion.getQuestionDifficulty().name(), Types.OTHER)
+                .param(4, inputQuestion.getQuestionNumber())
+                .param(5, inputQuestion.getQuestionLink())
+                .param(6, inputQuestion.getPointsAwarded().orElse(null), Types.INTEGER)
+                .param(7, inputQuestion.getQuestionTitle())
+                .param(8, inputQuestion.getDescription().orElse(null))
+                .param(9, inputQuestion.getAcceptanceRate())
+                .param(10, inputQuestion.getSubmittedAt())
+                .param(11, inputQuestion.getRuntime().orElse(null))
+                .param(12, inputQuestion.getMemory().orElse(null))
+                .param(13, inputQuestion.getCode().orElse(null))
+                .param(14, inputQuestion.getLanguage().orElse(null))
+                .param(15, inputQuestion.getSubmissionId().orElse(null))
+                .param(16, UUID.fromString(inputQuestion.getId()))
+                .update();
 
-            if (inputQuestion.getPointsAwarded().isPresent()) {
-                stmt.setInt(6, inputQuestion.getPointsAwarded().get());
-            } else {
-                stmt.setNull(6, java.sql.Types.INTEGER);
-            }
-            stmt.setString(7, inputQuestion.getQuestionTitle());
-            stmt.setString(8, inputQuestion.getDescription().orElse(null));
-            stmt.setFloat(9, inputQuestion.getAcceptanceRate());
-            stmt.setObject(10, inputQuestion.getSubmittedAt());
-            stmt.setString(11, inputQuestion.getRuntime().orElse(null));
-            stmt.setString(12, inputQuestion.getMemory().orElse(null));
-            stmt.setString(13, inputQuestion.getCode().orElse(null));
-            stmt.setString(14, inputQuestion.getLanguage().orElse(null));
-            stmt.setString(15, inputQuestion.getSubmissionId().orElse(null));
-            stmt.setObject(16, UUID.fromString(inputQuestion.getId()));
-
-            stmt.executeUpdate();
-
-            return getQuestionById(inputQuestion.getId())
-                    .orElseThrow(() -> new RuntimeException("Failed to retrieve updated question."));
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update question", e);
-        }
+        return getQuestionById(inputQuestion.getId())
+                .orElseThrow(() -> new RuntimeException("Failed to retrieve updated question."));
     }
 
     @Override
     public boolean deleteQuestionById(final String id) {
         String sql = "DELETE FROM \"Question\" WHERE id=?";
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected = jdbcClient.sql(sql).param(UUID.fromString(id)).update();
 
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while deleting session", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -456,20 +402,12 @@ public class QuestionSqlRepository implements QuestionRepository {
                 LIMIT 1
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, slug);
-            stmt.setObject(2, UUID.fromString(inputtedUserId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToQuestion(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve question", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param(slug)
+                .param(UUID.fromString(inputtedUserId))
+                .query(questionRowMapper)
+                .optional();
     }
 
     @Override
@@ -500,37 +438,27 @@ public class QuestionSqlRepository implements QuestionRepository {
             AND (cast(:endDate AS timestamptz) IS NULL OR q."createdAt" <= :endDate)
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("userId", UUID.fromString(userId));
-            stmt.setString("title", "%" + query + "%");
-            stmt.setBoolean("pointFilter", pointFilter);
-            LeetcodeTopicEnum[] topicEnums = questionTopicService.stringsToEnums(topics);
-            String[] sqlValues = Arrays.stream(topicEnums)
-                    .map(LeetcodeTopicEnum::getLeetcodeEnum)
-                    .toArray(String[]::new);
-            Array topicsArray = conn.createArrayOf("\"LeetcodeTopicEnum\"", sqlValues);
-            stmt.setArray("topics", topicsArray);
-            if (startDate == null) {
-                stmt.setNull("startDate", Types.TIMESTAMP_WITH_TIMEZONE);
-            } else {
-                stmt.setObject("startDate", startDate);
-            }
-            if (endDate == null) {
-                stmt.setNull("endDate", Types.TIMESTAMP_WITH_TIMEZONE);
-            } else {
-                stmt.setObject("endDate", endDate);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve questions", e);
-        }
+        LeetcodeTopicEnum[] topicEnums = questionTopicService.stringsToEnums(topics);
+        String[] sqlValues = Arrays.stream(topicEnums)
+                .map(LeetcodeTopicEnum::getLeetcodeEnum)
+                .toArray(String[]::new);
 
-        return 0;
+        try (Connection conn = ds.getConnection()) {
+            Array topicsArray = conn.createArrayOf("\"LeetcodeTopicEnum\"", sqlValues);
+            return jdbcClient
+                    .sql(sql)
+                    .param("userId", UUID.fromString(userId))
+                    .param("title", "%" + query + "%")
+                    .param("pointFilter", pointFilter)
+                    .param("topics", topicsArray)
+                    .param("startDate", startDate, Types.TIMESTAMP_WITH_TIMEZONE)
+                    .param("endDate", endDate, Types.TIMESTAMP_WITH_TIMEZONE)
+                    .query((rs, rowNum) -> rs.getInt(1))
+                    .optional()
+                    .orElse(0);
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to create SQL array", e);
+        }
     }
 
     @Override
@@ -544,20 +472,16 @@ public class QuestionSqlRepository implements QuestionRepository {
                     "submissionId" = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, submissionId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve question", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param(submissionId)
+                .query((rs, rowNum) -> rs.getString("id"))
+                .optional()
+                .isPresent();
     }
 
     @Override
     public ArrayList<Question> getAllIncompleteQuestions() {
-        ArrayList<Question> questions = new ArrayList<>();
         String sql = """
             SELECT
                 *
@@ -569,24 +493,14 @@ public class QuestionSqlRepository implements QuestionRepository {
                 OR ("code" is NULL OR "code" = '')
                 OR ("language" is NULL OR "language" = '')
             """;
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    questions.add(mapResultSetToQuestion(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve all incomplete questions", e);
-        }
 
-        return questions;
+        List<Question> questions = jdbcClient.sql(sql).query(questionRowMapper).list();
+
+        return new ArrayList<>(questions);
     }
 
     @Override
     public List<Question> getAllQuestionsWithNoTopics() {
-        List<Question> result = new ArrayList<>();
-
         String sql = """
             SELECT
                 q.id,
@@ -615,23 +529,11 @@ public class QuestionSqlRepository implements QuestionRepository {
             );
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(mapResultSetToQuestion(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get all questions with no topics", e);
-        }
+        return jdbcClient.sql(sql).query(questionRowMapper).list();
     }
 
     @Override
     public ArrayList<QuestionWithUser> getAllIncompleteQuestionsWithUser() {
-        ArrayList<QuestionWithUser> questions = new ArrayList<>();
         String sql = """
             SELECT
                 q.id,
@@ -667,24 +569,14 @@ public class QuestionSqlRepository implements QuestionRepository {
                 q."submittedAt" DESC
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    QuestionWithUser question = mapResultSetToQuestionWithUser(rs);
-                    questions.add(question);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve all incomplete questions with user", e);
-        }
+        List<QuestionWithUser> questions =
+                jdbcClient.sql(sql).query(questionWithUserRowMapper).list();
 
-        return questions;
+        return new ArrayList<>(questions);
     }
 
     @Override
     public ArrayList<Question> getAllIncompleteQuestionsWithNoJob() {
-        ArrayList<Question> questions = new ArrayList<>();
         String sql = """
         SELECT
             q.*
@@ -704,16 +596,8 @@ public class QuestionSqlRepository implements QuestionRepository {
         )
         """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    questions.add(mapResultSetToQuestion(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to retrieve incomplete questions with no active job", e);
-        }
-        return questions;
+        List<Question> questions = jdbcClient.sql(sql).query(questionRowMapper).list();
+
+        return new ArrayList<>(questions);
     }
 }

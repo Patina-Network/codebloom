@@ -1,39 +1,33 @@
 package org.patinanetwork.codebloom.common.db.repos.api;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.api.ApiKey;
 import org.patinanetwork.codebloom.common.time.StandardizedLocalDateTime;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ApiKeySqlRepository implements ApiKeyRepository {
 
-    private final DataSource ds;
+    private static final RowMapper<ApiKey> API_KEY_ROW_MAPPER = (rs, rowNum) -> ApiKey.builder()
+            .id(rs.getString("id"))
+            .apiKey(rs.getString("apiKeyHash"))
+            .expiresAt(Optional.ofNullable(rs.getTimestamp("expiresAt"))
+                    .map(Timestamp::toLocalDateTime)
+                    .orElse(null))
+            .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
+            .updatedAt(rs.getTimestamp("updatedAt").toLocalDateTime())
+            .updatedBy(rs.getString("updatedBy"))
+            .build();
 
-    public ApiKeySqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private ApiKey parseResultSetToApiKey(final ResultSet resultSet) throws SQLException {
-        return ApiKey.builder()
-                .id(resultSet.getString("id"))
-                .apiKey(resultSet.getString("apiKeyHash"))
-                .expiresAt(Optional.ofNullable(resultSet.getTimestamp("expiresAt"))
-                        .map(Timestamp::toLocalDateTime)
-                        .orElse(null))
-                .createdAt(resultSet.getTimestamp("createdAt").toLocalDateTime())
-                .updatedAt(resultSet.getTimestamp("updatedAt").toLocalDateTime())
-                .updatedBy(resultSet.getString("updatedBy"))
-                .build();
+    public ApiKeySqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -52,19 +46,12 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet resultSet = stmt.executeQuery()) {
-                if (resultSet.next()) {
-                    return parseResultSetToApiKey(resultSet);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch apiKeyHash by ID", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(API_KEY_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -83,19 +70,12 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
                 "apiKeyHash" = :hash
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("hash", hash);
-            try (ResultSet resultSet = stmt.executeQuery()) {
-                if (resultSet.next()) {
-                    return parseResultSetToApiKey(resultSet);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch apiKeyHash by hash", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("hash", hash)
+                .query(API_KEY_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -112,19 +92,7 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
                 "ApiKey"
             """;
 
-        final List<ApiKey> results = new ArrayList<>();
-
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql);
-                ResultSet resultSet = stmt.executeQuery()) {
-            while (resultSet.next()) {
-                results.add(parseResultSetToApiKey(resultSet));
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch all ApiKeys", e);
-        }
-
-        return results;
+        return jdbcClient.sql(sql).query(API_KEY_ROW_MAPPER).list();
     }
 
     @Override
@@ -147,16 +115,13 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
         final UUID id = UUID.fromString(apiKey.getId());
         final UUID updatedBy = UUID.fromString(apiKey.getUpdatedBy());
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", id);
-            stmt.setString("apiKeyHash", apiKey.getApiKey());
-            stmt.setObject("expiresAt", apiKey.getExpiresAt());
-            stmt.setObject("updatedBy", updatedBy);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create ApiKey", e);
-        }
+        jdbcClient
+                .sql(sql)
+                .param("id", id)
+                .param("apiKeyHash", apiKey.getApiKey())
+                .param("expiresAt", apiKey.getExpiresAt())
+                .param("updatedBy", updatedBy)
+                .update();
     }
 
     @Override
@@ -176,19 +141,15 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
         var localTime = StandardizedLocalDateTime.now();
         apiKey.setUpdatedAt(localTime);
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", id);
-            stmt.setString("apiKeyHash", apiKey.getApiKey());
-            stmt.setObject("expiresAt", apiKey.getExpiresAt());
-            stmt.setObject("updatedAt", apiKey.getUpdatedAt());
-            stmt.setObject("updatedBy", UUID.fromString(apiKey.getUpdatedBy()));
-
-            int rows = stmt.executeUpdate();
-            return rows > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update ApiKey by ID", e);
-        }
+        int rows = jdbcClient
+                .sql(sql)
+                .param("id", id)
+                .param("apiKeyHash", apiKey.getApiKey())
+                .param("expiresAt", apiKey.getExpiresAt())
+                .param("updatedAt", apiKey.getUpdatedAt())
+                .param("updatedBy", UUID.fromString(apiKey.getUpdatedBy()))
+                .update();
+        return rows > 0;
     }
 
     @Override
@@ -200,15 +161,9 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
                 "id" = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-
-            final int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete ApiKey by ID", e);
-        }
+        final int rowsAffected =
+                jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected > 0;
     }
 
     @Override
@@ -220,14 +175,7 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
                 "apiKeyHash" = :hash
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("hash", hash);
-
-            final int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete ApiKey by hash", e);
-        }
+        final int rowsAffected = jdbcClient.sql(sql).param("hash", hash).update();
+        return rowsAffected > 0;
     }
 }

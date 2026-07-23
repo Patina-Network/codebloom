@@ -1,36 +1,26 @@
 package org.patinanetwork.codebloom.common.db.repos.session;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.Session;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SessionSqlRepository implements SessionRepository {
 
-    private DataSource ds;
+    private static final RowMapper<Session> SESSION_ROW_MAPPER = (rs, rowNum) -> Session.builder()
+            .id(Optional.of(rs.getString("id")))
+            .userId(rs.getString("userId"))
+            .expiresAt(rs.getTimestamp("expiresAt").toLocalDateTime())
+            .build();
 
-    public SessionSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private JdbcClient jdbcClient;
 
-    private Session parseResultSetToSession(final ResultSet resultSet) throws SQLException {
-        return Session.builder()
-                .id(Optional.of(resultSet.getString("id")))
-                .userId(resultSet.getString("userId"))
-                .expiresAt(resultSet.getTimestamp("expiresAt").toLocalDateTime())
-                .build();
-    }
-
-    private void updateSessionWithResultSet(final ResultSet resultSet, final Session session) throws SQLException {
-        session.setId(Optional.of(resultSet.getString("id")));
+    public SessionSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -40,78 +30,45 @@ public class SessionSqlRepository implements SessionRepository {
         // ID altogether.
         session.setId(Optional.of(UUID.randomUUID().toString().replace("-", "")));
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(
-                    1,
-                    session.getId()
-                            .orElseThrow(() -> new IllegalStateException("Session ID must be present for insertion.")));
-            stmt.setObject(2, UUID.fromString(session.getUserId()));
-            stmt.setObject(3, session.getExpiresAt());
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    updateSessionWithResultSet(rs, session);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create session", e);
-        }
+        jdbcClient
+                .sql(sql)
+                .param(
+                        1,
+                        session.getId()
+                                .orElseThrow(
+                                        () -> new IllegalStateException("Session ID must be present for insertion.")))
+                .param(2, UUID.fromString(session.getUserId()))
+                .param(3, session.getExpiresAt())
+                .query((rs, rowNum) -> rs.getString("id"))
+                .optional()
+                .ifPresent(id -> session.setId(Optional.of(id)));
     }
 
     @Override
     public Optional<Session> getSessionById(final String id) {
-        Optional<Session> session = Optional.empty();
         String sql = "SELECT id, \"userId\", \"expiresAt\" FROM \"Session\" WHERE id=?";
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToSession(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving session", e);
-        }
-
-        return session;
+        return jdbcClient.sql(sql).param(1, id).query(SESSION_ROW_MAPPER).optional();
     }
 
     @Override
     public ArrayList<Session> getSessionsByUserId(final String id) {
         String sql = "SELECT id, \"userId\", \"expiresAt\" FROM \"Session\" WHERE \"userId\"=?";
-        ArrayList<Session> sessions = new ArrayList<>();
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    sessions.add(parseResultSetToSession(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving session", e);
-        }
-
-        return sessions;
+        return new ArrayList<>(jdbcClient
+                .sql(sql)
+                .param(1, UUID.fromString(id))
+                .query(SESSION_ROW_MAPPER)
+                .list());
     }
 
     @Override
     public boolean deleteSessionById(final String id) {
         String sql = "DELETE FROM \"Session\" WHERE id=?";
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected = jdbcClient.sql(sql).param(1, id).update();
 
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while deleting session", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -123,14 +80,9 @@ public class SessionSqlRepository implements SessionRepository {
                         "userId" = :userId
                 """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("userId", UUID.fromString(userId));
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected =
+                jdbcClient.sql(sql).param("userId", UUID.fromString(userId)).update();
 
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while deleting sessions", e);
-        }
+        return rowsAffected > 0;
     }
 }

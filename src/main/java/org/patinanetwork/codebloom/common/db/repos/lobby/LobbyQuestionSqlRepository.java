@@ -1,34 +1,29 @@
 package org.patinanetwork.codebloom.common.db.repos.lobby;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.lobby.LobbyQuestion;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
 
-    private final DataSource ds;
+    private static final RowMapper<LobbyQuestion> LOBBY_QUESTION_ROW_MAPPER = (rs, rowNum) -> LobbyQuestion.builder()
+            .id(rs.getString("id"))
+            .lobbyId(rs.getString("lobbyId"))
+            .questionBankId(rs.getString("questionBankId"))
+            .userSolvedCount(rs.getInt("userSolvedCount"))
+            .createdAt(rs.getObject("createdAt", OffsetDateTime.class))
+            .build();
 
-    public LobbyQuestionSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private LobbyQuestion parseResultSetToLobbyQuestion(final ResultSet resultSet) throws SQLException {
-        return LobbyQuestion.builder()
-                .id(resultSet.getString("id"))
-                .lobbyId(resultSet.getString("lobbyId"))
-                .questionBankId(resultSet.getString("questionBankId"))
-                .userSolvedCount(resultSet.getInt("userSolvedCount"))
-                .createdAt(resultSet.getObject("createdAt", OffsetDateTime.class))
-                .build();
+    public LobbyQuestionSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -42,21 +37,18 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
                 "createdAt"
             """;
         lobbyQuestion.setId(UUID.randomUUID().toString());
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(lobbyQuestion.getId()));
-            stmt.setObject("lobbyId", UUID.fromString(lobbyQuestion.getLobbyId()));
-            stmt.setObject("questionBankId", UUID.fromString(lobbyQuestion.getQuestionBankId()));
-            stmt.setInt("userSolvedCount", lobbyQuestion.getUserSolvedCount());
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    lobbyQuestion.setCreatedAt(rs.getObject("createdAt", OffsetDateTime.class));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create lobbyQuestion", e);
-        }
+        OffsetDateTime createdAt = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(lobbyQuestion.getId()))
+                .param("lobbyId", UUID.fromString(lobbyQuestion.getLobbyId()))
+                .param("questionBankId", UUID.fromString(lobbyQuestion.getQuestionBankId()))
+                .param("userSolvedCount", lobbyQuestion.getUserSolvedCount())
+                .query((rs, rowNum) -> rs.getObject("createdAt", OffsetDateTime.class))
+                .optional()
+                .orElse(null);
+
+        lobbyQuestion.setCreatedAt(createdAt);
     }
 
     @Override
@@ -73,23 +65,15 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
             WHERE
                 id = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobbyQuestion(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobbyQuestion by id", e);
-        }
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(LOBBY_QUESTION_ROW_MAPPER)
+                .optional();
     }
 
     @Override
     public List<LobbyQuestion> findLobbyQuestionsByLobbyId(final String lobbyId) {
-        List<LobbyQuestion> result = new java.util.ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -103,24 +87,16 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
                 "lobbyId" = :lobbyId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("lobbyId", UUID.fromString(lobbyId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobbyQuestion(rs));
-                }
-                return result;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobbyQuestions by lobbyId", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("lobbyId", UUID.fromString(lobbyId))
+                .query(LOBBY_QUESTION_ROW_MAPPER)
+                .list();
     }
 
     @Override
     public List<LobbyQuestion> findLobbyQuestionsByLobbyIdAndQuestionBankId(
             final String lobbyId, final String questionBankId) {
-        List<LobbyQuestion> result = new java.util.ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -134,19 +110,12 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
                 "lobbyId" = :lobbyId AND "questionBankId" = :questionBankId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("lobbyId", UUID.fromString(lobbyId));
-            stmt.setObject("questionBankId", UUID.fromString(questionBankId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobbyQuestion(rs));
-                }
-                return result;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobbyQuestions by lobbyId and questionBankId", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("lobbyId", UUID.fromString(lobbyId))
+                .param("questionBankId", UUID.fromString(questionBankId))
+                .query(LOBBY_QUESTION_ROW_MAPPER)
+                .list();
     }
 
     @Override
@@ -167,18 +136,11 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
             LIMIT 1
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("lobbyId", UUID.fromString(lobbyId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobbyQuestion(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find most recent lobbyQuestion by lobbyId", e);
-        }
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("lobbyId", UUID.fromString(lobbyId))
+                .query(LOBBY_QUESTION_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -191,21 +153,17 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setInt("userSolvedCount", lobbyQuestion.getUserSolvedCount());
-            stmt.setObject("id", UUID.fromString(lobbyQuestion.getId()));
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("userSolvedCount", lobbyQuestion.getUserSolvedCount())
+                .param("id", UUID.fromString(lobbyQuestion.getId()))
+                .update();
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update lobbyQuestion", e);
-        }
+        return rowsAffected == 1;
     }
 
     @Override
     public List<LobbyQuestion> findAllLobbyQuestions() {
-        List<LobbyQuestion> result = new java.util.ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -217,17 +175,7 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
                 "LobbyQuestion"
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobbyQuestion(rs));
-                }
-                return result;
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find all lobbyQuestions", e);
-        }
+        return jdbcClient.sql(sql).query(LOBBY_QUESTION_ROW_MAPPER).list();
     }
 
     @Override
@@ -237,14 +185,7 @@ public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
             WHERE id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete lobbyQuestion", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected == 1;
     }
 }

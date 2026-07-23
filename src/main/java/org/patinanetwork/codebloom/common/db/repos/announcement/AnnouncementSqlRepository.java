@@ -1,40 +1,32 @@
 package org.patinanetwork.codebloom.common.db.repos.announcement;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.announcement.Announcement;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AnnouncementSqlRepository implements AnnouncementRepository {
 
-    private final DataSource ds;
+    private static final RowMapper<Announcement> ANNOUNCEMENT_ROW_MAPPER = (rs, rowNum) -> Announcement.builder()
+            .id(rs.getString("id"))
+            .createdAt(rs.getObject("createdAt", OffsetDateTime.class))
+            .expiresAt(rs.getObject("expiresAt", OffsetDateTime.class))
+            .showTimer(rs.getBoolean("showTimer"))
+            .message(rs.getString("message"))
+            .build();
 
-    public AnnouncementSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private Announcement parseResultSetToTag(final ResultSet resultSet) throws SQLException {
-        return Announcement.builder()
-                .id(resultSet.getString("id"))
-                .createdAt(resultSet.getObject("createdAt", OffsetDateTime.class))
-                .expiresAt(resultSet.getObject("expiresAt", OffsetDateTime.class))
-                .showTimer(resultSet.getBoolean("showTimer"))
-                .message(resultSet.getString("message"))
-                .build();
+    public AnnouncementSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
     public List<Announcement> getAllAnnouncements() {
-        List<Announcement> result = new ArrayList<>();
         String sql = """
                 SELECT
                     id,
@@ -48,18 +40,7 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                     "createdAt" ASC
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToTag(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get all announcements", e);
-        }
+        return jdbcClient.sql(sql).query(ANNOUNCEMENT_ROW_MAPPER).list();
     }
 
     @Override
@@ -77,19 +58,12 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                                     id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToTag(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get announcement by id", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param(UUID.fromString(id))
+                .query(ANNOUNCEMENT_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -108,18 +82,7 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                                 LIMIT 1
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToTag(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to fetch most recent announcement", e);
-        }
-
-        return null;
+        return jdbcClient.sql(sql).query(ANNOUNCEMENT_ROW_MAPPER).optional().orElse(null);
     }
 
     @Override
@@ -133,24 +96,19 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                     id, "createdAt"
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.randomUUID());
-            stmt.setObject(2, announcement.getExpiresAt());
-            stmt.setBoolean(3, announcement.isShowTimer());
-            stmt.setString(4, announcement.getMessage());
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
+        return jdbcClient
+                .sql(sql)
+                .param(UUID.randomUUID())
+                .param(announcement.getExpiresAt())
+                .param(announcement.isShowTimer())
+                .param(announcement.getMessage())
+                .query((rs, rowNum) -> {
                     announcement.setId(rs.getString("id"));
                     announcement.setCreatedAt(rs.getObject("createdAt", OffsetDateTime.class));
                     return true;
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create announcement", e);
-        }
-
-        return false;
+                })
+                .optional()
+                .orElse(false);
     }
 
     @Override
@@ -162,15 +120,9 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                     id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected = jdbcClient.sql(sql).param(UUID.fromString(id)).update();
 
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete announcement by ID", e);
-        }
+        return rowsAffected == 1;
     }
 
     @Override
@@ -185,16 +137,15 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
             WHERE
                 id = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("expiresAt", announcement.getExpiresAt());
-            stmt.setBoolean("showTimer", announcement.isShowTimer());
-            stmt.setString("message", announcement.getMessage());
-            stmt.setObject("id", UUID.fromString(announcement.getId()));
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update announcement", e);
-        }
+
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("expiresAt", announcement.getExpiresAt())
+                .param("showTimer", announcement.isShowTimer())
+                .param("message", announcement.getMessage())
+                .param("id", UUID.fromString(announcement.getId()))
+                .update();
+
+        return rowsAffected > 0;
     }
 }

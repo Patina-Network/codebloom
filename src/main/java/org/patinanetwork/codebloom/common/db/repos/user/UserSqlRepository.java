@@ -1,69 +1,68 @@
 package org.patinanetwork.codebloom.common.db.repos.user;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.user.User;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
 import org.patinanetwork.codebloom.common.db.repos.achievements.AchievementRepository;
 import org.patinanetwork.codebloom.common.db.repos.user.options.UserFilterOptions;
 import org.patinanetwork.codebloom.common.db.repos.usertag.UserTagRepository;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserSqlRepository implements UserRepository {
 
-    private DataSource ds;
+    private final JdbcClient jdbcClient;
     private final UserTagRepository userTagRepository;
     private final AchievementRepository achievementRepository;
 
+    private final RowMapper<User> userRowMapper;
+    private final RowMapper<UserWithScore> userWithScoreRowMapper;
+
     public UserSqlRepository(
-            final DataSource ds,
+            final JdbcClient jdbcClient,
             final UserTagRepository userTagRepository,
             final AchievementRepository achievementRepository) {
-        this.ds = ds;
+        this.jdbcClient = jdbcClient;
         this.userTagRepository = userTagRepository;
         this.achievementRepository = achievementRepository;
-    }
 
-    private User parseResultSetToUser(final ResultSet rs) throws SQLException {
-        var id = rs.getString("id");
-        return User.builder()
-                .id(id)
-                .discordId(rs.getString("discordId"))
-                .discordName(rs.getString("discordName"))
-                .leetcodeUsername(rs.getString("leetcodeUsername"))
-                .nickname(rs.getString("nickname"))
-                .verifyKey(rs.getString("verifyKey"))
-                .admin(rs.getBoolean("admin"))
-                .schoolEmail(rs.getString("schoolEmail"))
-                .profileUrl(rs.getString("profileUrl"))
-                .tags(userTagRepository.findTagsByUserId(id))
-                .achievements(achievementRepository.getAchievementsByUserId(id))
-                .build();
-    }
+        this.userRowMapper = (rs, rowNum) -> {
+            var id = rs.getString("id");
+            return User.builder()
+                    .id(id)
+                    .discordId(rs.getString("discordId"))
+                    .discordName(rs.getString("discordName"))
+                    .leetcodeUsername(rs.getString("leetcodeUsername"))
+                    .nickname(rs.getString("nickname"))
+                    .verifyKey(rs.getString("verifyKey"))
+                    .admin(rs.getBoolean("admin"))
+                    .schoolEmail(rs.getString("schoolEmail"))
+                    .profileUrl(rs.getString("profileUrl"))
+                    .tags(this.userTagRepository.findTagsByUserId(id))
+                    .achievements(this.achievementRepository.getAchievementsByUserId(id))
+                    .build();
+        };
 
-    private UserWithScore parseResultSetToUserWithScore(final ResultSet rs) throws SQLException {
-        var id = rs.getString("id");
-        return UserWithScore.builder()
-                .id(id)
-                .discordId(rs.getString("discordId"))
-                .discordName(rs.getString("discordName"))
-                .leetcodeUsername(rs.getString("leetcodeUsername"))
-                .nickname(rs.getString("nickname"))
-                .verifyKey(rs.getString("verifyKey"))
-                .admin(rs.getBoolean("admin"))
-                .schoolEmail(rs.getString("schoolEmail"))
-                .profileUrl(rs.getString("profileUrl"))
-                .tags(userTagRepository.findTagsByUserId(id))
-                .achievements(achievementRepository.getAchievementsByUserId(id))
-                .totalScore(rs.getInt("totalScore"))
-                .build();
+        this.userWithScoreRowMapper = (rs, rowNum) -> {
+            var id = rs.getString("id");
+            return UserWithScore.builder()
+                    .id(id)
+                    .discordId(rs.getString("discordId"))
+                    .discordName(rs.getString("discordName"))
+                    .leetcodeUsername(rs.getString("leetcodeUsername"))
+                    .nickname(rs.getString("nickname"))
+                    .verifyKey(rs.getString("verifyKey"))
+                    .admin(rs.getBoolean("admin"))
+                    .schoolEmail(rs.getString("schoolEmail"))
+                    .profileUrl(rs.getString("profileUrl"))
+                    .tags(this.userTagRepository.findTagsByUserId(id))
+                    .achievements(this.achievementRepository.getAchievementsByUserId(id))
+                    .totalScore(rs.getInt("totalScore"))
+                    .build();
+        };
     }
 
     /**
@@ -81,25 +80,22 @@ public class UserSqlRepository implements UserRepository {
                 "verifyKey"
             """;
         user.setId(UUID.randomUUID().toString());
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(user.getId()));
-            stmt.setString("discordName", user.getDiscordName());
-            stmt.setString("discordId", user.getDiscordId());
-            stmt.setString("leetcodeUsername", user.getLeetcodeUsername());
-            stmt.setString("nickname", user.getNickname());
-            stmt.setString("schoolEmail", user.getSchoolEmail());
-            stmt.setBoolean("admin", user.isAdmin());
-            stmt.setString("profileUrl", user.getProfileUrl());
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    user.setVerifyKey(rs.getString("verifyKey"));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while creating user", e);
-        }
+        String verifyKey = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(user.getId()))
+                .param("discordName", user.getDiscordName())
+                .param("discordId", user.getDiscordId())
+                .param("leetcodeUsername", user.getLeetcodeUsername())
+                .param("nickname", user.getNickname())
+                .param("schoolEmail", user.getSchoolEmail())
+                .param("admin", user.isAdmin())
+                .param("profileUrl", user.getProfileUrl())
+                .query((rs, rowNum) -> rs.getString("verifyKey"))
+                .optional()
+                .orElse(null);
+
+        user.setVerifyKey(verifyKey);
     }
 
     @Override
@@ -120,19 +116,12 @@ public class UserSqlRepository implements UserRepository {
                 id=:id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(inputId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToUser(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving user", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(inputId))
+                .query(userRowMapper)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -152,19 +141,12 @@ public class UserSqlRepository implements UserRepository {
                 WHERE "leetcodeUsername" = :leetcodeUsername
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("leetcodeUsername", inputLeetcodeUsername);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToUser(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving user", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("leetcodeUsername", inputLeetcodeUsername)
+                .query(userRowMapper)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -185,36 +167,19 @@ public class UserSqlRepository implements UserRepository {
                 "discordId" = :discordId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("discordId", inputDiscordId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToUser(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving user", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("discordId", inputDiscordId)
+                .query(userRowMapper)
+                .optional()
+                .orElse(null);
     }
 
     @Override
     public int getUserCount() {
         String sql = "SELECT COUNT(*) FROM \"User\"";
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving user count", e);
-        }
-
-        return 0;
+        return jdbcClient.sql(sql).query((rs, rowNum) -> rs.getInt(1)).single();
     }
 
     @Override
@@ -233,31 +198,26 @@ public class UserSqlRepository implements UserRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(inputUser.getId()));
-            stmt.setString("discordName", inputUser.getDiscordName());
-            stmt.setString("discordId", inputUser.getDiscordId());
-            stmt.setString("leetcodeUsername", inputUser.getLeetcodeUsername());
-            stmt.setString("nickname", inputUser.getNickname());
-            stmt.setBoolean("admin", inputUser.isAdmin());
-            stmt.setString("profileUrl", inputUser.getProfileUrl());
-            stmt.setString("schoolEmail", inputUser.getSchoolEmail());
+        // We don't care what this actually returns, it can never be more than 1 anyways
+        // because id is UNIQUE. Just return the new user every time if we want to do
+        // any work on it.
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(inputUser.getId()))
+                .param("discordName", inputUser.getDiscordName())
+                .param("discordId", inputUser.getDiscordId())
+                .param("leetcodeUsername", inputUser.getLeetcodeUsername())
+                .param("nickname", inputUser.getNickname())
+                .param("admin", inputUser.isAdmin())
+                .param("profileUrl", inputUser.getProfileUrl())
+                .param("schoolEmail", inputUser.getSchoolEmail())
+                .update();
 
-            // We don't care what this actually returns, it can never be more than 1 anyways
-            // because id is UNIQUE. Just return the new user every time if we want to do
-            // any work on it.
-            int rowsAffected = stmt.executeUpdate();
-
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while updating user", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
     public ArrayList<User> getAllUsers() {
-        ArrayList<User> users = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -272,23 +232,11 @@ public class UserSqlRepository implements UserRepository {
             FROM "User"
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    users.add(parseResultSetToUser(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving user", e);
-        }
-
-        return users;
+        return new ArrayList<>(jdbcClient.sql(sql).query(userRowMapper).list());
     }
 
     @Override
     public ArrayList<User> getAllUsers(final int page, final int pageSize, final String query) {
-        ArrayList<User> users = new ArrayList<>();
         String sql = """
                 SELECT
                     id,
@@ -309,22 +257,13 @@ public class UserSqlRepository implements UserRepository {
                 LIMIT :limit OFFSET :offset
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("query", "%" + query + "%");
-            stmt.setInt("limit", pageSize);
-            stmt.setInt("offset", (page - 1) * pageSize);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    users.add(parseResultSetToUser(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving paginated users", e);
-        }
-
-        return users;
+        return new ArrayList<>(jdbcClient
+                .sql(sql)
+                .param("query", "%" + query + "%")
+                .param("limit", pageSize)
+                .param("offset", (page - 1) * pageSize)
+                .query(userRowMapper)
+                .list());
     }
 
     @Override
@@ -337,15 +276,12 @@ public class UserSqlRepository implements UserRepository {
             LIMIT 1
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, leetcodeUsername);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while retrieving user count with given leetcodeUsername", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param(1, leetcodeUsername)
+                .query((rs, rowNum) -> 1)
+                .optional()
+                .isPresent();
     }
 
     @Override
@@ -372,20 +308,13 @@ public class UserSqlRepository implements UserRepository {
                     m."leaderboardId" = :leaderboardId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(userId));
-            stmt.setObject("leaderboardId", UUID.fromString(leaderboardId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToUserWithScore(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get user with score by id", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(userId))
+                .param("leaderboardId", UUID.fromString(leaderboardId))
+                .query(userWithScoreRowMapper)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -411,20 +340,13 @@ public class UserSqlRepository implements UserRepository {
                     m."leaderboardId" = :leaderboardId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("leetcodeUsername", userLeetcodeUsername);
-            stmt.setObject("leaderboardId", UUID.fromString(leaderboardId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToUserWithScore(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get user with score by leetcode username", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("leetcodeUsername", userLeetcodeUsername)
+                .param("leaderboardId", UUID.fromString(leaderboardId))
+                .query(userWithScoreRowMapper)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -437,18 +359,12 @@ public class UserSqlRepository implements UserRepository {
             WHERE
                 ("discordName" ILIKE :query OR "leetcodeUsername" ILIKE :query OR "nickname" ILIKE :query)
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("query", "%" + query + "%");
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while counting users", e);
-        }
-        return 0;
+
+        return jdbcClient
+                .sql(sql)
+                .param("query", "%" + query + "%")
+                .query((rs, rowNum) -> rs.getInt(1))
+                .single();
     }
 
     @Override
@@ -459,15 +375,8 @@ public class UserSqlRepository implements UserRepository {
                     id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
 
-            int rowsAffected = stmt.executeUpdate();
-
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete user by id", e);
-        }
+        return rowsAffected > 0;
     }
 }
