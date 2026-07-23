@@ -1,7 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.achievements;
 
 import java.sql.Types;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -132,7 +131,7 @@ public class AchievementSqlRepository implements AchievementRepository {
 
         int rowsAffected = jdbcClient
                 .sql(sql)
-                .param("deletedAt", LocalDateTime.now())
+                .param("deletedAt", StandardizedOffsetDateTime.now())
                 .param("id", UUID.fromString(id))
                 .update();
 
