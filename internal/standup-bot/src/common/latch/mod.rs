@@ -1,12 +1,16 @@
-use std::sync::Arc;
+pub mod error;
 
-use chrono::Duration;
+use std::{
+    sync::Arc,
+    time::Duration,
+};
+
 use tokio::{
     sync::Semaphore,
     time::timeout,
 };
 
-use crate::utils::latch::error::CountdownLatchError;
+use crate::common::latch::error::CountdownLatchError;
 
 /// [CountdownLatch] is the Rust equivalent of
 /// [Java's CountDownLatch](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CountDownLatch.html),
@@ -33,19 +37,9 @@ pub struct CountdownLatch {
 }
 
 #[allow(dead_code)]
-pub trait Latch {
-    fn new(n: u8) -> Self;
-
-    fn count_down(&self) -> ();
-
-    async fn wait(&self) -> Result<(), CountdownLatchError>;
-
-    async fn wait_until(&self, ms: u32) -> Result<(), CountdownLatchError>;
-}
-
-impl Latch for CountdownLatch {
+impl CountdownLatch {
     /// Create a new [CountdownLatch] with the specified count of `n`.
-    fn new(n: u8) -> Self {
+    pub fn new(n: u8) -> Self {
         CountdownLatch {
             count: n,
             sem: Arc::new(Semaphore::new(0)),
@@ -53,33 +47,28 @@ impl Latch for CountdownLatch {
     }
 
     /// Count down by a factor of `1`.
-    fn count_down(&self) -> () {
+    pub fn count_down(&self) -> () {
         self.sem.add_permits(1);
     }
 
     /// Will wait until `count_down` has been called `n` times.
-    async fn wait(&self) -> Result<(), CountdownLatchError> {
-        let permit = self
-            .sem
-            .acquire_many(self.count as u32)
-            .await
-            .map_err(|e| CountdownLatchError::from(e))?;
+    pub async fn wait(&self) -> Result<(), CountdownLatchError> {
+        let permit = self.sem.acquire_many(self.count as u32).await?;
         permit.forget();
         Ok(())
     }
 
     /// Will wait until `count_down` has been called `n` times or timeout if we have waited `ms`
     /// milliseconds.
-    async fn wait_until(&self, ms: u32) -> Result<(), CountdownLatchError> {
-        timeout(
-            Duration::milliseconds(ms as i64).to_std().unwrap(),
+    pub async fn wait_until(&self, ms: u32) -> Result<(), CountdownLatchError> {
+        let permit = timeout(
+            Duration::from_millis(ms as u64),
             self.sem.acquire_many(self.count as u32),
         )
-        .await
-        .map_err(CountdownLatchError::from)?
-        .map(|p| {
-            p.forget();
-        })
-        .map_err(CountdownLatchError::from)
+        .await??;
+
+        permit.forget();
+
+        Ok(())
     }
 }
