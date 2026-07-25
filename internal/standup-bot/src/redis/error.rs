@@ -3,55 +3,14 @@ use bb8_redis::{
     redis::RedisError,
 };
 use chrono::ParseError;
-use std::fmt;
+use thiserror::Error;
 
-#[derive(Debug, Clone)]
-pub struct RedisSingletonEmptyError;
-
-#[derive(Debug)]
-#[allow(dead_code)]
+#[derive(Debug, Error)]
 pub enum RedisClientError {
-    PooledRedisError(RunError<RedisError>),
-    RedisError(RedisError),
-    DateTimeParseError(ParseError),
-    EmptyError(RedisSingletonEmptyError),
-}
-
-impl fmt::Display for RedisClientError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            RedisClientError::PooledRedisError(e) => write!(f, "PooledRedisError: {:?}", e),
-            RedisClientError::RedisError(e) => write!(f, "RedisError: {:?}", e),
-            RedisClientError::DateTimeParseError(e) => write!(f, "DateTimeParse: {:?}", e),
-            RedisClientError::EmptyError(_) => {
-                write!(f, "Redis Singleton is empty")
-            }
-        }
-    }
-}
-
-impl std::error::Error for RedisClientError {}
-
-impl From<RunError<RedisError>> for RedisClientError {
-    fn from(value: RunError<RedisError>) -> Self {
-        RedisClientError::PooledRedisError(value)
-    }
-}
-
-impl From<RedisError> for RedisClientError {
-    fn from(value: RedisError) -> Self {
-        RedisClientError::RedisError(value)
-    }
-}
-
-impl From<ParseError> for RedisClientError {
-    fn from(value: ParseError) -> Self {
-        RedisClientError::DateTimeParseError(value)
-    }
-}
-
-impl From<RedisSingletonEmptyError> for RedisClientError {
-    fn from(value: RedisSingletonEmptyError) -> Self {
-        RedisClientError::EmptyError(value)
-    }
+    #[error("redis pool error: {0}")]
+    Pool(#[from] RunError<RedisError>),
+    #[error("redis error: {0}")]
+    Redis(#[from] RedisError),
+    #[error("failed to parse standup datetime: {0}")]
+    DateTimeParse(#[from] ParseError),
 }
