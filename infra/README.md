@@ -7,6 +7,6 @@
 
 This directory contains the Dockerfile used to build the main Codebloom image, which is then uploaded to [hub.docker.com/r/tahminator/codebloom](https://hub.docker.com/r/tahminator/codebloom).
 
-The image is then deployed to the [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform) see [`.do/`](../.do/) to view the DigitalOcean app spec and more detailed documentation regarding DigitalOcean and deployments.
+The image is then deployed to our Kubernetes cluster (docs WIP).
 
 There is a Bun Shell script which helps us manage the workflow for deployments across production and staging, which can be found at [`.github/scripts/redeploy/index.ts`](../.github/scripts/redeploy/index.ts).
