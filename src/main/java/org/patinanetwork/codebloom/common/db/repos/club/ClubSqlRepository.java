@@ -1,25 +1,17 @@
 package org.patinanetwork.codebloom.common.db.repos.club;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Types;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.club.Club;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClubSqlRepository implements ClubRepository {
 
-    private DataSource ds;
-
-    public ClubSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
-
-    private Club parseResultSetToClub(final ResultSet rs) throws SQLException {
+    private static final RowMapper<Club> CLUB_ROW_MAPPER = (rs, rowNum) -> {
         var id = rs.getString("id");
         var name = rs.getString("name");
         var description = rs.getString("description");
@@ -38,6 +30,12 @@ public class ClubSqlRepository implements ClubRepository {
                 .password(password)
                 .tag(tag)
                 .build();
+    };
+
+    private final JdbcClient jdbcClient;
+
+    public ClubSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -49,19 +47,17 @@ public class ClubSqlRepository implements ClubRepository {
             VALUES
                 (:id, :name, :description, :slug, :splashIconUrl, :password, :tag)
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(club.getId()));
-            stmt.setString("name", club.getName());
-            stmt.setString("description", club.getDescription());
-            stmt.setString("slug", club.getSlug());
-            stmt.setString("splashIconUrl", club.getSplashIconUrl());
-            stmt.setString("password", club.getPassword());
-            stmt.setObject("tag", club.getTag() != null ? club.getTag().name() : null, java.sql.Types.OTHER);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create Club", e);
-        }
+
+        jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(club.getId()))
+                .param("name", club.getName())
+                .param("description", club.getDescription())
+                .param("slug", club.getSlug())
+                .param("splashIconUrl", club.getSplashIconUrl())
+                .param("password", club.getPassword())
+                .param("tag", club.getTag() != null ? club.getTag().name() : null, Types.OTHER)
+                .update();
     }
 
     @Override
@@ -78,22 +74,21 @@ public class ClubSqlRepository implements ClubRepository {
             WHERE
                 id = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(club.getId()));
-            stmt.setString("name", club.getName());
-            stmt.setString("description", club.getDescription());
-            stmt.setString("splashIconUrl", club.getSplashIconUrl());
-            stmt.setString("password", club.getPassword());
-            stmt.setObject("tag", club.getTag() != null ? club.getTag().name() : null, java.sql.Types.OTHER);
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                return getClubById(club.getId());
-            }
-            return null;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update Club", e);
+
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("name", club.getName())
+                .param("description", club.getDescription())
+                .param("splashIconUrl", club.getSplashIconUrl())
+                .param("password", club.getPassword())
+                .param("tag", club.getTag() != null ? club.getTag().name() : null, Types.OTHER)
+                .param("id", UUID.fromString(club.getId()))
+                .update();
+
+        if (rowsAffected > 0) {
+            return getClubById(club.getId());
         }
+        return null;
     }
 
     @Override
@@ -112,18 +107,13 @@ public class ClubSqlRepository implements ClubRepository {
             WHERE
                 id = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToClub(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get Club by id", e);
-        }
-        return null;
+
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(CLUB_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -142,18 +132,13 @@ public class ClubSqlRepository implements ClubRepository {
             WHERE
                 "slug" = :slug
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("slug", slug);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToClub(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get Club by slug", e);
-        }
-        return null;
+
+        return jdbcClient
+                .sql(sql)
+                .param("slug", slug)
+                .query(CLUB_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -163,14 +148,8 @@ public class ClubSqlRepository implements ClubRepository {
             WHERE "slug" = :slug
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("slug", slug);
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete club by slug", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("slug", slug).update();
+        return rowsAffected > 0;
     }
 
     @Override
@@ -180,13 +159,7 @@ public class ClubSqlRepository implements ClubRepository {
             WHERE id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete club by id", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected > 0;
     }
 }

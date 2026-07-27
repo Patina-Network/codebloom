@@ -1,38 +1,33 @@
 package org.patinanetwork.codebloom.common.db.repos.job;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Types;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import javax.sql.DataSource;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JobSqlRepository implements JobRepository {
 
-    private DataSource ds;
+    private static final RowMapper<Job> JOB_ROW_MAPPER = (rs, rowNum) -> Job.builder()
+            .id(rs.getString("id"))
+            .createdAt(rs.getObject("createdAt", OffsetDateTime.class))
+            .processedAt(rs.getObject("processedAt", OffsetDateTime.class))
+            .completedAt(rs.getObject("completedAt", OffsetDateTime.class))
+            .nextAttemptAt(rs.getObject("nextAttemptAt", OffsetDateTime.class))
+            .status(JobStatus.valueOf(rs.getString("status")))
+            .questionId(rs.getString("questionId"))
+            .attempts(rs.getInt("attempts"))
+            .build();
 
-    public JobSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private Job parseResultSetToJob(final ResultSet resultSet) throws SQLException {
-        return Job.builder()
-                .id(resultSet.getString("id"))
-                .createdAt(resultSet.getObject("createdAt", OffsetDateTime.class))
-                .processedAt(resultSet.getObject("processedAt", OffsetDateTime.class))
-                .completedAt(resultSet.getObject("completedAt", OffsetDateTime.class))
-                .nextAttemptAt(resultSet.getObject("nextAttemptAt", OffsetDateTime.class))
-                .status(JobStatus.valueOf(resultSet.getString("status")))
-                .questionId(resultSet.getString("questionId"))
-                .attempts(resultSet.getInt("attempts"))
-                .build();
+    public JobSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -48,20 +43,20 @@ public class JobSqlRepository implements JobRepository {
 
         job.setId(UUID.randomUUID().toString());
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(job.getId()));
-            stmt.setString(2, job.getQuestionId());
-            stmt.setObject(3, job.getStatus().name(), java.sql.Types.OTHER);
+        OffsetDateTime[] timestamps = jdbcClient
+                .sql(sql)
+                .param(1, UUID.fromString(job.getId()))
+                .param(2, job.getQuestionId())
+                .param(3, job.getStatus().name(), Types.OTHER)
+                .query((rs, rowNum) -> new OffsetDateTime[] {
+                    rs.getObject("createdAt", OffsetDateTime.class), rs.getObject("nextAttemptAt", OffsetDateTime.class)
+                })
+                .optional()
+                .orElse(null);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    job.setCreatedAt(rs.getObject("createdAt", OffsetDateTime.class));
-                    job.setNextAttemptAt(rs.getObject("nextAttemptAt", OffsetDateTime.class));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create job", e);
+        if (timestamps != null) {
+            job.setCreatedAt(timestamps[0]);
+            job.setNextAttemptAt(timestamps[1]);
         }
     }
 
@@ -83,24 +78,16 @@ public class JobSqlRepository implements JobRepository {
                 id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToJob(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find job by id", e);
-        }
-
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param(1, UUID.fromString(id))
+                .query(JOB_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
     public List<Job> findJobsByQuestionId(String id) {
-        List<Job> result = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -119,24 +106,11 @@ public class JobSqlRepository implements JobRepository {
                 "nextAttemptAt" ASC
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToJob(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find jobs by question id of " + id, e);
-        }
+        return jdbcClient.sql(sql).param(1, id).query(JOB_ROW_MAPPER).list();
     }
 
     @Override
     public List<Job> findIncompleteJobs(final int maxJobs) {
-        List<Job> result = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -157,21 +131,12 @@ public class JobSqlRepository implements JobRepository {
             LIMIT ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, JobStatus.INCOMPLETE.name(), java.sql.Types.OTHER);
-            stmt.setInt(2, maxJobs);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToJob(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find incomplete jobs", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param(1, JobStatus.INCOMPLETE.name(), Types.OTHER)
+                .param(2, maxJobs)
+                .query(JOB_ROW_MAPPER)
+                .list();
     }
 
     @Override
@@ -188,20 +153,17 @@ public class JobSqlRepository implements JobRepository {
                 id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, job.getProcessedAt());
-            stmt.setObject(2, job.getCompletedAt());
-            stmt.setObject(3, job.getNextAttemptAt());
-            stmt.setObject(4, job.getStatus().name(), java.sql.Types.OTHER);
-            stmt.setObject(5, job.getAttempts());
-            stmt.setObject(6, UUID.fromString(job.getId()));
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param(1, job.getProcessedAt())
+                .param(2, job.getCompletedAt())
+                .param(3, job.getNextAttemptAt())
+                .param(4, job.getStatus().name(), Types.OTHER)
+                .param(5, job.getAttempts())
+                .param(6, UUID.fromString(job.getId()))
+                .update();
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update job", e);
-        }
+        return rowsAffected == 1;
     }
 
     @Override
@@ -211,15 +173,9 @@ public class JobSqlRepository implements JobRepository {
             WHERE id = ?
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setObject(1, UUID.fromString(id));
+        int rowsAffected = jdbcClient.sql(sql).param(1, UUID.fromString(id)).update();
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete job", e);
-        }
+        return rowsAffected == 1;
     }
 
     @Override
@@ -228,12 +184,7 @@ public class JobSqlRepository implements JobRepository {
             DELETE FROM "Job"
             """;
 
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete job", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).update();
+        return rowsAffected == 1;
     }
 }

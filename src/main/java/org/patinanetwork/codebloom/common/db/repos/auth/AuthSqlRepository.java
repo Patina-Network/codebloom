@@ -1,33 +1,27 @@
 package org.patinanetwork.codebloom.common.db.repos.auth;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.auth.Auth;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AuthSqlRepository implements AuthRepository {
 
-    private DataSource ds;
+    private static final RowMapper<Auth> AUTH_ROW_MAPPER = (rs, rowNum) -> Auth.builder()
+            .id(rs.getString("id"))
+            .token(rs.getString("token"))
+            .csrf(rs.getString("csrf"))
+            .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
+            .build();
 
-    public AuthSqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private JdbcClient jdbcClient;
 
-    private Auth parseResultSetToAuth(final ResultSet rs) throws SQLException {
-        return Auth.builder()
-                .id(rs.getString("id"))
-                .token(rs.getString("token"))
-                .csrf(rs.getString("csrf"))
-                .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
-                .build();
+    public AuthSqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -42,21 +36,17 @@ public class AuthSqlRepository implements AuthRepository {
             """;
         auth.setId(UUID.randomUUID().toString());
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(auth.getId()));
-            stmt.setString("token", auth.getToken());
-            stmt.setString("csrf", auth.getCsrf());
+        OffsetDateTime createdAt = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(auth.getId()))
+                .param("token", auth.getToken())
+                .param("csrf", auth.getCsrf())
+                .query((rs, rowNum) ->
+                        StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
+                .optional()
+                .orElse(null);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    auth.setCreatedAt(
-                            StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create new auth", e);
-        }
+        auth.setCreatedAt(createdAt);
     }
 
     @Override
@@ -69,18 +59,15 @@ public class AuthSqlRepository implements AuthRepository {
             WHERE
                 id = :id
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(auth.getId()));
-            stmt.setString("token", auth.getToken());
-            stmt.setString("csrf", auth.getCsrf());
 
-            int rowsAffected = stmt.executeUpdate();
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(auth.getId()))
+                .param("token", auth.getToken())
+                .param("csrf", auth.getCsrf())
+                .update();
 
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update auth", e);
-        }
+        return rowsAffected > 0;
     }
 
     @Override
@@ -92,19 +79,13 @@ public class AuthSqlRepository implements AuthRepository {
             WHERE
                 id = :id;
             """;
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(inputtedId));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return parseResultSetToAuth(rs);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get auth by id", e);
-        }
 
-        return null;
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(inputtedId))
+                .query(AUTH_ROW_MAPPER)
+                .optional()
+                .orElse(null);
     }
 
     @Override
@@ -116,17 +97,8 @@ public class AuthSqlRepository implements AuthRepository {
             ORDER BY "createdAt" DESC
             LIMIT 1
             """;
-        try (Connection conn = ds.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return parseResultSetToAuth(rs);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to get most recent auth", e);
-        }
 
-        return null;
+        return jdbcClient.sql(sql).query(AUTH_ROW_MAPPER).optional().orElse(null);
     }
 
     @Override
@@ -138,14 +110,7 @@ public class AuthSqlRepository implements AuthRepository {
                     id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Error while deleting auth by ID", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected > 0;
     }
 }

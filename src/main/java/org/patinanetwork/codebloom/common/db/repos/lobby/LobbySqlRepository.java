@@ -1,40 +1,35 @@
 package org.patinanetwork.codebloom.common.db.repos.lobby;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Types;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.sql.DataSource;
-import org.patinanetwork.codebloom.common.db.helper.NamedPreparedStatement;
 import org.patinanetwork.codebloom.common.db.models.lobby.Lobby;
 import org.patinanetwork.codebloom.common.db.models.lobby.LobbyStatus;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
 public class LobbySqlRepository implements LobbyRepository {
 
-    private final DataSource ds;
+    private static final RowMapper<Lobby> LOBBY_ROW_MAPPER = (rs, rowNum) -> Lobby.builder()
+            .id(rs.getString("id"))
+            .joinCode(rs.getString("joinCode"))
+            .status(LobbyStatus.valueOf(rs.getString("status")))
+            .createdAt(rs.getObject("createdAt", OffsetDateTime.class))
+            .expiresAt(Optional.ofNullable(rs.getObject("expiresAt", OffsetDateTime.class)))
+            .playerCount(rs.getInt("playerCount"))
+            .winnerId(Optional.ofNullable(rs.getString("winnerId")))
+            .tie(rs.getBoolean("tie"))
+            .build();
 
-    public LobbySqlRepository(final DataSource ds) {
-        this.ds = ds;
-    }
+    private final JdbcClient jdbcClient;
 
-    private Lobby parseResultSetToLobby(final ResultSet resultSet) throws SQLException {
-        return Lobby.builder()
-                .id(resultSet.getString("id"))
-                .joinCode(resultSet.getString("joinCode"))
-                .status(LobbyStatus.valueOf(resultSet.getString("status")))
-                .createdAt(resultSet.getObject("createdAt", OffsetDateTime.class))
-                .expiresAt(Optional.ofNullable(resultSet.getObject("expiresAt", OffsetDateTime.class)))
-                .playerCount(resultSet.getInt("playerCount"))
-                .winnerId(Optional.ofNullable(resultSet.getString("winnerId")))
-                .tie(resultSet.getBoolean("tie"))
-                .build();
+    public LobbySqlRepository(final JdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
     @Override
@@ -50,28 +45,24 @@ public class LobbySqlRepository implements LobbyRepository {
 
         lobby.setId(UUID.randomUUID().toString());
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(lobby.getId()));
-            stmt.setString("joinCode", lobby.getJoinCode());
-            stmt.setObject("status", lobby.getStatus().name(), java.sql.Types.OTHER);
-            stmt.setObject(
-                    "expiresAt",
-                    lobby.getExpiresAt()
-                            .map(StandardizedOffsetDateTime::normalize)
-                            .orElse(null));
-            stmt.setInt("playerCount", lobby.getPlayerCount());
-            stmt.setObject("winnerId", lobby.getWinnerId().map(UUID::fromString).orElse(null));
-            stmt.setBoolean("tie", lobby.isTie());
+        OffsetDateTime createdAt = jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(lobby.getId()))
+                .param("joinCode", lobby.getJoinCode())
+                .param("status", lobby.getStatus().name(), Types.OTHER)
+                .param(
+                        "expiresAt",
+                        lobby.getExpiresAt()
+                                .map(StandardizedOffsetDateTime::normalize)
+                                .orElse(null))
+                .param("playerCount", lobby.getPlayerCount())
+                .param("winnerId", lobby.getWinnerId().map(UUID::fromString).orElse(null))
+                .param("tie", lobby.isTie())
+                .query((rs, rowNum) -> rs.getObject("createdAt", OffsetDateTime.class))
+                .optional()
+                .orElse(null);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    lobby.setCreatedAt(rs.getObject("createdAt", OffsetDateTime.class));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create lobby", e);
-        }
+        lobby.setCreatedAt(createdAt);
     }
 
     @Override
@@ -92,19 +83,11 @@ public class LobbySqlRepository implements LobbyRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobby(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobby by id", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("id", UUID.fromString(id))
+                .query(LOBBY_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -126,20 +109,12 @@ public class LobbySqlRepository implements LobbyRepository {
                 AND status = :status
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("joinCode", joinCode);
-            stmt.setObject("status", LobbyStatus.AVAILABLE.name(), java.sql.Types.OTHER);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobby(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobby by join code and status", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("joinCode", joinCode)
+                .param("status", LobbyStatus.AVAILABLE.name(), Types.OTHER)
+                .query(LOBBY_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -161,24 +136,15 @@ public class LobbySqlRepository implements LobbyRepository {
                 AND status = 'ACTIVE'
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setString("joinCode", joinCode);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobby(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobby by join code and status", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("joinCode", joinCode)
+                .query(LOBBY_ROW_MAPPER)
+                .optional();
     }
 
     @Override
     public List<Lobby> findLobbiesByStatus(final LobbyStatus status) {
-        List<Lobby> result = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -197,25 +163,15 @@ public class LobbySqlRepository implements LobbyRepository {
                 "createdAt" DESC
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("status", status.name(), java.sql.Types.OTHER);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobby(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find lobbies by status", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("status", status.name(), Types.OTHER)
+                .query(LOBBY_ROW_MAPPER)
+                .list();
     }
 
     @Override
     public List<Lobby> findAvailableLobbies() {
-        List<Lobby> result = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -235,25 +191,15 @@ public class LobbySqlRepository implements LobbyRepository {
                 "createdAt" DESC
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("status", LobbyStatus.AVAILABLE.name(), java.sql.Types.OTHER);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobby(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find available lobbies", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("status", LobbyStatus.AVAILABLE.name(), Types.OTHER)
+                .query(LOBBY_ROW_MAPPER)
+                .list();
     }
 
     @Override
     public List<Lobby> findActiveLobbies() {
-        List<Lobby> result = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -273,25 +219,15 @@ public class LobbySqlRepository implements LobbyRepository {
                 "createdAt" DESC
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("status", LobbyStatus.ACTIVE.name(), java.sql.Types.OTHER);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobby(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find active lobbies", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("status", LobbyStatus.ACTIVE.name(), Types.OTHER)
+                .query(LOBBY_ROW_MAPPER)
+                .list();
     }
 
     @Override
     public List<Lobby> findExpiredLobbies() {
-        List<Lobby> result = new ArrayList<>();
         String sql = """
             SELECT
                 id,
@@ -311,20 +247,11 @@ public class LobbySqlRepository implements LobbyRepository {
                 "createdAt" DESC
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("status", LobbyStatus.ACTIVE.name(), java.sql.Types.OTHER);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    result.add(parseResultSetToLobby(rs));
-                }
-            }
-
-            return result;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find expired lobbies", e);
-        }
+        return jdbcClient
+                .sql(sql)
+                .param("status", LobbyStatus.ACTIVE.name(), Types.OTHER)
+                .query(LOBBY_ROW_MAPPER)
+                .list();
     }
 
     @Override
@@ -348,21 +275,12 @@ public class LobbySqlRepository implements LobbyRepository {
                 AND lp."playerId" = :playerId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("status", LobbyStatus.ACTIVE.name(), java.sql.Types.OTHER);
-            stmt.setObject("playerId", UUID.fromString(lobbyPlayerId));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobby(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find active lobby by lobby player id", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("status", LobbyStatus.ACTIVE.name(), Types.OTHER)
+                .param("playerId", UUID.fromString(lobbyPlayerId))
+                .query(LOBBY_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -387,20 +305,11 @@ public class LobbySqlRepository implements LobbyRepository {
                 lp."playerId" = :playerId
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("playerId", UUID.fromString(lobbyPlayerId));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(parseResultSetToLobby(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to find available lobby by lobby player id", e);
-        }
-
-        return Optional.empty();
+        return jdbcClient
+                .sql(sql)
+                .param("playerId", UUID.fromString(lobbyPlayerId))
+                .query(LOBBY_ROW_MAPPER)
+                .optional();
     }
 
     @Override
@@ -417,25 +326,22 @@ public class LobbySqlRepository implements LobbyRepository {
                 id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("status", lobby.getStatus().name(), java.sql.Types.OTHER);
-            stmt.setInt("playerCount", lobby.getPlayerCount());
-            stmt.setObject("id", UUID.fromString(lobby.getId()));
-            stmt.setObject("winnerId", lobby.getWinnerId().map(UUID::fromString).orElse(null));
-            stmt.setBoolean("tie", lobby.isTie());
-            stmt.setObject(
-                    "expiresAt",
-                    lobby.getExpiresAt().isPresent()
-                            ? StandardizedOffsetDateTime.normalize(
-                                    lobby.getExpiresAt().get())
-                            : null);
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("status", lobby.getStatus().name(), Types.OTHER)
+                .param("playerCount", lobby.getPlayerCount())
+                .param("id", UUID.fromString(lobby.getId()))
+                .param("winnerId", lobby.getWinnerId().map(UUID::fromString).orElse(null))
+                .param("tie", lobby.isTie())
+                .param(
+                        "expiresAt",
+                        lobby.getExpiresAt().isPresent()
+                                ? StandardizedOffsetDateTime.normalize(
+                                        lobby.getExpiresAt().get())
+                                : null)
+                .update();
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update lobby", e);
-        }
+        return rowsAffected == 1;
     }
 
     @Override
@@ -445,14 +351,7 @@ public class LobbySqlRepository implements LobbyRepository {
             WHERE id = :id
             """;
 
-        try (Connection conn = ds.getConnection();
-                NamedPreparedStatement stmt = new NamedPreparedStatement(conn, sql)) {
-            stmt.setObject("id", UUID.fromString(id));
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected == 1;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete lobby", e);
-        }
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+        return rowsAffected == 1;
     }
 }
