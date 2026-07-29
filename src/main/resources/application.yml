@@ -106,11 +106,6 @@ management:
     prometheus:
       enabled: true
 
-security:
-  actuator:
-    username: ${ACTUATOR_USERNAME}
-    password: ${ACTUATOR_PASSWORD}
-
 secret:
   key: ${SECRET_KEY}
 
