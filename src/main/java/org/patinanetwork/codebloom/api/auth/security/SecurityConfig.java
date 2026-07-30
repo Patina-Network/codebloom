@@ -1,6 +1,5 @@
 package org.patinanetwork.codebloom.api.auth.security;
 
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -8,9 +7,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
@@ -20,7 +16,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
  * @see <a href= "https://github.com/tahminator/codebloom/tree/main/docs/auth.md">Authentication Documentation</a>
  */
 @Configuration
-@EnableConfigurationProperties(SecurityActuatorProperties.class)
 @EnableWebSecurity
 public class SecurityConfig {
 
@@ -28,29 +23,6 @@ public class SecurityConfig {
 
     public SecurityConfig(final AuthenticationSuccessHandler customAuthenticationSuccessHandler) {
         this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
-    }
-
-    @Bean
-    UserDetailsService userDetailsService(SecurityActuatorProperties props) {
-        return new InMemoryUserDetailsManager(User.withUsername(props.username())
-                .password("{noop}" + props.password())
-                .roles("ACTUATOR")
-                .build());
-    }
-
-    /**
-     * Security filter chain for actuator endpoints with HTTP Basic authentication. This needs to be processed first
-     * (Order 1) to prevent OAuth from being applied.
-     */
-    @Bean
-    @Order(1)
-    public SecurityFilterChain actuatorSecurityFilterChain(final HttpSecurity http) throws Exception {
-        http.securityMatcher("/actuator/**")
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().hasRole("ACTUATOR"))
-                .httpBasic(basic -> {});
-
-        return http.build();
     }
 
     @Bean
