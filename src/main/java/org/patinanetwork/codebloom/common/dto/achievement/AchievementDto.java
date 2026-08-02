@@ -31,6 +31,9 @@ public class AchievementDto {
     private Tag leaderboard;
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
+    private String leaderboardId;
+
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private String title;
 
     @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true)
@@ -52,6 +55,7 @@ public class AchievementDto {
                 .leaderboard(achievement.getLeaderboard())
                 .place(achievement.getPlace())
                 .title(achievement.getTitle())
+                .leaderboardId(achievement.getLeaderboardId())
                 .description(achievement.getDescription())
                 .isActive(achievement.isActive())
                 .createdAt(achievement.getCreatedAt())
