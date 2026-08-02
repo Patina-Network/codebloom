@@ -24,6 +24,9 @@ public class Achievement {
     private String userId;
 
     @NotNullColumn
+    private String leaderboardId;
+
+    @NotNullColumn
     private AchievementPlaceEnum place;
 
     /** `null` indicates global leaderboard. */
