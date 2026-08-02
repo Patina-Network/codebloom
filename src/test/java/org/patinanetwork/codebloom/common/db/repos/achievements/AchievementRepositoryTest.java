@@ -22,6 +22,8 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
     private Achievement testAchievement;
     private Achievement deletableAchievement;
     private String mockUserId = "ed3bfe18-e42a-467f-b4fa-07e8da4d2555";
+    // Not expired leaderboard
+    private String mockLeaderboardId = "39bc2def-669f-4383-8ea3-7202efd613f2";
 
     @Autowired
     public AchievementRepositoryTest(final AchievementRepository repo) {
@@ -34,6 +36,7 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
                 .userId(mockUserId)
                 .place(AchievementPlaceEnum.ONE)
                 .leaderboard(null)
+                .leaderboardId(mockLeaderboardId)
                 .title("Test Achievement")
                 .description("Integration test achievement")
                 .isActive(true)
@@ -78,6 +81,7 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
                 .userId(testAchievement.getUserId())
                 .place(AchievementPlaceEnum.THREE)
                 .leaderboard(Tag.Patina)
+                .leaderboardId(mockLeaderboardId)
                 .title("Updated Title")
                 .description("Updated Description")
                 .isActive(false)
@@ -101,6 +105,7 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
                 .userId(mockUserId)
                 .place(AchievementPlaceEnum.ONE)
                 .leaderboard(null)
+                .leaderboardId(mockLeaderboardId)
                 .title("Deletable Achievement")
                 .description("Should be deleted")
                 .isActive(true)
