@@ -26,6 +26,7 @@ public class AchievementSqlRepository implements AchievementRepository {
         var title = rs.getString("title");
         var description = rs.getString("description");
         var isActive = rs.getBoolean("isActive");
+        var leaderboardId = rs.getString("leaderboardId");
         var createdAt = StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class));
         OffsetDateTime deletedAt =
                 StandardizedOffsetDateTime.normalize(rs.getObject("deletedAt", OffsetDateTime.class));
@@ -34,6 +35,7 @@ public class AchievementSqlRepository implements AchievementRepository {
                 .userId(userId)
                 .place(place)
                 .leaderboard(leaderboard)
+                .leaderboardId(leaderboardId)
                 .title(title)
                 .description(description)
                 .isActive(isActive)
@@ -53,9 +55,9 @@ public class AchievementSqlRepository implements AchievementRepository {
         achievement.setId(UUID.randomUUID().toString());
         String sql = """
             INSERT INTO "Achievement"
-                (id, "userId", place, leaderboard, title, description, "isActive", "deletedAt")
+                (id, "userId", place, leaderboard, title, description, "isActive", "deletedAt", "leaderboardId")
             VALUES
-                (:id, :userId, :place, :leaderboard, :title, :description, :isActive, :deletedAt)
+                (:id, :userId, :place, :leaderboard, :title, :description, :isActive, :deletedAt, :leaderboardId)
             RETURNING
                 "createdAt"
             """;
@@ -71,6 +73,7 @@ public class AchievementSqlRepository implements AchievementRepository {
                                 .map(Enum::name)
                                 .orElse(null),
                         Types.OTHER)
+                .param("leaderboardId", UUID.fromString(achievement.getLeaderboardId()))
                 .param("title", achievement.getTitle())
                 .param("description", achievement.getDescription())
                 .param("isActive", achievement.isActive())
@@ -94,7 +97,8 @@ public class AchievementSqlRepository implements AchievementRepository {
                 title = :title,
                 description = :description,
                 "isActive" = :isActive,
-                "deletedAt" = :deletedAt
+                "deletedAt" = :deletedAt,
+                "leaderboardId" = :leaderboardId
             WHERE
                 id = :id
             """;
@@ -108,10 +112,12 @@ public class AchievementSqlRepository implements AchievementRepository {
                                 .map(Enum::name)
                                 .orElse(null),
                         Types.OTHER)
+                .param("leaderboardId", achievement.getLeaderboardId())
                 .param("title", achievement.getTitle())
                 .param("description", achievement.getDescription())
                 .param("isActive", achievement.isActive())
                 .param("deletedAt", achievement.getDeletedAt())
+                .param("leaderboardId", UUID.fromString(achievement.getLeaderboardId()))
                 .param("id", UUID.fromString(achievement.getId()))
                 .update();
 
@@ -150,7 +156,8 @@ public class AchievementSqlRepository implements AchievementRepository {
                 description,
                 "isActive",
                 "createdAt",
-                "deletedAt"
+                "deletedAt",
+                "leaderboardId"
             FROM
                 "Achievement"
             WHERE
@@ -178,7 +185,8 @@ public class AchievementSqlRepository implements AchievementRepository {
                 description,
                 "isActive",
                 "createdAt",
-                "deletedAt"
+                "deletedAt",
+                "leaderboardId"
             FROM
                 "Achievement"
             WHERE
