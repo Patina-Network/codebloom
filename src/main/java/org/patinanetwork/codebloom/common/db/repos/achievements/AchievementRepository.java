@@ -15,6 +15,7 @@ public interface AchievementRepository {
      *       <li>title
      *       <li>description
      *       <li>isActive
+     *       <li>leaderboardId
      *     </ul>
      */
     void createAchievement(Achievement achievement);
@@ -29,6 +30,7 @@ public interface AchievementRepository {
      *       <li>description
      *       <li>isActive
      *       <li>deletedAt
+     *       <li>leaderboardId
      *     </ul>
      *
      * @return updated achievement if successful
