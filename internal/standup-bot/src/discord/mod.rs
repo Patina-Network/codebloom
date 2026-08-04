@@ -36,7 +36,7 @@ use crate::{
 };
 
 const INTENTS: GatewayIntents = GatewayIntents::GUILD_MEMBERS.union(GatewayIntents::GUILD_MESSAGES);
-const ROLE_ID: u64 = 1391944565409316944;
+const ROLE_ID: u64 = 1534007500121313341;
 
 pub struct DiscordClient {
     http: Arc<Http>,
