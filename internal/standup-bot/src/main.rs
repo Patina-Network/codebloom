@@ -8,6 +8,7 @@ use tokio::time::{
     Duration,
     interval,
 };
+use tracing::error;
 
 use crate::{
     common::standup::{
@@ -27,11 +28,34 @@ mod discord;
 mod env;
 mod redis;
 
+fn init_tracing() {
+    let is_production = std::env::var("ENVIRONMENT")
+        .map(|v| v.eq_ignore_ascii_case("production"))
+        .unwrap_or(false);
+
+    let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
+
+    if is_production {
+        tracing_subscriber::fmt()
+            .json()
+            .with_env_filter(env_filter)
+            .init();
+    } else {
+        tracing_subscriber::fmt()
+            .pretty()
+            .with_env_filter(env_filter)
+            .init();
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     if let Err(e) = dotenv() {
         eprintln!("Failed to load .env but continuing anyways...: {e:#?}\n\n");
     }
+
+    init_tracing();
 
     let redis_creds = RedisCredentials::new()?;
     let redis_client = Arc::new(RedisClient::new(&redis_creds).await?);
@@ -52,21 +76,21 @@ async fn main() -> Result<()> {
                     let thread_id = match standup_discord.send_standup_message().await {
                         Ok(id) => id,
                         Err(e) => {
-                            eprintln!("Failed to send standup message: {e:#?}");
+                            error!("Failed to send standup message: {e:#?}");
                             return;
                         }
                     };
 
                     if let Err(e) = standup_redis.set_standup_thread_id(thread_id).await {
-                        eprintln!("Failed to persist standup thread id: {e:#?}");
+                        error!("Failed to persist standup thread id: {e:#?}");
                     }
 
                     if let Err(e) = standup_redis.set_last_standup(Utc::now()).await {
-                        eprintln!("Failed to save standup to Redis: {e:#?}");
+                        error!("Failed to save standup to Redis: {e:#?}");
                     }
                 }
                 Err(e) => {
-                    eprintln!("Failed to get last standup from Redis: {e:#?}");
+                    error!("Failed to get last standup from Redis: {e:#?}");
                 }
                 _ => (),
             }
@@ -80,7 +104,7 @@ async fn main() -> Result<()> {
             let already_sent = match eod_redis.get_eod_reminder_sent(today).await {
                 Ok(v) => v,
                 Err(e) => {
-                    eprintln!("Failed to get eod_reminder_sent from Redis: {e:#?}");
+                    error!("Failed to get eod_reminder_sent from Redis: {e:#?}");
                     return;
                 }
             };
@@ -92,7 +116,7 @@ async fn main() -> Result<()> {
             let members = match eod_discord.get_standup_role_members().await {
                 Ok(m) => m,
                 Err(e) => {
-                    eprintln!("Failed to fetch standup role members: {e:#?}");
+                    error!("Failed to fetch standup role members: {e:#?}");
                     return;
                 }
             };
@@ -100,7 +124,7 @@ async fn main() -> Result<()> {
             let replied = match eod_redis.get_standup_replies(today).await {
                 Ok(r) => r,
                 Err(e) => {
-                    eprintln!("Failed to get standup replies from Redis: {e:#?}");
+                    error!("Failed to get standup replies from Redis: {e:#?}");
                     return;
                 }
             };
@@ -111,12 +135,12 @@ async fn main() -> Result<()> {
                     continue;
                 }
                 if let Err(e) = eod_discord.send_eod_reminder_dm(user_id).await {
-                    eprintln!("Failed to send EOD reminder DM to {user_id}: {e:#?}");
+                    error!("Failed to send EOD reminder DM to {user_id}: {e:#?}");
                 }
             }
 
             if let Err(e) = eod_redis.set_eod_reminder_sent(today).await {
-                eprintln!("Failed to save eod_reminder_sent to Redis: {e:#?}");
+                error!("Failed to save eod_reminder_sent to Redis: {e:#?}");
             }
         });
     }
