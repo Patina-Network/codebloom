@@ -12,3 +12,5 @@ tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
 chrono = "0.4.43"
 chrono-tz = "0.10.4"
 bb8-redis = "0.26.0"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["json", "env-filter"] }
