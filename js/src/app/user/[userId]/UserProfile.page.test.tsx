@@ -2,7 +2,7 @@ import UserProfilePage from "@/app/user/[userId]/UserProfile.page";
 import { TestUtils, TestUtilTypes } from "@/lib/test";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Route, Routes } from "react-router";
+import { Route, Routes } from "react-router-dom";
 
 class ResizeObserverMock {
   observe() {}

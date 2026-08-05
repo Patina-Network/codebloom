@@ -33,5 +33,14 @@
         "typescript": "^5.9.0",
         "typescript-eslint": "^8.53.0"
     },
-    "patchedDependencies": {}
+    "patchedDependencies": {},
+    "pnpm": {
+        "overrides": {
+            "brace-expansion@<2": ">=1.1.18 <2",
+            "brace-expansion@>=3.0.0 <5.0.9": ">=5.0.9 <6",
+            "flatted@<3.4.2": ">=3.4.2 <4",
+            "js-yaml@<4.3.0": ">=4.3.0 <5",
+            "picomatch@>=4.0.0 <4.0.4": ">=4.0.4 <5"
+        }
+    }
 }

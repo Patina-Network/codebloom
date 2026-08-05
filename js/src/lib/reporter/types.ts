@@ -1,4 +1,4 @@
-import { ErrorResponse } from "react-router";
+import { ErrorResponse } from "react-router-dom";
 
 /**
  * Custom React Router error object that may also include an error object.
