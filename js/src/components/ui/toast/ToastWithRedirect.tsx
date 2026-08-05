@@ -1,7 +1,7 @@
 import { DefaultMantineColor } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { ReactNode, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 
 /**
  * A custom React function that shows a notification and handles the redirect in a React way.
