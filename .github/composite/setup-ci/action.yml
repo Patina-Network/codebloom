@@ -12,6 +12,9 @@ inputs:
     description: "GitHub token used to send message"
     required: false
     default: ${{ github.token }}
+  SECRETS:
+    description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
+    required: false
 
 runs:
   using: "composite"

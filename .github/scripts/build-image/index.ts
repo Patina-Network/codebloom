@@ -40,8 +40,7 @@ const serverProfiles = environment === "staging" ? "stg" : "prod";
 
 async function main() {
   try {
-    const ciEnv = await getEnvVariables(["ci"]);
-    const { dockerHubPat } = parseCiEnv(ciEnv);
+    const { dockerHubPat } = parseCiEnv(process.env);
     const localDbEnv = await db.start();
     const ciAppEnv = await getEnvVariables(["ci-app"]);
 
@@ -126,7 +125,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const dockerHubPat = (() => {
     const v = ciEnv["DOCKER_HUB_PAT"];
     if (!v) {

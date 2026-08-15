@@ -30,8 +30,7 @@ async function main() {
     await $$`pnpm --dir js run test`;
 
     if (shouldUploadCoverage) {
-      const ciEnv = await getEnvVariables(["ci"]);
-      const { sonarToken } = parseCiEnv(ciEnv);
+      const { sonarToken } = parseCiEnv(process.env);
 
       await uploadFrontendTests(sonarToken);
     }
@@ -41,7 +40,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const sonarToken = (() => {
     const v = ciEnv["SONAR_TOKEN"];
     if (!v) {

@@ -111,12 +111,14 @@ jobs:
       - name: Setup CI
         uses: ./.github/composite/setup-ci
         with:
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Load secrets
         uses: ./.github/composite/load-secrets
         with:
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           UNLOAD_ENVIRONMENTS: ci
@@ -151,6 +153,7 @@ jobs:
       - name: Run workflow
         uses: ./.github/composite/test/frontend-pre-test
         with:
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
@@ -185,6 +188,7 @@ jobs:
       - name: Run workflow
         uses: ./.github/composite/validate-db
         with:
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           ENVIRONMENT: staging
@@ -213,6 +217,7 @@ jobs:
         uses: ./.github/composite/build-image
         with:
           ENVIRONMENT: staging
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
@@ -232,6 +237,7 @@ jobs:
       - name: Run workflow
         uses: ./.github/composite/redeploy
         with:
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           ENVIRONMENT: staging

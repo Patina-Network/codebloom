@@ -11,9 +11,7 @@ async function main() {
   // await $`git-crypt unlock`;
 
   const { bearerAuth, serverUrl, projectUuid, serverUuid } = parseCiEnv(
-    await getEnvVariables(["ci"], {
-      baseDir: "internal",
-    }),
+    process.env,
   );
 
   const client = await initClient(bearerAuth, serverUrl);
@@ -74,7 +72,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const bearerAuth = (() => {
     const v = ciEnv["COOLIFY_BEARER_AUTH"];
     if (!v) {

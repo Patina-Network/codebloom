@@ -44,8 +44,7 @@ async function main() {
     await $$`./mvnw clean verify -Dspring.profiles.active=ci`;
 
     if (shouldUploadCoverage) {
-      const ciEnv = await getEnvVariables(["ci"]);
-      const { sonarToken } = parseCiEnv(ciEnv);
+      const { sonarToken } = parseCiEnv(process.env);
       await uploadBackendTests(sonarToken);
     }
   } finally {
@@ -55,7 +54,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const sonarToken = (() => {
     const v = ciEnv["SONAR_TOKEN"];
     if (!v) {

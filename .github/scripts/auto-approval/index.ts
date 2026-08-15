@@ -1,6 +1,5 @@
 import type { RestEndpointMethodTypes } from "@octokit/rest";
 
-import { getEnvVariables } from "load-secrets/env/load";
 import { checkNotionPrAndGetTask } from "notion/pr";
 import { getNotionClient } from "notion/sdk";
 import { Octokit } from "octokit";
@@ -34,7 +33,7 @@ const {
   .strict()
   .parse();
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const notionDbId = (() => {
     const v = ciEnv["NOTION_TASK_DB_ID"];
     if (!v) {
@@ -57,7 +56,7 @@ function parseCiEnv(ciEnv: Record<string, string>) {
   };
 }
 
-const { notionDbId, notionSecret } = parseCiEnv(await getEnvVariables(["ci"]));
+const { notionDbId, notionSecret } = parseCiEnv(process.env);
 const notionClient = getNotionClient(notionSecret);
 
 const taskAndPr = await checkNotionPrAndGetTask(notionClient, prId, notionDbId);

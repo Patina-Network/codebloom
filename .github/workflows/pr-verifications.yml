@@ -34,5 +34,4 @@ jobs:
 #        id: notion_check
 #        with:
 #          PR_ID: ${{ github.event.number }}
-#          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#          SECRETS: ${{ toJSON(secrets) }}

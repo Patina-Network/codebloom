@@ -1,5 +1,4 @@
 import { $ } from "bun";
-import { getEnvVariables } from "load-secrets/env/load";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -27,8 +26,7 @@ const { dockerUpload, getGhaOutput, githubOutputFile } = await yargs(
   .parse();
 
 async function main() {
-  const ciEnv = await getEnvVariables(["ci"]);
-  const { dockerHubPat } = parseCiEnv(ciEnv);
+  const { dockerHubPat } = parseCiEnv(process.env);
 
   // copy old tz format from build-image.sh
   const timestamp = new Date()
@@ -94,7 +92,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const dockerHubPat = (() => {
     const v = ciEnv["DOCKER_HUB_PAT"];
     if (!v) {

@@ -20,9 +20,7 @@ const { actionUrl, skipDiscordMessage } = await yargs(hideBin(process.argv))
   .parse();
 
 async function main() {
-  const { discordToken, discordChannelId } = parseCiEnv(
-    await getEnvVariables(["ci"]),
-  );
+  const { discordToken, discordChannelId } = parseCiEnv(process.env);
   try {
     const ciAppEnv = await getEnvVariables(["ci-app"]);
 
@@ -81,7 +79,7 @@ main()
     process.exit(1);
   });
 
-function parseCiEnv(env: Record<string, string>) {
+function parseCiEnv(env: Record<string, string | undefined>) {
   const discordToken = env["DISCORD_TOKEN"];
   if (!discordToken) {
     throw new Error("Missing DISCORD_TOKEN from .env.ci");
