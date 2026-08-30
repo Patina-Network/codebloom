@@ -56,6 +56,7 @@ async fn main() -> Result<()> {
     }
 
     init_tracing();
+    std::panic::set_hook(Box::new(tracing_panic::panic_hook));
 
     let redis_creds = RedisCredentials::new()?;
     let redis_client = Arc::new(RedisClient::new(&redis_creds).await?);
