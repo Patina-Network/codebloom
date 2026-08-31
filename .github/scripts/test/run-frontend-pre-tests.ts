@@ -1,10 +1,10 @@
 import { $ } from "bun";
-import { getEnvVariables } from "load-secrets/env/load";
+import { getEnvVariablesFromProcess } from "load-secrets/env/load";
 import { backend } from "utils/run-backend-instance";
 import { db } from "utils/run-local-db";
 
 async function main() {
-  const ciAppEnv = await getEnvVariables(["ci-app"]);
+  const ciAppEnv = getEnvVariablesFromProcess("CI_APP_");
   const localDbEnv = await db.start();
   await backend.start({ ...ciAppEnv, ...localDbEnv });
 

@@ -19,52 +19,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Export GitHub Token
-      shell: bash
-      run: echo "GH_TOKEN=${{ inputs.GITHUB_TOKEN }}" >> $GITHUB_ENV
-
-    - name: Export secrets to environment
-      if: inputs.SECRETS != ''
-      shell: bash
-      env:
-        SECRETS_JSON: ${{ inputs.SECRETS }}
-      run: |
-        echo "$SECRETS_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
-          echo "::add-mask::$value"
-          echo "$key=$value" >> "$GITHUB_ENV"
-        done
-
-    - name: Disable man-db
-      shell: bash
-      run: sudo bash -ec 'echo "set man-db/auto-update false" | debconf-communicate; dpkg-reconfigure man-db'
-
-    - uses: oven-sh/setup-bun@v2
+    - name: Setup
+      uses: tahminator/pipeline/actions/setup@1.0.70
       with:
-        bun-version: latest
-
-    - name: Cache Bun dependencies
-      uses: actions/cache@v5
-      with:
-        path: ~/.bun/install/cache
-        key: ${{ runner.os }}-bun-${{ hashFiles('.github/scripts/bun.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-bun-
-
-    - name: Install deps
-      shell: bash
-      run: bun install --cwd .github/scripts --frozen-lockfile
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        GPG_PRIVATE_KEY: ${{ inputs.GPG_PRIVATE_KEY }}
+        GPG_PASSPHRASE: ${{ inputs.GPG_PASSPHRASE }}
+        SECRETS: ${{ inputs.SECRETS }}
 
     - name: Test CI scripts
       shell: bash
       run: bun run --cwd .github/scripts test
-
-    - name: Load GPG secret key
-      uses: crazy-max/ghaction-import-gpg@v7
-      if: inputs.GPG_PRIVATE_KEY != '' && inputs.GPG_PASSPHRASE != ''
-      with:
-        gpg_private_key: ${{ inputs.GPG_PRIVATE_KEY }}
-        passphrase: ${{ inputs.GPG_PASSPHRASE }}
-
-    - name: Install git-crypt
-      if: inputs.GPG_PRIVATE_KEY != '' && inputs.GPG_PASSPHRASE != ''
-      uses: flydiverny/setup-git-crypt@v4

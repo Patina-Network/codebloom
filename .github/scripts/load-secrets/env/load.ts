@@ -81,3 +81,17 @@ export async function getEnvVariables(
 
   return Object.fromEntries(loaded);
 }
+
+export function getEnvVariablesFromProcess(
+  prefix: string,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.startsWith(prefix) && value !== undefined) {
+      result[key.slice(prefix.length)] = value;
+    }
+  }
+
+  return result;
+}
