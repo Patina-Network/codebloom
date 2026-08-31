@@ -23,6 +23,17 @@ runs:
       shell: bash
       run: echo "GH_TOKEN=${{ inputs.GITHUB_TOKEN }}" >> $GITHUB_ENV
 
+    - name: Export secrets to environment
+      if: inputs.SECRETS != ''
+      shell: bash
+      env:
+        SECRETS_JSON: ${{ inputs.SECRETS }}
+      run: |
+        echo "$SECRETS_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r key value; do
+          echo "::add-mask::$value"
+          echo "$key=$value" >> "$GITHUB_ENV"
+        done
+
     - name: Disable man-db
       shell: bash
       run: sudo bash -ec 'echo "set man-db/auto-update false" | debconf-communicate; dpkg-reconfigure man-db'
