@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { getEnvVariablesFromProcess } from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { backend } from "utils/run-backend-instance";
 import { frontend } from "utils/run-frontend-instance";
 import { db } from "utils/run-local-db";
@@ -17,7 +17,7 @@ const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
 
 async function main() {
   try {
-    const ciAppEnv = getEnvVariablesFromProcess("CI_APP_");
+    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
     const localDbEnv = await db.start();
 
     // backend starts so we can generate schema, then kill it.

@@ -1,10 +1,7 @@
 import type { Environment } from "types";
 
 import { $ } from "bun";
-import {
-  getEnvVariables,
-  getEnvVariablesFromProcess,
-} from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -48,9 +45,9 @@ export async function main() {
 
   const appEnv =
     environment === "staging" ?
-      await getEnvVariables(["staging"])
+      getEnvVariablesByPrefix("STAGING_")
     : {
-        ...getEnvVariablesFromProcess("DB_MIGRATIOR_"),
+        ...getEnvVariablesByPrefix("DB_MIGRATIOR_"),
         DATABASE_NAME: "codebloom-prod",
       };
 

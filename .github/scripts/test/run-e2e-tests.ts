@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { getEnvVariablesFromProcess } from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { sendDiscordMessage } from "utils/discord/send-message";
 import { backend } from "utils/run-backend-instance";
 import { db } from "utils/run-local-db";
@@ -22,7 +22,7 @@ const { actionUrl, skipDiscordMessage } = await yargs(hideBin(process.argv))
 async function main() {
   const { discordToken, discordChannelId } = parseCiEnv(process.env);
   try {
-    const ciAppEnv = getEnvVariablesFromProcess("CI_APP_");
+    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
 
     //type-gen
     try {
