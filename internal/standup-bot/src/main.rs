@@ -9,7 +9,6 @@ use tokio::time::{
     interval,
 };
 use tracing::error;
-use tracing::error;
 
 use crate::{
     common::standup::{
@@ -58,15 +57,6 @@ async fn main() -> Result<()> {
 
     init_tracing();
     std::panic::set_hook(Box::new(tracing_panic::panic_hook));
-<<<<<<< HEAD
-
-    if std::env::var("PANIC_HOOK_SMOKE_TEST").is_ok() {
-        tokio::spawn(async {
-            panic!("standup-bot: manual panic hook test");
-        });
-    }
-=======
->>>>>>> 8f9c83a7 (TAN-42: used tracing panic)
 
     let redis_creds = RedisCredentials::new()?;
     let redis_client = Arc::new(RedisClient::new(&redis_creds).await?);
