@@ -29,14 +29,14 @@ mod env;
 mod redis;
 
 fn init_tracing() {
-    let is_production = std::env::var("ENVIRONMENT")
-        .map(|v| v.eq_ignore_ascii_case("production"))
+    let use_json = std::env::var("ENVIRONMENT")
+        .map(|v| v.eq_ignore_ascii_case("production") || v.eq_ignore_ascii_case("staging"))
         .unwrap_or(false);
 
     let env_filter = tracing_subscriber::EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
 
-    if is_production {
+    if use_json {
         tracing_subscriber::fmt()
             .json()
             .with_env_filter(env_filter)
@@ -57,6 +57,12 @@ async fn main() -> Result<()> {
 
     init_tracing();
     std::panic::set_hook(Box::new(tracing_panic::panic_hook));
+
+    if std::env::var("PANIC_HOOK_SMOKE_TEST").is_ok() {
+        tokio::spawn(async {
+            panic!("standup-bot: manual panic hook test");
+        });
+    }
 
     let redis_creds = RedisCredentials::new()?;
     let redis_client = Arc::new(RedisClient::new(&redis_creds).await?);
