@@ -1,7 +1,7 @@
 import type { Environment } from "types";
 
 import { $ } from "bun";
-import { getEnvVariables } from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 
 export async function _migrateDb({
   environment,
@@ -22,7 +22,7 @@ export async function _migrateDb({
     }
   }
 
-  const migratorEnv = await getEnvVariables(["migrator"]);
+  const migratorEnv = getEnvVariablesByPrefix("DB_MIGRATIOR_");
   const DATABASE_NAME =
     environment === "production" ? "codebloom-prod" : "codebloom-stg";
 
