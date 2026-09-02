@@ -45,7 +45,7 @@ export async function main() {
 
   const appEnv =
     environment === "staging" ?
-      getEnvVariablesByPrefix("STAGING_")
+      getEnvVariablesByPrefix("STAGING_DB_MIGRATIOR_")
     : {
         ...getEnvVariablesByPrefix("DB_MIGRATIOR_"),
         DATABASE_NAME: "codebloom-prod",
