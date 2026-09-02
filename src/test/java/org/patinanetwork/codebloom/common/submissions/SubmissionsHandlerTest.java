@@ -319,6 +319,43 @@ class SubmissionsHandlerTest {
     }
 
     @Test
+    @DisplayName("re-fetches and backfills the question bank entry when its description is missing")
+    void backfillsMissingDescription() {
+        LeetcodeSubmission sub = acceptedSubmission(603, "two-sum", LocalDateTime.of(2025, 6, 1, 12, 0));
+        when(questionRepository.questionExistsBySubmissionId("603")).thenReturn(false);
+        when(questionRepository.getQuestionBySlugAndUserId("two-sum", USER_ID)).thenReturn(Optional.empty());
+
+        QuestionBank staleBankQuestion = QuestionBank.builder()
+                .id("bank-1")
+                .questionSlug("two-sum")
+                .questionDifficulty(QuestionDifficulty.Easy)
+                .questionTitle("two-sum")
+                .questionNumber(1)
+                .questionLink("https://leetcode.com/problems/two-sum")
+                .description(Optional.empty())
+                .acceptanceRate(50f)
+                .topics(List.of())
+                .build();
+
+        when(questionBankRepository.getQuestionBySlug("two-sum")).thenReturn(Optional.of(staleBankQuestion));
+        when(leetcodeClient.findQuestionBySlug("two-sum")).thenReturn(leetcodeQuestion("two-sum", "Easy", 50f));
+
+        handler.handleSubmissions(List.of(sub), user, false);
+
+        verify(leetcodeClient).findQuestionBySlug("two-sum");
+
+        ArgumentCaptor<QuestionBank> bankCaptor = ArgumentCaptor.forClass(QuestionBank.class);
+        verify(questionBankRepository).updateQuestion(bankCaptor.capture());
+        assertEquals("bank-1", bankCaptor.getValue().getId());
+        assertEquals(
+                Optional.of("Description of two-sum"), bankCaptor.getValue().getDescription());
+
+        ArgumentCaptor<Question> qCaptor = ArgumentCaptor.forClass(Question.class);
+        verify(questionRepository).createQuestion(qCaptor.capture());
+        assertEquals(Optional.of("Description of two-sum"), qCaptor.getValue().getDescription());
+    }
+
+    @Test
     @DisplayName("distinctByKey filters duplicates by the given key")
     void distinctByKeyWorks() {
         List<String> input = List.of("aaa", "abc", "aab", "bbb");
