@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { getEnvVariables } from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { sendDiscordMessage } from "utils/discord/send-message";
 import { backend } from "utils/run-backend-instance";
 import { db } from "utils/run-local-db";
@@ -20,11 +20,9 @@ const { actionUrl, skipDiscordMessage } = await yargs(hideBin(process.argv))
   .parse();
 
 async function main() {
-  const { discordToken, discordChannelId } = parseCiEnv(
-    await getEnvVariables(["ci"]),
-  );
+  const { discordToken, discordChannelId } = parseCiEnv(process.env);
   try {
-    const ciAppEnv = await getEnvVariables(["ci-app"]);
+    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
 
     //type-gen
     try {
@@ -81,7 +79,7 @@ main()
     process.exit(1);
   });
 
-function parseCiEnv(env: Record<string, string>) {
+function parseCiEnv(env: Record<string, string | undefined>) {
   const discordToken = env["DISCORD_TOKEN"];
   if (!discordToken) {
     throw new Error("Missing DISCORD_TOKEN from .env.ci");

@@ -1,7 +1,7 @@
 import type { Environment } from "@tahminator/pipeline";
 import type { Type } from "types";
 
-import { GitHubClient, Utils } from "@tahminator/pipeline";
+import { GitHubClient } from "@tahminator/pipeline";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -24,8 +24,7 @@ const { environment, newTagVersion, type } = await yargs(hideBin(process.argv))
   .parse();
 
 async function main() {
-  const ciEnv = await Utils.getEnvVariables(["ci"]);
-  const { ghPat } = parseCiEnv(ciEnv);
+  const { ghPat } = parseCiEnv(process.env);
   const ghClient = new GitHubClient(ghPat);
 
   if (type === "web") {
@@ -51,7 +50,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const ghPat = (() => {
     const v = ciEnv["GH_PAT"];
     if (!v) {

@@ -1,7 +1,7 @@
 import type { Environment } from "types";
 
 import { $ } from "bun";
-import { getEnvVariables } from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { backend } from "utils/run-backend-instance";
 import { db } from "utils/run-local-db";
 import yargs from "yargs";
@@ -40,10 +40,9 @@ const serverProfiles = environment === "staging" ? "stg" : "prod";
 
 async function main() {
   try {
-    const ciEnv = await getEnvVariables(["ci"]);
-    const { dockerHubPat } = parseCiEnv(ciEnv);
+    const { dockerHubPat } = parseCiEnv(process.env);
     const localDbEnv = await db.start();
-    const ciAppEnv = await getEnvVariables(["ci-app"]);
+    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
 
     await backend.start(ciAppEnv);
 
@@ -126,7 +125,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const dockerHubPat = (() => {
     const v = ciEnv["DOCKER_HUB_PAT"];
     if (!v) {

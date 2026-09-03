@@ -2,12 +2,15 @@ name: "Backend test"
 description: "Run backend tests"
 
 inputs:
+  SECRETS:
+    description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
+    required: false
   GPG_PRIVATE_KEY:
     description: "GPG Private Key"
-    required: true
+    required: false
   GPG_PASSPHRASE:
     description: "GPG Passphrase"
-    required: true
+    required: false
   UPLOAD_TEST_COV:
     description: "Boolean indicating whether tests should be uploaded to our code coverage provider or not."
     required: false
@@ -19,6 +22,7 @@ runs:
     - name: Setup CI
       uses: ./.github/composite/setup-ci
       with:
+        SECRETS: ${{ inputs.SECRETS }}
         GPG_PRIVATE_KEY: ${{ inputs.GPG_PRIVATE_KEY }}
         GPG_PASSPHRASE: ${{ inputs.GPG_PASSPHRASE }}
 

@@ -81,3 +81,27 @@ export async function getEnvVariables(
 
   return Object.fromEntries(loaded);
 }
+
+/**
+ * @param prefix - Prefix to filter `envObject` keys by.
+ * @param envObject - Object to read variables from. Defaults to `process.env`.
+ *
+ * @returns a map of the matching variables, keyed without the `prefix`.
+ *
+ * _Please note that keys are stripped of `prefix` before being returned, so
+ * `PREFIX_FOO` becomes `FOO`._
+ */
+export function getEnvVariablesByPrefix(
+  prefix: string,
+  envObject: Record<string, string | undefined> = process.env,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(envObject)) {
+    if (key.startsWith(prefix) && value !== undefined) {
+      result[key.slice(prefix.length)] = value;
+    }
+  }
+
+  return result;
+}

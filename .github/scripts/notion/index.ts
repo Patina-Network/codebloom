@@ -1,4 +1,3 @@
-import { getEnvVariables } from "load-secrets/env/load";
 import { _checkCommits } from "notion/commits";
 import { checkNotionPrAndGetTask } from "notion/pr";
 import { _validateNotionTask } from "notion/pr/validate-ticket";
@@ -42,9 +41,7 @@ const {
 async function main() {
   console.log(`GET_GHA_OUTPUT=${getGhaOutput}`);
 
-  const { notionDbId, notionSecret } = parseCiEnv(
-    await getEnvVariables(["ci"]),
-  );
+  const { notionDbId, notionSecret } = parseCiEnv(process.env);
   const client = getNotionClient(notionSecret);
 
   const { taskId, taskContent, task, taskPublicUrl } =
@@ -72,7 +69,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const notionDbId = (() => {
     const v = ciEnv["NOTION_TASK_DB_ID"];
     if (!v) {

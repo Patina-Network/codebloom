@@ -58,12 +58,14 @@ jobs:
       - name: Setup CI
         uses: ./.github/composite/setup-ci
         with:
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Load secrets
         uses: ./.github/composite/load-secrets
         with:
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           UNLOAD_ENVIRONMENTS: ci
@@ -73,6 +75,7 @@ jobs:
         id: notion_check
         with:
           PR_ID: ${{ github.event.number || github.event.issue.number  }}
+          SECRETS: ${{ toJSON(secrets) }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           GET_GHA_OUTPUT: "true"

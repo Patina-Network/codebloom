@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { getEnvVariables } from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { backend } from "utils/run-backend-instance";
 import { db } from "utils/run-local-db";
 import { uploadFrontendTests } from "utils/upload";
@@ -16,7 +16,7 @@ const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
 
 async function main() {
   try {
-    const ciAppEnv = await getEnvVariables(["ci-app"]);
+    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
     const localDbEnv = await db.start();
 
     await backend.start({ ...ciAppEnv, ...localDbEnv });
@@ -30,8 +30,7 @@ async function main() {
     await $$`pnpm --dir js run test`;
 
     if (shouldUploadCoverage) {
-      const ciEnv = await getEnvVariables(["ci"]);
-      const { sonarToken } = parseCiEnv(ciEnv);
+      const { sonarToken } = parseCiEnv(process.env);
 
       await uploadFrontendTests(sonarToken);
     }
@@ -41,7 +40,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const sonarToken = (() => {
     const v = ciEnv["SONAR_TOKEN"];
     if (!v) {

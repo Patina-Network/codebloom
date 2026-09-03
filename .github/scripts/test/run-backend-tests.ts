@@ -1,5 +1,5 @@
 import { $ } from "bun";
-import { getEnvVariables } from "load-secrets/env/load";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { backend } from "utils/run-backend-instance";
 import { frontend } from "utils/run-frontend-instance";
 import { db } from "utils/run-local-db";
@@ -17,7 +17,7 @@ const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
 
 async function main() {
   try {
-    const ciAppEnv = await getEnvVariables(["ci-app"]);
+    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
     const localDbEnv = await db.start();
 
     // backend starts so we can generate schema, then kill it.
@@ -44,8 +44,7 @@ async function main() {
     await $$`./mvnw clean verify -Dspring.profiles.active=ci`;
 
     if (shouldUploadCoverage) {
-      const ciEnv = await getEnvVariables(["ci"]);
-      const { sonarToken } = parseCiEnv(ciEnv);
+      const { sonarToken } = parseCiEnv(process.env);
       await uploadBackendTests(sonarToken);
     }
   } finally {
@@ -55,7 +54,7 @@ async function main() {
   }
 }
 
-function parseCiEnv(ciEnv: Record<string, string>) {
+function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const sonarToken = (() => {
     const v = ciEnv["SONAR_TOKEN"];
     if (!v) {
