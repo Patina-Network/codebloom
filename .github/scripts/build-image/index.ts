@@ -1,5 +1,6 @@
-import type { Environment } from "types";
+import type { Environment, Type } from "types";
 
+import { DockerClient, GitHubClient } from "@tahminator/pipeline";
 import { $ } from "bun";
 import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { backend } from "utils/run-backend-instance";
@@ -9,119 +10,152 @@ import { hideBin } from "yargs/helpers";
 
 process.env.TZ = "America/New_York";
 
-const { environment, dockerUpload, getGhaOutput, githubOutputFile } =
-  await yargs(hideBin(process.argv))
-    .option("environment", {
-      choices: ["staging", "production"] satisfies Environment[],
-      describe: "Deployment environment (staging or production)",
-      demandOption: true,
-    })
-    .option("dockerUpload", {
-      type: "boolean",
-      default: false,
-      demandOption: true,
-    })
-    .option("getGhaOutput", {
-      type: "boolean",
-      describe:
-        "Enable GitHub Actions output to receive latest built tag version",
-      default: false,
-    })
-    .option("githubOutputFile", {
-      type: "string",
-      describe: "Path to GITHUB_OUTPUT (passed in automatically in CI)",
-      default: process.env.GITHUB_OUTPUT,
-    })
-    .strict()
-    .parse();
+const {
+  environment,
+  dockerUpload,
+  getGhaOutput,
+  githubOutputFile,
+  type,
+  prId,
+} = await yargs(hideBin(process.argv))
+  .option("environment", {
+    choices: ["staging", "production"] satisfies Environment[],
+    describe: "Deployment environment (staging or production)",
+    demandOption: true,
+  })
+  .option("dockerUpload", {
+    type: "boolean",
+    default: false,
+    demandOption: true,
+  })
+  .option("getGhaOutput", {
+    type: "boolean",
+    describe:
+      "Enable GitHub Actions output to receive latest built tag version",
+    default: false,
+  })
+  .option("githubOutputFile", {
+    type: "string",
+    describe: "Path to GITHUB_OUTPUT (passed in automatically in CI)",
+    default: process.env.GITHUB_OUTPUT,
+  })
+  .option("type", {
+    choices: ["standup-bot", "web"] satisfies Type[],
+    describe: "Type to build",
+    demandOption: true,
+    default: "web" as Type,
+  })
+  .option("prId", {
+    type: "string",
+    default: "",
+    coerce: (v: string) => (v === "" ? undefined : Number(v)),
+  })
+  .strict()
+  .parse();
 
 const tagPrefix = environment === "staging" ? "staging-" : "";
-const serverProfiles = environment === "staging" ? "stg" : "prod";
 
 async function main() {
-  try {
-    const { dockerHubPat } = parseCiEnv(process.env);
-    const localDbEnv = await db.start();
-    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
+  const {
+    dockerHubPat,
+    dockerHubUsername,
+    githubAppAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  } = parseCiEnv(process.env);
 
+  if (type === "web") {
+    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
+    const localDbEnv = await db.start();
     await backend.start(ciAppEnv);
 
-    const $$ = $.env({
-      ...process.env,
-      ...ciAppEnv,
-      ...localDbEnv,
-    });
-    await $$`pnpm --dir js run generate`;
-
-    // copy old tz format from build-image.sh
-    const timestamp = new Date()
-      .toLocaleString("en-US", {
-        timeZone: process.env.TZ,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      })
-      .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, "$3.$1.$2-$4.$5.$6");
-
-    const gitSha = (await $`git rev-parse --short HEAD`.text()).trim();
-
-    const tags = [
-      `tahminator/codebloom:${tagPrefix}latest`,
-      `tahminator/codebloom:${tagPrefix}${timestamp}`,
-      `tahminator/codebloom:${tagPrefix}${gitSha}`,
-    ];
-
-    console.log("Building image with following tags:");
-    tags.forEach((tag) => console.log(tag));
-
-    if (dockerHubPat) {
-      console.log("DOCKER_HUB_PAT found");
-    } else {
-      console.log("DOCKER_HUB_PAT missing or empty");
-    }
-
-    await $`echo ${dockerHubPat} | docker login -u tahminator --password-stdin`;
-
     try {
-      await $`docker buildx create --use --name codebloom-builder`;
-    } catch {
-      await $`docker buildx use codebloom-builder`;
+      const $$ = $.env({
+        ...process.env,
+        ...ciAppEnv,
+        ...localDbEnv,
+      });
+      await $$`pnpm --dir js run generate`;
+    } finally {
+      await backend.end();
+      await db.end();
     }
+  }
 
-    const buildMode = dockerUpload ? "--push" : "--load";
+  // copy old tz format from build-image.sh
+  const timestamp = new Date()
+    .toLocaleString("en-US", {
+      timeZone: process.env.TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    })
+    .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, "$3.$1.$2-$4.$5.$6");
 
-    const viteStagingArg =
-      serverProfiles === "stg" ? ["--build-arg", "VITE_STAGING=true"] : [];
+  const gitSha = (await $`git rev-parse --short HEAD`.text()).trim();
 
-    const tagArgs = tags.flatMap((tag) => ["--tag", tag]);
+  await using dockerClient = await DockerClient.create(
+    dockerHubUsername,
+    dockerHubPat,
+  );
 
-    await $`docker buildx build ${buildMode} \
-              --platform linux/amd64 \
-              --file infra/Dockerfile \
-              --build-arg SERVER_PROFILES=${serverProfiles} \
-              --build-arg COMMIT_SHA=${gitSha} \
-              --cache-from=type=gha \
-              --cache-to=type=gha,mode=max \
-              ${viteStagingArg} \
-              ${tagArgs} \
-              .`;
+  const tags = [
+    `${tagPrefix}latest`,
+    `${tagPrefix}${timestamp}`,
+    `${tagPrefix}${gitSha}`,
+  ];
 
-    console.log("Image pushed successfully.");
+  console.log("Building image with following tags:");
+  tags.forEach((tag) => console.log(tag));
 
-    if (getGhaOutput && githubOutputFile) {
-      console.log("Outputting image tag...");
-      const w = Bun.file(githubOutputFile).writer();
-      await w.write(`tag<<EOF\n${tagPrefix}${gitSha}\nEOF\n`);
-      await w.flush();
-      await w.end();
+  const buildArgs = {
+    ...(environment === "staging" ?
+      {
+        VITE_STAGING: true,
+      }
+    : {}),
+  };
+
+  await dockerClient.buildImage({
+    dockerRepository: type === "web" ? "codebloom" : "codebloom-standup-bot",
+    dockerFileLocation:
+      type === "web" ? "infra/Dockerfile" : "internal/standup-bot/Dockerfile",
+    tags,
+    shouldUpload: dockerUpload,
+    buildArgs,
+    platforms: ["linux/amd64"],
+  });
+
+  console.log("Image pushed successfully.");
+
+  if (getGhaOutput && githubOutputFile) {
+    const githubClient = await GitHubClient.createWithGithubAppToken({
+      appId: githubAppAppId,
+      installationId: githubAppInstallationId,
+      privateKey: githubAppPrivateKey,
+    });
+    await githubClient.outputToGithubOutput({
+      overrideGithubOutputFile: githubOutputFile,
+      ctx: {
+        tag: gitSha,
+      },
+    });
+
+    if (prId !== undefined) {
+      await githubClient.sendPrMessage({
+        prId,
+        owner: "Patina-Network",
+        repository: "codebloom",
+        message: `The image has been uploaded to https://hub.docker.com/r/patinanetwork/${type === "web" ? "codebloom" : "codebloom-standup-bot"}/tags under the following tags:
+
+${tags.map((t) => `- \`${type === "web" ? "codebloom" : "codebloom-standup-bot"}:${t}\``).join("\n")}
+`,
+      });
     }
-  } finally {
-    await backend.end();
-    await db.end();
   }
 }
 
@@ -129,19 +163,50 @@ function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   const dockerHubPat = (() => {
     const v = ciEnv["DOCKER_HUB_PAT"];
     if (!v) {
-      throw new Error("Missing DOCKER_HUB_PAT from .env.ci");
+      throw new Error("Missing DOCKER_HUB_PAT from env");
     }
     return v;
   })();
 
-  return { dockerHubPat };
+  const dockerHubUsername = (() => {
+    const v = ciEnv["DOCKER_HUB_USERNAME"];
+    if (!v) {
+      throw new Error("Missing DOCKER_HUB_USERNAME from env");
+    }
+    return v;
+  })();
+
+  const githubAppAppId = (() => {
+    const v = ciEnv["_GITHUB_APP_APP_ID"];
+    if (!v) {
+      throw new Error("Missing _GITHUB_APP_APP_ID from env");
+    }
+    return v;
+  })();
+
+  const githubAppInstallationId = (() => {
+    const v = ciEnv["_GITHUB_APP_INSTALLATION_ID"];
+    if (!v) {
+      throw new Error("Missing _GITHUB_APP_INSTALLATION_ID from env");
+    }
+    return v;
+  })();
+
+  const githubAppPrivateKey = (() => {
+    const v = ciEnv["_GITHUB_APP_PEM_CONTENT"];
+    if (!v) {
+      throw new Error("Missing _GITHUB_APP_PEM_CONTENT from env");
+    }
+    return v;
+  })();
+
+  return {
+    dockerHubPat,
+    dockerHubUsername,
+    githubAppAppId,
+    githubAppInstallationId,
+    githubAppPrivateKey,
+  };
 }
 
-main()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+main();

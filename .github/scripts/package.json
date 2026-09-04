@@ -22,7 +22,7 @@
         "@digitalocean/dots": "^1.7.0",
         "@notionhq/client": "^5.7.0",
         "@octokit/rest": "^22.0.1",
-        "@tahminator/pipeline": "^1.0.18",
+        "@tahminator/pipeline": "^1.0.70",
         "@types/yargs": "^17.0.35",
         "bun": "^1.3.6",
         "coolify": "https://github.com/tahminator/Coolify-TypeScript-SDK#8e19e18635ea2b095a9c39c574d22eefd938441f",

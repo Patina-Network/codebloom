@@ -24,8 +24,6 @@ jobs:
         uses: ./.github/composite/setup-ci
         with:
           SECRETS: ${{ toJSON(secrets) }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v5

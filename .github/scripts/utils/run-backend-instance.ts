@@ -61,12 +61,19 @@ async function end() {
   if (be) {
     if (!be.killed) {
       be.kill();
-      // hack to wait until backend is truly dead.
-      await new Promise((res) => {
-        setTimeout(() => {
-          res(null);
-        }, 2000);
-      });
+
+      const exitedInTime = await Promise.race([
+        be.exited.then(() => true),
+        Bun.sleep(5000).then(() => false),
+      ]);
+
+      if (!exitedInTime) {
+        console.warn(
+          "Backend did not exit after SIGTERM within 5s, sending SIGKILL...",
+        );
+        be.kill("SIGKILL");
+        await be.exited;
+      }
     }
     console.log(cyan("=== BACKEND LOGS ==="));
     const logs = await Bun.file("backend.log").text();

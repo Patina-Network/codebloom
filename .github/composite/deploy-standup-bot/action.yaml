@@ -2,30 +2,26 @@ name: Deploy Standup Bot Service
 description: Builds standup-bot image and deploys to k8s manifests
 
 inputs:
-  ENVIRONMENT:
-    description: "'staging' or 'production'"
-    required: true
-  SECRETS:
-    description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
-    required: false
-  GPG_PRIVATE_KEY:
-    description: "GPG Private Key"
-    required: false
-  GPG_PASSPHRASE:
-    description: "GPG Passphrase"
-    required: false
+    ENVIRONMENT:
+        description: "'staging' or 'production'"
+        required: true
+    SECRETS:
+        description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
+        required: false
 
 runs:
-  using: composite
-  steps:
-    - name: Build and push standup-bot image
-      id: build-image
-      uses: ./.github/composite/build-image/internal/standup-bot
-      with:
-        SECRETS: ${{ inputs.SECRETS }}
-        GPG_PRIVATE_KEY: ${{ inputs.GPG_PRIVATE_KEY }}
-        GPG_PASSPHRASE: ${{ inputs.GPG_PASSPHRASE }}
+    using: composite
+    steps:
+        - name: Build and push standup-bot image
+          id: build-image
+          uses: ./.github/composite/build-image/internal/standup-bot
+          with:
+              SECRETS: ${{ inputs.SECRETS }}
 
-    - name: Deploy standup-bot image tag
-      shell: bash
-      run: bun run .github/scripts/deploy --environment "${{ inputs.ENVIRONMENT }}" --type standup-bot --newTagVersion "${{ steps.build-image.outputs.tag }}"
+        - name: Deploy standup-bot image tag
+          shell: bash
+          run: |
+            bun run .github/scripts/redeploy \
+                --environment="${{ inputs.ENVIRONMENT }}" \
+                --sha="${{ steps.build-image.outputs.tag }}" \
+                --type="standup-bot"
