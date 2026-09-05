@@ -20,6 +20,11 @@ use serenity::{
     },
     async_trait,
 };
+use tracing::{
+    error,
+    info,
+    warn,
+};
 
 use crate::{
     common::latch::CountdownLatch,
@@ -44,12 +49,12 @@ impl Handler {
             return Ok(());
         };
 
-        println!("Received command interaction: {command:#?}");
+        info!("Received command interaction: {command:#?}");
 
         let content = match command.data.name.as_str() {
             "hello" => Some(commands::hello::run(&command.data.options())),
             cmd => {
-                eprintln!("Command {cmd} not supported");
+                warn!("Command {cmd} not supported");
                 None
             }
         };
@@ -86,7 +91,7 @@ impl Handler {
 
     async fn on_ready(&self, ctx: Context) -> anyhow::Result<()> {
         let commands = get_commands(self.guild_id, ctx).await?;
-        println!("I now have the following guild slash commands: {commands:#?}");
+        info!("I now have the following guild slash commands: {commands:#?}");
 
         Ok(())
     }
@@ -96,21 +101,21 @@ impl Handler {
 impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Err(e) = self.on_interaction(ctx, interaction).await {
-            eprintln!("interaction handler failed: {e:#?}");
+            error!("interaction handler failed: {e:#?}");
         }
     }
 
     async fn message(&self, _ctx: Context, new_message: Message) {
         if let Err(e) = self.on_message(new_message).await {
-            eprintln!("message handler failed: {e:#?}");
+            error!("message handler failed: {e:#?}");
         }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
+        info!("{} is connected!", ready.user.name);
 
         if let Err(e) = self.on_ready(ctx).await {
-            eprintln!("ready handler failed: {e:#?}");
+            error!("ready handler failed: {e:#?}");
         }
 
         self.latch.count_down();
