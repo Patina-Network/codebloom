@@ -106,6 +106,32 @@ public class SubmissionsHandler {
         return t -> seen.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
     }
 
+    private QuestionBank refetchAndBackfillQuestion(
+            final String slug, final QuestionBank existingBankQuestion, final boolean fast) {
+        LeetcodeQuestion question =
+                fast ? leetcodeClient.findQuestionBySlugFast(slug) : leetcodeClient.findQuestionBySlug(slug);
+
+        QuestionBank refetchedQuestion = QuestionBank.builder()
+                .questionSlug(question.getTitleSlug())
+                .questionDifficulty(QuestionDifficulty.valueOf(question.getDifficulty()))
+                .questionTitle(question.getQuestionTitle())
+                .questionNumber(question.getQuestionId())
+                .questionLink("https://leetcode.com/problems/" + question.getTitleSlug())
+                .description(Optional.ofNullable(question.getQuestion()))
+                .acceptanceRate(question.getAcceptanceRate())
+                .topics(question.getTopics().stream()
+                        .map(SubmissionsHandler::topicTagToQuestionTopic)
+                        .toList())
+                .build();
+
+        if (existingBankQuestion != null) {
+            refetchedQuestion.setId(existingBankQuestion.getId());
+            questionBankRepository.updateQuestion(refetchedQuestion);
+        }
+
+        return refetchedQuestion;
+    }
+
     public ArrayList<AcceptedSubmission> handleSubmissions(
             final List<LeetcodeSubmission> leetcodeSubmissions, final User user, boolean fast) {
         ArrayList<AcceptedSubmission> acceptedSubmissions = new ArrayList<>();
@@ -116,26 +142,16 @@ public class SubmissionsHandler {
                 .map(s -> {
                     String slug = s.getTitleSlug();
 
-                    QuestionBank bankQuestion = questionBankRepository
-                            .getQuestionBySlug(slug)
-                            .orElseGet(() -> {
-                                LeetcodeQuestion question = fast
-                                        ? leetcodeClient.findQuestionBySlugFast(slug)
-                                        : leetcodeClient.findQuestionBySlug(slug);
+                    Optional<QuestionBank> existingBankQuestion = questionBankRepository.getQuestionBySlug(slug);
 
-                                return QuestionBank.builder()
-                                        .questionSlug(question.getTitleSlug())
-                                        .questionDifficulty(QuestionDifficulty.valueOf(question.getDifficulty()))
-                                        .questionTitle(question.getQuestionTitle())
-                                        .questionNumber(question.getQuestionId())
-                                        .questionLink("https://leetcode.com/problems/" + question.getTitleSlug())
-                                        .description(Optional.ofNullable(question.getQuestion()))
-                                        .acceptanceRate(question.getAcceptanceRate())
-                                        .topics(question.getTopics().stream()
-                                                .map(SubmissionsHandler::topicTagToQuestionTopic)
-                                                .toList())
-                                        .build();
-                            });
+                    boolean hasDescription = existingBankQuestion
+                            .flatMap(QuestionBank::getDescription)
+                            .filter(description -> !description.isBlank())
+                            .isPresent();
+
+                    QuestionBank bankQuestion = hasDescription
+                            ? existingBankQuestion.get()
+                            : refetchAndBackfillQuestion(slug, existingBankQuestion.orElse(null), fast);
 
                     return Pair.of(slug, bankQuestion);
                 })
