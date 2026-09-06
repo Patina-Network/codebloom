@@ -29,8 +29,6 @@ export async function main() {
 ### Available PR Commands
 
 - \`/copy\` - Triggers copy from production to staging db (can only be run by \`tahminator\` or \`angelayu0530\`)
-
-There are currently none available at this time.
 `.trim(),
   });
 }

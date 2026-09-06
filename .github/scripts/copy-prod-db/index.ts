@@ -1,9 +1,8 @@
 import { $ } from "bun";
+import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import { updateCommitStatus } from "utils/update-commit-status";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-
-import { getEnvVariables } from "../load-secrets/env/load";
 
 const AUTHORIZED_USERS = ["tahminator", "angelayu0530"];
 
@@ -39,47 +38,66 @@ async function main() {
       throw new Error("You are not authorized!");
     }
 
-    const env = await getEnvVariables(["production"], {
-      baseDir: "infra",
-    });
+    const dbCreds = getEnvVariablesByPrefix("DB_MIGRATIOR_");
+
+    const prodDb: Record<string, string> = {
+      ...dbCreds,
+      DATABASE_NAME: "codebloom-prod",
+    };
+    const stagingDb: Record<string, string> = {
+      ...dbCreds,
+      DATABASE_NAME: "codebloom-stg",
+    };
 
     const flywayEnv = {
-      ...env,
-      DATABASE_NAME: env.STAGING_DATABASE_NAME,
+      ...stagingDb,
     };
 
     const pgEnv = {
-      ...env,
-      PGPASSWORD: env.DATABASE_PASSWORD,
+      PROD_DATABASE_HOST: prodDb.DATABASE_HOST,
+      PROD_DATABASE_PORT: prodDb.DATABASE_PORT,
+      PROD_DATABASE_USER: prodDb.DATABASE_USER,
+      PROD_DATABASE_PASSWORD: prodDb.DATABASE_PASSWORD,
+      PROD_DATABASE_NAME: prodDb.DATABASE_NAME,
+      STAGING_DATABASE_HOST: stagingDb.DATABASE_HOST,
+      STAGING_DATABASE_PORT: stagingDb.DATABASE_PORT,
+      STAGING_DATABASE_USER: stagingDb.DATABASE_USER,
+      STAGING_DATABASE_PASSWORD: stagingDb.DATABASE_PASSWORD,
+      STAGING_DATABASE_NAME: stagingDb.DATABASE_NAME,
     };
 
     console.log("Cleaning staging database...");
     await $.env(flywayEnv)`./mvnw flyway:clean -Dflyway.cleanDisabled=false`;
 
     console.log("Copying production database to staging...");
-    await $.env(pgEnv)`PGPASSWORD="$DATABASE_PASSWORD" pg_dump \
-      --host="$DATABASE_HOST" \
-      --port="$DATABASE_PORT" \
-      --username="$DATABASE_USER" \
-      --dbname="$PRODUCTION_DATABASE_NAME" \
+    // extensions are provisioned by `platform-infra`,
+    // and Pulumi doesnt support provisioning extensions via each table's service acct
+    // (instead, it goes thru root).
+    //
+    // this means, we cant try to add them back in this script, or it will fail the entire transaction.
+    await $.env(pgEnv)`PGPASSWORD="$PROD_DATABASE_PASSWORD" pg_dump \
+      --host="$PROD_DATABASE_HOST" \
+      --port="$PROD_DATABASE_PORT" \
+      --username="$PROD_DATABASE_USER" \
+      --dbname="$PROD_DATABASE_NAME" \
       --verbose \
       --clean \
       --if-exists \
       --format=plain \
-      | sed '/SET transaction_timeout/d' \
-      | PGPASSWORD="$DATABASE_PASSWORD" psql \
-          --host="$DATABASE_HOST" \
-          --port="$DATABASE_PORT" \
-          --username="$DATABASE_USER" \
+      | sed -E '/SET transaction_timeout/d; /^(DROP|CREATE|ALTER) EXTENSION/d; /^COMMENT ON EXTENSION/d' \
+      | PGPASSWORD="$STAGING_DATABASE_PASSWORD" psql \
+          --host="$STAGING_DATABASE_HOST" \
+          --port="$STAGING_DATABASE_PORT" \
+          --username="$STAGING_DATABASE_USER" \
           --dbname="$STAGING_DATABASE_NAME" \
           --echo-errors \
           --single-transaction`;
 
     console.log("Cleaning unneccesary data...");
-    await $.env(pgEnv)`PGPASSWORD="$DATABASE_PASSWORD" psql \
-      --host="$DATABASE_HOST" \
-      --port="$DATABASE_PORT" \
-      --username="$DATABASE_USER" \
+    await $.env(pgEnv)`PGPASSWORD="$STAGING_DATABASE_PASSWORD" psql \
+      --host="$STAGING_DATABASE_HOST" \
+      --port="$STAGING_DATABASE_PORT" \
+      --username="$STAGING_DATABASE_USER" \
       --dbname="$STAGING_DATABASE_NAME" \
       --set ON_ERROR_STOP=on \
       --file ./infra/clean-stg-db.SQL`;
