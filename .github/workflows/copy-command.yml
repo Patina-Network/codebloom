@@ -13,6 +13,15 @@ on:
       prId:
         description: "PR to confirm success to"
         required: true
+      repository:
+        description: "The repository from which the slash command was dispatched"
+        required: true
+      comment-id:
+        description: "The comment-id of the slash command"
+        required: true
+      author:
+        description: "The author that triggered this actions"
+        required: true
 
 permissions:
   contents: read
@@ -66,6 +75,6 @@ jobs:
           cache: "maven"
 
       - name: Copy Production Database to Staging
-        run: bun run .github/scripts/copy-prod-db/index.ts --run-url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} --username=${{ github.event.client_payload.github.actor || github.actor }} --sha=${{ needs.getPRHead.outputs.sha }}
+        run: bun run .github/scripts/copy-prod-db/index.ts --run-url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} --username=${{ github.event.client_payload.github.actor || github.event.inputs.author }} --sha=${{ needs.getPRHead.outputs.sha }}
         env:
           PR_ID: ${{ github.event.client_payload.slash_command.args.named.prId || github.event.inputs.prId }}
