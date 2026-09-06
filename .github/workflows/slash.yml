@@ -57,16 +57,18 @@ jobs:
         run: bun run .github/scripts/load-slash-commands --get-gha-output=true
         id: cmds
 
-      - name: Load secrets
-        uses: ./.github/composite/load-secrets
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v3
+        id: app-token
         with:
-          SECRETS: ${{ toJSON(secrets) }}
+          app-id: ${{ secrets._GITHUB_APP_APP_ID }}
+          private-key: ${{ secrets._GITHUB_APP_PEM_CONTENT }}
 
       - name: Slash Command Dispatch
         uses: peter-evans/slash-command-dispatch@v4
         with:
           dispatch-type: workflow
-          token: ${{ env.GH_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
           commands: |
             ${{ steps.cmds.outputs.commands }}
           static-args: |

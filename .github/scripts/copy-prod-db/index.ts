@@ -5,7 +5,7 @@ import { hideBin } from "yargs/helpers";
 
 import { getEnvVariables } from "../load-secrets/env/load";
 
-const AUTHORIZED_USER = "tahminator";
+const AUTHORIZED_USERS = ["tahminator", "angelayu0530"];
 
 const { runUrl, username, sha } = await yargs(hideBin(process.argv))
   .options("runUrl", {
@@ -35,7 +35,7 @@ async function main() {
       context: "Copy Production DB to Staging",
     });
 
-    if (username !== AUTHORIZED_USER) {
+    if (!AUTHORIZED_USERS.includes(username)) {
       throw new Error("You are not authorized!");
     }
 
