@@ -52,8 +52,6 @@ jobs:
         uses: ./.github/composite/setup-ci
         with:
           SECRETS: ${{ toJSON(secrets) }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Run script
         run: bun run .github/scripts/load-slash-commands --get-gha-output=true
@@ -63,9 +61,6 @@ jobs:
         uses: ./.github/composite/load-secrets
         with:
           SECRETS: ${{ toJSON(secrets) }}
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          UNLOAD_ENVIRONMENTS: ci
 
       - name: Slash Command Dispatch
         uses: peter-evans/slash-command-dispatch@v4

@@ -5,11 +5,12 @@ inputs:
   SECRETS:
     description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
     required: false
-  GPG_PRIVATE_KEY:
-    description: "GPG Private Key"
+  ENVIRONMENT:
+    description: '"staging" or "production"'
     required: false
-  GPG_PASSPHRASE:
-    description: "GPG Passphrase"
+    default: production
+  SHA:
+    description: "(Staging only). Current commit SHA"
     required: false
 
 runs:
@@ -19,18 +20,14 @@ runs:
       uses: ./.github/composite/setup-ci
       with:
         SECRETS: ${{ inputs.SECRETS }}
-        GPG_PRIVATE_KEY: ${{ inputs.GPG_PRIVATE_KEY }}
-        GPG_PASSPHRASE: ${{ inputs.GPG_PASSPHRASE }}
 
     - name: Expose GitHub Runtime
       uses: crazy-max/ghaction-github-runtime@v4
 
     - name: Run script
       shell: bash
-      run: bun .github/scripts/redeploy/internal/standup-bot
-      env:
-        DOCKER_UPLOAD: ${{ inputs.DOCKER_UPLOAD }}
-        TAG_PREFIX: ${{ inputs.TAG_PREFIX }}
-        SERVER_PROFILES: ${{ inputs.SERVER_PROFILES }}
-        ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
-        SHA: ${{ inputs.SHA }}
+      run: |
+        bun run .github/scripts/redeploy \
+            --environment="${{ inputs.ENVIRONMENT }}" \
+            --sha="${{ inputs.SHA }}" \
+            --type="standup-bot"

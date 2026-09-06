@@ -2,12 +2,6 @@ name: "Setup CI"
 description: "Setup dependencies required to run CI (disable man-db)"
 
 inputs:
-  GPG_PASSPHRASE:
-    description: "GPG passphrase if secrets will be used."
-    required: false
-  GPG_PRIVATE_KEY:
-    description: "GPG private key if secrets will be used."
-    required: false
   GITHUB_TOKEN:
     description: "GitHub token used to send message"
     required: false
@@ -23,8 +17,6 @@ runs:
       uses: tahminator/pipeline/actions/setup@1.0.70
       with:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        GPG_PRIVATE_KEY: ${{ inputs.GPG_PRIVATE_KEY }}
-        GPG_PASSPHRASE: ${{ inputs.GPG_PASSPHRASE }}
         SECRETS: ${{ inputs.SECRETS }}
 
     - name: Test CI scripts
