@@ -2,6 +2,10 @@ name: "Build & Upload Docker Image for codebloom-standup-bot"
 description: "Build & (optionally) upload Docker Image to Docker Registry"
 
 inputs:
+  ENVIRONMENT:
+    description: "Deployment environment (staging or production)."
+    required: false
+    default: production
   SECRETS:
     description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
     required: false
@@ -40,5 +44,5 @@ runs:
             --docker-upload="${{ inputs.DOCKER_UPLOAD }}" \
             --getGhaOutput=true \
             --type="standup-bot" \
-            --environment="production" \
+            --environment="${{ inputs.ENVIRONMENT }}" \
             --prId="${{ github.event.pull_request.number }}"

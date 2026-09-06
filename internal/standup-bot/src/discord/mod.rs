@@ -22,6 +22,10 @@ use serenity::{
     },
     http::Http,
 };
+use tracing::{
+    error,
+    info,
+};
 
 use crate::{
     common::latch::CountdownLatch,
@@ -64,7 +68,7 @@ impl DiscordClient {
 
         tokio::spawn(async move {
             if let Err(e) = client.start().await {
-                eprintln!("Client error: {e:?}");
+                error!("Client error: {e:?}");
             }
         });
 
@@ -79,7 +83,7 @@ impl DiscordClient {
     }
 
     pub async fn send_standup_message(&self) -> Result<u64, DiscordClientError> {
-        println!("Sending standup message!");
+        info!("Sending standup message!");
 
         let embed = CreateEmbed::new()
             .title("Codebloom Standup")
@@ -99,14 +103,14 @@ impl DiscordClient {
         let msg = channel
             .send_message(self.http.as_ref(), create_msg)
             .await
-            .inspect_err(|e| eprintln!("Error sending message: {e:#?}"))?;
+            .inspect_err(|e| error!("Error sending message: {e:#?}"))?;
 
         let thread_builder = CreateThread::new("Daily Standup Thread");
 
         let thread = channel
             .create_thread_from_message(self.http.as_ref(), msg.id, thread_builder)
             .await
-            .inspect_err(|e| eprintln!("Error creating thread: {e:#?}"))?;
+            .inspect_err(|e| error!("Error creating thread: {e:#?}"))?;
 
         Ok(thread.id.get())
     }
