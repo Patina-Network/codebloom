@@ -148,6 +148,19 @@ public class LeetcodeQuestionProcessService {
             log.info("Found question: {} ({})", question.getQuestionTitle(), question.getQuestionSlug());
 
             boolean dataFound = false;
+            boolean descriptionMissing =
+                    question.getDescription().filter(d -> !d.isBlank()).isEmpty();
+            if (descriptionMissing) {
+                var fetchedQuestion = leetcodeClient.findQuestionBySlug(question.getQuestionSlug());
+                var description =
+                        Optional.ofNullable(fetchedQuestion.getQuestion()).filter(d -> !d.isBlank());
+                if (description.isPresent()) {
+                    question.setDescription(description);
+                    questionRepository.updateQuestion(question);
+                    log.info("Backfilled description for question ID: {}", question.getId());
+                    dataFound = true;
+                }
+            }
 
             if (question.getSubmissionId().isPresent()
                     && !question.getSubmissionId().get().isEmpty()) {
@@ -184,7 +197,7 @@ public class LeetcodeQuestionProcessService {
                 }
             }
 
-            if (dataFound) {
+            if (dataFound && question.getDescription().filter(d -> !d.isBlank()).isPresent()) {
                 job.setStatus(JobStatus.COMPLETE);
                 job.setCompletedAt(StandardizedOffsetDateTime.now());
 
@@ -194,6 +207,7 @@ public class LeetcodeQuestionProcessService {
                         question.getQuestionTitle(),
                         question.getId());
             } else {
+                job.setStatus(JobStatus.INCOMPLETE);
                 job.setNextAttemptAt(StandardizedOffsetDateTime.now().plusMinutes(30));
 
                 log.info(

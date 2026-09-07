@@ -492,6 +492,7 @@ public class QuestionSqlRepository implements QuestionRepository {
                 OR ("memory" IS NULL OR "memory" = '')
                 OR ("code" is NULL OR "code" = '')
                 OR ("language" is NULL OR "language" = '')
+                OR (description IS NULL OR TRIM(description) = '')
             """;
 
         List<Question> questions = jdbcClient.sql(sql).query(questionRowMapper).list();
@@ -565,6 +566,7 @@ public class QuestionSqlRepository implements QuestionRepository {
                 OR (q."memory" IS NULL OR q."memory" = '')
                 OR (q."code" IS NULL OR q."code" = '')
                 OR (q."language" IS NULL OR q."language" = '')
+                OR (q.description IS NULL OR TRIM(q.description) = '')
             ORDER BY
                 q."submittedAt" DESC
             """;
@@ -587,6 +589,7 @@ public class QuestionSqlRepository implements QuestionRepository {
             OR (q."memory" IS NULL OR q."memory" = '')
             OR (q."code" IS NULL OR q."code" = '')
             OR (q."language" IS NULL OR q."language" = '')
+                OR (q.description IS NULL OR TRIM(q.description) = '')
         )
         AND NOT EXISTS (
             SELECT 1
