@@ -24,7 +24,7 @@ Codebloom is a leaderboard system that game-ifies the aspect of solving LeetCode
 
 ## Features
 
-_Last updated: 02/14/2026_
+_Last updated: 09/03/2026_
 
 Codebloom features include
 
@@ -86,12 +86,12 @@ Please go to [`docs/setup/README.md`](./docs/local/README.md) to begin setup ins
 
 ## Authors
 
-The current lead developer of the Codebloom development team is Arshadul Monir. If you have any inquires or questions, please direct them to him.
+The current lead developers of the Codebloom development team are Tahmid Ahmed and Angela Yu. If you have any inquires or questions, please direct them to them.
 
 <!-- TODO: Add new authors -->
-<!-- The current members of the core development team are: -->
-<!---->
-<!-- - Arshadul Monir -->
+The current members of the core development team are:
+
+- Nancy Huang 
 
 > [!NOTE]
 > Codebloom is open-source and happily accepts contributions from the community. However, all pull requests are subject to review by the development team. Please click [here](./CONTRIBUTING.md) to learn more.
@@ -100,11 +100,9 @@ The current lead developer of the Codebloom development team is Arshadul Monir. 
 
 Thank you to all the previous members of the Codebloom development team that have helped make Codebloom possible <3
 
-- Tahmid Ahmed (Previous lead developer, founding member)
 - Alfardil Alam (Previous developer, founding member)
 - Alisha Zaman (Previous developer, founding member)
-- Angela Yu (Previous developer)
-- Nancy Huang (Previous developer)
+- Arshadul Monir (Previous developer)
 
 ## Patina Network
 
