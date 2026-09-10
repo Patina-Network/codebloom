@@ -154,6 +154,9 @@ jobs:
         uses: ./.github/composite/validate-db
         with:
           SECRETS: ${{ toJSON(secrets) }}
+          HEADSCALE_ADDRESS: ${{ secrets.HEADSCALE_ADDRESS }}
+          HEADSCALE_USER: ${{ secrets.HEADSCALE_USER }}
+          HEADSCALE_PREAUTHKEY: ${{ secrets.HEADSCALE_PREAUTHKEY }}
 
   buildImage:
     name: Build Docker Image & Upload to Registry
@@ -203,6 +206,9 @@ jobs:
         uses: ./.github/composite/redeploy
         with:
           SECRETS: ${{ toJSON(secrets) }}
+          HEADSCALE_ADDRESS: ${{ secrets.HEADSCALE_ADDRESS }}
+          HEADSCALE_USER: ${{ secrets.HEADSCALE_USER }}
+          HEADSCALE_PREAUTHKEY: ${{ secrets.HEADSCALE_PREAUTHKEY }}
 
   deployStandupBot:
     name: deploy codebloom-standup-bot to K8S
