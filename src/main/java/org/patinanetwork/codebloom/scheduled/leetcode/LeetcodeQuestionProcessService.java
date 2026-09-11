@@ -13,8 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
 import org.patinanetwork.codebloom.common.db.models.question.Question;
+import org.patinanetwork.codebloom.common.db.models.question.bank.QuestionBank;
+import org.patinanetwork.codebloom.common.db.models.question.topic.LeetcodeTopicEnum;
+import org.patinanetwork.codebloom.common.db.models.question.topic.QuestionTopic;
 import org.patinanetwork.codebloom.common.db.repos.job.JobRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
+import org.patinanetwork.codebloom.common.db.repos.question.questionbank.QuestionBankRepository;
 import org.patinanetwork.codebloom.common.dto.Empty;
 import org.patinanetwork.codebloom.common.leetcode.LeetcodeClient;
 import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
@@ -39,6 +43,7 @@ public class LeetcodeQuestionProcessService {
     private final JobRepository jobRepository;
     private final LeetcodeClient leetcodeClient;
     private final QuestionRepository questionRepository;
+    private final QuestionBankRepository questionBankRepository;
     private final BlockingBucket rateLimiter;
 
     private BlockingBucket initializeBucket() {
@@ -62,10 +67,12 @@ public class LeetcodeQuestionProcessService {
     public LeetcodeQuestionProcessService(
             final JobRepository jobRepository,
             final ThrottledLeetcodeClient throttledLeetcodeClient,
-            final QuestionRepository questionRepository) {
+            final QuestionRepository questionRepository,
+            final QuestionBankRepository questionBankRepository) {
         this.jobRepository = jobRepository;
         this.leetcodeClient = throttledLeetcodeClient;
         this.questionRepository = questionRepository;
+        this.questionBankRepository = questionBankRepository;
         this.rateLimiter = initializeBucket();
     }
 
@@ -117,6 +124,13 @@ public class LeetcodeQuestionProcessService {
         return CompletableFuture.completedFuture(Empty.of());
     }
 
+    private boolean hasSubmissionDetails(final Question question) {
+        return question.getRuntime().filter(d -> !d.isBlank()).isPresent()
+                && question.getMemory().filter(d -> !d.isBlank()).isPresent()
+                && question.getCode().filter(d -> !d.isBlank()).isPresent()
+                && question.getLanguage().filter(d -> !d.isBlank()).isPresent();
+    }
+
     /**
      * Actually processes the job, makes updates to the repo as necessary to indicate the state that the job is in. This
      * will fetch the question from our backend first, then use the leetcode ID to get submission details.
@@ -147,22 +161,56 @@ public class LeetcodeQuestionProcessService {
 
             log.info("Found question: {} ({})", question.getQuestionTitle(), question.getQuestionSlug());
 
-            boolean dataFound = false;
+            var bankQuestion = questionBankRepository.getQuestionBySlug(question.getQuestionSlug());
+            boolean isPaidOnly = bankQuestion.map(QuestionBank::isPaidOnly).orElse(false);
             boolean descriptionMissing =
                     question.getDescription().filter(d -> !d.isBlank()).isEmpty();
-            if (descriptionMissing) {
+            if (descriptionMissing
+                    && bankQuestion
+                            .flatMap(QuestionBank::getDescription)
+                            .filter(d -> !d.isBlank())
+                            .isPresent()) {
+                question.setDescription(bankQuestion.get().getDescription());
+                questionRepository.updateQuestion(question);
+                descriptionMissing = false;
+            }
+            if (descriptionMissing && !isPaidOnly) {
                 var fetchedQuestion = leetcodeClient.findQuestionBySlug(question.getQuestionSlug());
+                isPaidOnly = fetchedQuestion.isPaidOnly();
                 var description =
                         Optional.ofNullable(fetchedQuestion.getQuestion()).filter(d -> !d.isBlank());
+                var cached = bankQuestion.orElseGet(() -> QuestionBank.builder()
+                        .questionSlug(question.getQuestionSlug())
+                        .questionTitle(question.getQuestionTitle())
+                        .questionDifficulty(question.getQuestionDifficulty())
+                        .questionNumber(question.getQuestionNumber())
+                        .questionLink(question.getQuestionLink())
+                        .acceptanceRate(question.getAcceptanceRate())
+                        .build());
+                cached.setPaidOnly(isPaidOnly);
+                cached.setDescription(description);
+                if (bankQuestion.isPresent()) {
+                    if (!questionBankRepository.updateQuestion(cached)) {
+                        throw new RuntimeException("Failed to save question description metadata");
+                    }
+                } else {
+                    cached.setTopics(fetchedQuestion.getTopics().stream()
+                            .map(topic -> QuestionTopic.builder()
+                                    .topicSlug(topic.getSlug())
+                                    .topic(LeetcodeTopicEnum.fromValue(topic.getSlug()))
+                                    .build())
+                            .toList());
+                    questionBankRepository.createQuestionWithTopics(cached);
+                }
                 if (description.isPresent()) {
                     question.setDescription(description);
                     questionRepository.updateQuestion(question);
-                    log.info("Backfilled description for question ID: {}", question.getId());
-                    dataFound = true;
                 }
             }
 
-            if (question.getSubmissionId().isPresent()
+            boolean detailsComplete = hasSubmissionDetails(question);
+            if (!detailsComplete
+                    && question.getSubmissionId().isPresent()
                     && !question.getSubmissionId().get().isEmpty()) {
                 try {
                     int submissionId =
@@ -185,7 +233,6 @@ public class LeetcodeQuestionProcessService {
 
                         questionRepository.updateQuestion(question);
                         log.info("Successfully updated question ID: {} with submission details", question.getId());
-                        dataFound = true;
                     } else {
                         log.warn("No detailed submission found for submission ID: {}", submissionId);
                     }
@@ -197,7 +244,11 @@ public class LeetcodeQuestionProcessService {
                 }
             }
 
-            if (dataFound && question.getDescription().filter(d -> !d.isBlank()).isPresent()) {
+            if (hasSubmissionDetails(question)
+                    && (isPaidOnly
+                            || question.getDescription()
+                                    .filter(d -> !d.isBlank())
+                                    .isPresent())) {
                 job.setStatus(JobStatus.COMPLETE);
                 job.setCompletedAt(StandardizedOffsetDateTime.now());
 

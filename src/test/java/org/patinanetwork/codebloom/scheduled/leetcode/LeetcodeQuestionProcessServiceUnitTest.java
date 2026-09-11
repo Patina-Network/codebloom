@@ -13,13 +13,18 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
 import org.patinanetwork.codebloom.common.db.models.question.Question;
+import org.patinanetwork.codebloom.common.db.models.question.bank.QuestionBank;
 import org.patinanetwork.codebloom.common.db.repos.job.JobRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
+import org.patinanetwork.codebloom.common.db.repos.question.questionbank.QuestionBankRepository;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion;
 import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 
 class LeetcodeQuestionProcessServiceUnitTest {
+    private final QuestionBankRepository bank = mock(QuestionBankRepository.class);
+    private final QuestionBank cached =
+            QuestionBank.builder().id("bank-id").questionSlug("two-sum").build();
     private final JobRepository jobs = mock(JobRepository.class);
     private final QuestionRepository questions = mock(QuestionRepository.class);
     private final ThrottledLeetcodeClient client = mock(ThrottledLeetcodeClient.class);
@@ -41,6 +46,8 @@ class LeetcodeQuestionProcessServiceUnitTest {
 
     @BeforeEach
     void setup() {
+        when(bank.getQuestionBySlug("two-sum")).thenReturn(Optional.of(cached));
+        when(bank.updateQuestion(any())).thenReturn(true);
         when(jobs.findIncompleteJobs(10)).thenReturn(List.of(job), List.of());
         when(jobs.updateJob(any())).thenReturn(true);
         when(questions.getQuestionById(question.getId())).thenReturn(Optional.of(question));
@@ -53,7 +60,9 @@ class LeetcodeQuestionProcessServiceUnitTest {
     }
 
     private void runQueue() {
-        new LeetcodeQuestionProcessService(jobs, client, questions).drainQueue().join();
+        new LeetcodeQuestionProcessService(jobs, client, questions, bank)
+                .drainQueue()
+                .join();
     }
 
     @ParameterizedTest
@@ -105,11 +114,75 @@ class LeetcodeQuestionProcessServiceUnitTest {
     }
 
     @Test
+    void premiumDescriptionIsRememberedAndNotRetried() {
+        when(client.findQuestionBySlug("two-sum"))
+                .thenReturn(LeetcodeQuestion.builder().isPaidOnly(true).build());
+        question.setSubmissionId(Optional.of("123"));
+        runQueue();
+        assertTrue(cached.isPaidOnly());
+        verify(client, never()).findSubmissionDetailBySubmissionId(anyInt());
+        verify(bank).updateQuestion(cached);
+        assertEquals(JobStatus.COMPLETE, job.getStatus());
+
+        when(jobs.findIncompleteJobs(10)).thenReturn(List.of(job), List.of());
+        runQueue();
+        verify(client, times(1)).findQuestionBySlug("two-sum");
+    }
+
+    @Test
+    void knownPremiumStillRetriesMissingSubmissionDetails() {
+        cached.setPaidOnly(true);
+        question.setCode(Optional.empty());
+        question.setSubmissionId(Optional.of("123"));
+        runQueue();
+        verify(client, never()).findQuestionBySlug(anyString());
+        verify(client).findSubmissionDetailBySubmissionId(123);
+        assertEquals(JobStatus.INCOMPLETE, job.getStatus());
+    }
+
+    @Test
+    void usesCachedDescriptionWithoutFetching() {
+        cached.setDescription(Optional.of("Cached description"));
+        runQueue();
+        assertEquals(cached.getDescription(), question.getDescription());
+        verify(client, never()).findQuestionBySlug(anyString());
+        assertEquals(JobStatus.COMPLETE, job.getStatus());
+    }
+
+    @Test
     void failedSaveDoesNotMarkJobComplete() {
         respondWith("Description");
         when(questions.updateQuestion(question)).thenThrow(new RuntimeException("Database unavailable"));
         runQueue();
         assertEquals(JobStatus.INCOMPLETE, job.getStatus());
         assertNull(job.getCompletedAt());
+    }
+
+    @Test
+    void newPremiumBankEntrySavesTopicLinks() {
+        when(bank.getQuestionBySlug("two-sum")).thenReturn(Optional.empty());
+        doAnswer(invocation -> {
+                    QuestionBank created = invocation.getArgument(0);
+                    created.setId("new-bank");
+                    return null;
+                })
+                .when(bank)
+                .createQuestionWithTopics(any());
+        when(client.findQuestionBySlug("two-sum"))
+                .thenReturn(LeetcodeQuestion.builder()
+                        .isPaidOnly(true)
+                        .topics(List.of(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeTopicTag.builder()
+                                .slug("array")
+                                .name("Array")
+                                .build()))
+                        .build());
+
+        runQueue();
+
+        verify(bank)
+                .createQuestionWithTopics(argThat(created -> created.isPaidOnly()
+                        && created.getTopics().size() == 1
+                        && created.getTopics().getFirst().getTopicSlug().equals("array")));
+        assertEquals(JobStatus.COMPLETE, job.getStatus());
     }
 }

@@ -9,6 +9,8 @@ import org.patinanetwork.codebloom.common.db.models.question.topic.LeetcodeTopic
 public interface QuestionBankRepository {
     void createQuestion(QuestionBank question);
 
+    void createQuestionWithTopics(QuestionBank question);
+
     Optional<QuestionBank> getQuestionById(String id);
 
     Optional<QuestionBank> getQuestionBySlug(String slug);

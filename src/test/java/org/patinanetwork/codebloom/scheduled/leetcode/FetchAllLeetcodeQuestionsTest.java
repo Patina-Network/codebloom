@@ -146,4 +146,17 @@ public class FetchAllLeetcodeQuestionsTest {
         spyJob.init();
         verify(spyJob, times(1)).init();
     }
+
+    @Test
+    void preservesPremiumMetadataMissingFromFreeProblemList() {
+        when(leetcodeClient.getAllProblems()).thenReturn(List.of());
+        when(questionBankRepository.getAllQuestions())
+                .thenReturn(List.of(QuestionBank.builder()
+                        .id("premium-id")
+                        .questionSlug("premium")
+                        .isPaidOnly(true)
+                        .build()));
+        job.updateQuestionBank();
+        verify(questionBankRepository, org.mockito.Mockito.never()).deleteQuestionById("premium-id");
+    }
 }

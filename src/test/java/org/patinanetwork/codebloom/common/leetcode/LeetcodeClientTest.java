@@ -834,41 +834,24 @@ public class LeetcodeClientTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"true", "false", "null", "missing"})
-    void diagnosticDistinguishesPremiumValues(String premiumValue) throws Exception {
-        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        var root = mapper.createObjectNode();
-        var question = root.putObject("data").putObject("question");
-        question.put("questionId", "42");
-        question.put("title", "Example");
-        question.put("titleSlug", "example");
-        question.put("difficulty", "Easy");
-        question.putNull("content");
-        question.put("stats", mapper.createObjectNode().put("acRate", "50%").toString());
-        question.putArray("topicTags");
-        if (!premiumValue.equals("missing")) {
-            question.set("isPaidOnly", mapper.readTree(premiumValue));
-        }
-
+    @ValueSource(booleans = {true, false})
+    void paidOnlyFlagPreservesNullContent(boolean isPaidOnly) throws Exception {
         when(httpResponse.statusCode()).thenReturn(200);
-        when(httpResponse.body()).thenReturn(root.toString());
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var data = new java.util.HashMap<String, Object>();
+        data.put("questionId", "1");
+        data.put("title", "Premium");
+        data.put("titleSlug", "premium");
+        data.put("difficulty", "Medium");
+        data.put("content", null);
+        data.put("isPaidOnly", isPaidOnly);
+        data.put("stats", "{\"acRate\":\"50%\"}");
+        data.put("topicTags", List.of());
+        when(httpResponse.body()).thenReturn(mapper.writeValueAsString(Map.of("data", Map.of("question", data))));
         when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(httpResponse);
-
-        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(LeetcodeClientImpl.class);
-        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
-        appender.start();
-        logger.addAppender(appender);
-        try {
-            leetcodeClient.findQuestionBySlug("example");
-            String expected = "LeetCode question diagnostic: slug=example, isPaidOnlyPresent="
-                    + !premiumValue.equals("missing") + ", isPaidOnly=" + premiumValue
-                    + ", descriptionMissing=true";
-            assertTrue(appender.list.stream()
-                    .anyMatch(event -> event.getFormattedMessage().equals(expected)));
-        } finally {
-            logger.detachAppender(appender);
-            appender.stop();
-        }
+        var question = leetcodeClient.findQuestionBySlug("premium");
+        assertEquals(isPaidOnly, question.isPaidOnly());
+        assertNull(question.getQuestion());
     }
 }

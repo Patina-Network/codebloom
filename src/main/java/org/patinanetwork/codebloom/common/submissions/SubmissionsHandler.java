@@ -117,7 +117,8 @@ public class SubmissionsHandler {
                 .questionTitle(question.getQuestionTitle())
                 .questionNumber(question.getQuestionId())
                 .questionLink("https://leetcode.com/problems/" + question.getTitleSlug())
-                .description(Optional.ofNullable(question.getQuestion()))
+                .description(Optional.ofNullable(question.getQuestion()).filter(d -> !d.isBlank()))
+                .isPaidOnly(question.isPaidOnly())
                 .acceptanceRate(question.getAcceptanceRate())
                 .topics(question.getTopics().stream()
                         .map(SubmissionsHandler::topicTagToQuestionTopic)
@@ -126,7 +127,11 @@ public class SubmissionsHandler {
 
         if (existingBankQuestion != null) {
             refetchedQuestion.setId(existingBankQuestion.getId());
-            questionBankRepository.updateQuestion(refetchedQuestion);
+            if (!questionBankRepository.updateQuestion(refetchedQuestion)) {
+                throw new IllegalStateException("Failed to save question metadata for " + slug);
+            }
+        } else {
+            questionBankRepository.createQuestionWithTopics(refetchedQuestion);
         }
 
         return refetchedQuestion;
@@ -149,7 +154,10 @@ public class SubmissionsHandler {
                             .filter(description -> !description.isBlank())
                             .isPresent();
 
-                    QuestionBank bankQuestion = hasDescription
+                    QuestionBank bankQuestion = (hasDescription
+                                    || existingBankQuestion
+                                            .map(QuestionBank::isPaidOnly)
+                                            .orElse(false))
                             ? existingBankQuestion.get()
                             : refetchAndBackfillQuestion(slug, existingBankQuestion.orElse(null), fast);
 

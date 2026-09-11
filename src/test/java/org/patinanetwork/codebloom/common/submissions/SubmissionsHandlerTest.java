@@ -172,6 +172,13 @@ class SubmissionsHandlerTest {
     @Test
     @DisplayName("creates topic entries for a new accepted submission")
     void createsTopics() {
+        doAnswer(invocation -> {
+                    QuestionBank created = invocation.getArgument(0);
+                    created.setId("new-bank");
+                    return null;
+                })
+                .when(questionBankRepository)
+                .createQuestionWithTopics(any());
         LeetcodeSubmission submission = acceptedSubmission(200, "two-sum", LocalDateTime.of(2025, 6, 1, 12, 0));
         when(questionRepository.questionExistsBySubmissionId("200")).thenReturn(false);
         when(questionRepository.getQuestionBySlugAndUserId("two-sum", USER_ID)).thenReturn(Optional.empty());
@@ -179,7 +186,15 @@ class SubmissionsHandlerTest {
 
         handler.handleSubmissions(List.of(submission), user, false);
 
-        verify(questionTopicRepository).createQuestionTopic(argThat(qt -> "array".equals(qt.getTopicSlug())));
+        verify(questionTopicRepository)
+                .createQuestionTopic(argThat(qt ->
+                        "array".equals(qt.getTopicSlug()) && qt.getQuestionId().isPresent()));
+        verify(questionBankRepository)
+                .createQuestionWithTopics(argThat(bankQuestion -> bankQuestion
+                                        .getTopics()
+                                        .size()
+                                == 1
+                        && bankQuestion.getTopics().getFirst().getTopicSlug().equals("array")));
     }
 
     @Test
@@ -321,6 +336,7 @@ class SubmissionsHandlerTest {
     @Test
     @DisplayName("re-fetches and backfills the question bank entry when its description is missing")
     void backfillsMissingDescription() {
+        when(questionBankRepository.updateQuestion(any())).thenReturn(true);
         LeetcodeSubmission sub = acceptedSubmission(603, "two-sum", LocalDateTime.of(2025, 6, 1, 12, 0));
         when(questionRepository.questionExistsBySubmissionId("603")).thenReturn(false);
         when(questionRepository.getQuestionBySlugAndUserId("two-sum", USER_ID)).thenReturn(Optional.empty());
@@ -401,5 +417,34 @@ class SubmissionsHandlerTest {
 
         assertFalse(potdResult.isEmpty());
         verify(questionRepository, atLeast(1)).createQuestion(any(Question.class));
+    }
+
+    @Test
+    void knownPremiumDoesNotRefetchDescription() {
+        var cached = QuestionBank.builder()
+                .questionSlug("premium-problem")
+                .isPaidOnly(true)
+                .topics(List.of())
+                .build();
+        when(questionBankRepository.getQuestionBySlug("premium-problem")).thenReturn(Optional.of(cached));
+        when(questionRepository.questionExistsBySubmissionId("123")).thenReturn(true);
+        handler.handleSubmissions(
+                List.of(acceptedSubmission(123, "premium-problem", LocalDateTime.now())), user, false);
+        verify(leetcodeClient, never()).findQuestionBySlug(anyString());
+        verify(leetcodeClient, never()).findQuestionBySlugFast(anyString());
+    }
+
+    @Test
+    void failedPremiumMetadataSaveStopsSubmissionProcessing() {
+        var submission = acceptedSubmission(604, "two-sum", LocalDateTime.of(2025, 6, 1, 12, 0));
+        when(questionBankRepository.getQuestionBySlug("two-sum"))
+                .thenReturn(Optional.of(QuestionBank.builder().id("bank-1").build()));
+        when(leetcodeClient.findQuestionBySlug("two-sum")).thenReturn(leetcodeQuestion("two-sum", "Easy", 50f));
+        when(questionBankRepository.updateQuestion(any())).thenReturn(false);
+
+        assertThrows(IllegalStateException.class, () -> handler.handleSubmissions(List.of(submission), user, false));
+
+        verify(questionRepository, never()).createQuestion(any());
+        verify(jobRepository, never()).createJob(any());
     }
 }

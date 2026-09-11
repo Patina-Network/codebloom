@@ -8,11 +8,13 @@ import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionDifficulty;
 import org.patinanetwork.codebloom.common.db.models.question.bank.QuestionBank;
 import org.patinanetwork.codebloom.common.db.models.question.topic.LeetcodeTopicEnum;
+import org.patinanetwork.codebloom.common.db.models.question.topic.QuestionTopic;
 import org.patinanetwork.codebloom.common.db.repos.question.topic.QuestionTopicRepository;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class QuestionBankSqlRepository implements QuestionBankRepository {
@@ -44,6 +46,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     .questionLink(questionLink)
                     .questionTitle(questionTitle)
                     .description(Optional.ofNullable(description))
+                    .isPaidOnly(rs.getBoolean("isPaidOnly"))
                     .acceptanceRate(acceptanceRate)
                     .createdAt(createdAt)
                     .topics(this.questionTopicRepository.findQuestionTopicsByQuestionBankId(questionBankId))
@@ -62,10 +65,11 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     "questionLink",
                     "questionTitle",
                     description,
+                    "isPaidOnly",
                     "acceptanceRate"
                 )
                 VALUES
-                    (:id, :slug, :difficulty, :number, :link, :title, :desc, :ac)
+                    (:id, :slug, :difficulty, :number, :link, :title, :desc, :isPaidOnly, :ac)
             """;
 
         question.setId(UUID.randomUUID().toString());
@@ -79,8 +83,22 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                 .param("link", question.getQuestionLink())
                 .param("title", question.getQuestionTitle())
                 .param("desc", question.getDescription().orElse(null))
+                .param("isPaidOnly", question.isPaidOnly())
                 .param("ac", question.getAcceptanceRate())
                 .update();
+    }
+
+    @Override
+    @Transactional
+    public void createQuestionWithTopics(final QuestionBank question) {
+        createQuestion(question);
+        for (var topic : question.getTopics()) {
+            questionTopicRepository.createQuestionTopic(QuestionTopic.builder()
+                    .questionBankId(question.getId())
+                    .topicSlug(topic.getTopicSlug())
+                    .topic(topic.getTopic())
+                    .build());
+        }
     }
 
     @Override
@@ -94,6 +112,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     "questionLink",
                     "questionTitle",
                     description,
+                    "isPaidOnly",
                     "acceptanceRate",
                     "createdAt"
                 FROM
@@ -120,6 +139,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     "questionLink",
                     "questionTitle",
                     description,
+                    "isPaidOnly",
                     "acceptanceRate",
                     "createdAt"
                 FROM
@@ -147,6 +167,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     "questionLink" = :link,
                     "questionTitle" = :title,
                     description = :desc,
+                    "isPaidOnly" = :isPaidOnly,
                     "acceptanceRate" = :ac
                 WHERE
                     id = :id
@@ -160,6 +181,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                 .param("link", inputQuestion.getQuestionLink())
                 .param("title", inputQuestion.getQuestionTitle())
                 .param("desc", inputQuestion.getDescription().orElse(null))
+                .param("isPaidOnly", inputQuestion.isPaidOnly())
                 .param("ac", inputQuestion.getAcceptanceRate())
                 .param("id", UUID.fromString(inputQuestion.getId()))
                 .update();
@@ -187,6 +209,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     "questionLink",
                     "questionTitle",
                     description,
+                    "isPaidOnly",
                     "acceptanceRate",
                     "createdAt"
                 FROM
@@ -209,6 +232,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     qb."questionLink",
                     qb."questionTitle",
                     qb.description,
+                    qb."isPaidOnly",
                     qb."acceptanceRate",
                     qb."createdAt"
                 FROM
@@ -237,6 +261,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                     "questionLink",
                     "questionTitle",
                     description,
+                    "isPaidOnly",
                     "acceptanceRate",
                     "createdAt"
                 FROM
@@ -263,6 +288,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
                         "questionLink",
                         "questionTitle",
                         description,
+                        "isPaidOnly",
                         "acceptanceRate",
                         "createdAt"
                     FROM "QuestionBank"
