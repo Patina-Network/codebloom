@@ -158,6 +158,17 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             }
 
             JsonNode node = mapper.readTree(body);
+            JsonNode questionNode = node.path("data").path("question");
+            JsonNode premiumNode = questionNode.path("isPaidOnly");
+            JsonNode contentNode = questionNode.path("content");
+            log.info(
+                    "LeetCode question diagnostic: slug={}, isPaidOnlyPresent={}, isPaidOnly={}, descriptionMissing={}",
+                    slug,
+                    questionNode.has("isPaidOnly"),
+                    premiumNode.isMissingNode() ? "missing" : premiumNode.toString(),
+                    contentNode.isNull()
+                            || contentNode.isMissingNode()
+                            || contentNode.asText().isBlank());
 
             int questionId =
                     node.path("data").path("question").path("questionId").asInt();

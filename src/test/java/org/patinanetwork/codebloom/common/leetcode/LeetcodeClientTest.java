@@ -832,4 +832,43 @@ public class LeetcodeClientTest {
             Thread.interrupted();
         }
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false", "null", "missing"})
+    void diagnosticDistinguishesPremiumValues(String premiumValue) throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var root = mapper.createObjectNode();
+        var question = root.putObject("data").putObject("question");
+        question.put("questionId", "42");
+        question.put("title", "Example");
+        question.put("titleSlug", "example");
+        question.put("difficulty", "Easy");
+        question.putNull("content");
+        question.put("stats", mapper.createObjectNode().put("acRate", "50%").toString());
+        question.putArray("topicTags");
+        if (!premiumValue.equals("missing")) {
+            question.set("isPaidOnly", mapper.readTree(premiumValue));
+        }
+
+        when(httpResponse.statusCode()).thenReturn(200);
+        when(httpResponse.body()).thenReturn(root.toString());
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        var logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(LeetcodeClientImpl.class);
+        var appender = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            leetcodeClient.findQuestionBySlug("example");
+            String expected = "LeetCode question diagnostic: slug=example, isPaidOnlyPresent="
+                    + !premiumValue.equals("missing") + ", isPaidOnly=" + premiumValue
+                    + ", descriptionMissing=true";
+            assertTrue(appender.list.stream()
+                    .anyMatch(event -> event.getFormattedMessage().equals(expected)));
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
 }
