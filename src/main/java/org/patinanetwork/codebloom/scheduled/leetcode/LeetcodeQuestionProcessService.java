@@ -191,7 +191,8 @@ public class LeetcodeQuestionProcessService {
                 cached.setDescription(description);
                 if (bankQuestion.isPresent()) {
                     if (!questionBankRepository.updateQuestion(cached)) {
-                        throw new RuntimeException("Failed to save question description metadata");
+                        throw new IllegalStateException(
+                                "Failed to save question metadata for " + question.getQuestionSlug());
                     }
                 } else {
                     cached.setTopics(fetchedQuestion.getTopics().stream()
