@@ -158,6 +158,10 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             }
 
             JsonNode node = mapper.readTree(body);
+            JsonNode questionNode = node.path("data").path("question");
+            if (!questionNode.isObject()) {
+                throw new LeetcodeClientException("LeetCode returned no question data");
+            }
 
             int questionId =
                     node.path("data").path("question").path("questionId").asInt();
@@ -168,10 +172,6 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             String link = "https://leetcode.com/problems/" + titleSlug;
             String difficulty =
                     node.path("data").path("question").path("difficulty").asText();
-            JsonNode questionNode = node.path("data").path("question");
-            if (!questionNode.isObject()) {
-                throw new LeetcodeClientException("LeetCode returned no question data");
-            }
             String question = questionNode.path("content").asText(null);
             if (question != null && question.isBlank()) {
                 question = null;
