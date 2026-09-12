@@ -12,7 +12,7 @@ This directory contains helper scripts that are used in our CI/CD workflows. The
 ├── load-secrets                        # used to load environment variables (and automatically mask them in GitHub Actions) as a JS object.
 ├── notion                              # notion-specific logic (includes helper functions that can be shared as well as a `main()` function to directly run Notion verification checks against PR & commits)
 ├── patches                             # bun patches applied to certain packages to fulfill our need
-├── redeploy                            # redeployment logic (db migrations, DigitalOcean, Coolify)
+├── redeploy                            # redeployment logic (db migrations and Kubernetes manifest PRs)
 ├── test                                # includes multiple different test flows (backend, frontend, compile checks only)
 ├── types.ts                            # shared types
 ├── utils                               # shared utils
@@ -33,18 +33,6 @@ This directory contains helper scripts that are used in our CI/CD workflows. The
 
 ## Run
 
-To run a script, simply use the following snippet below:
+Run scripts from the repository root with Bun. Each script declares its required arguments in its `yargs` configuration.
 
-```bash
-bun run .github/scripts/redeploy/index.ts
-
-# or use shorthand since it's an index.ts file
-
-bun run .github/scripts/redeploy
-
-# you do not need to call `dotenvx run --` before calling Bun Shell scripts. they already have a way to
-# parse env files and use them as a JS object at runtime (masked in GitHub Actions).
-
-# if you need to explicitly pass in an environment variable, do it like so
-ENVIRONMENT=staging bun run .github/scripts/redeploy
-```
+For deployment, `redeploy/index.ts` requires `--sha` (or `GITHUB_SHA`) and GitHub App credentials in the process environment. Select the environment with `--environment staging|production`. Running the script locally does not automatically load environment files.

@@ -12,7 +12,7 @@ These templates are then built into `*.html` files which are then loaded at runt
 ### Run
 
 1. Run `pnpm i` to install all dependencies
-1. Run `just dev` from the root directory to run the React Email dev server with sane defaults
+1. Run `just email-dev` from the root directory to run the React Email dev server with sane defaults
 1. Run `pnpm build` to build all React Email files under `emails/`
 1. If you would like to build & copy all template files to the backend, run `just email-gen` from the root directory
 
