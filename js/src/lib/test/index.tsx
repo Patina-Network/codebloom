@@ -9,7 +9,7 @@ import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, RenderResult } from "@testing-library/react";
 import { ReactElement } from "react";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter } from "react-router-dom";
 
 /**
  * Some Mantine components like Modals use Transition components to render an animation.

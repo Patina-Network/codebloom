@@ -2,7 +2,7 @@ import { DuelWithIdBody } from "@/app/duel/_components/DuelBody";
 import ToastWithRedirect from "@/components/ui/toast/ToastWithRedirect";
 import { useAuthQuery } from "@/lib/api/queries/auth";
 import { Flex, Loader } from "@mantine/core";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 
 export default function DuelPage() {
   const { lobbyCode } = useParams<{ lobbyCode: string }>();
