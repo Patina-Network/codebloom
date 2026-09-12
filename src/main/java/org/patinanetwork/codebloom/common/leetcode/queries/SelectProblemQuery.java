@@ -14,6 +14,7 @@ public class SelectProblemQuery {
                 questionId
                 title
                 titleSlug
+                isPaidOnly
                 content
                 difficulty
                 stats

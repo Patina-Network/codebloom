@@ -158,6 +158,10 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             }
 
             JsonNode node = mapper.readTree(body);
+            JsonNode questionNode = node.path("data").path("question");
+            if (!questionNode.isObject()) {
+                throw new LeetcodeClientException("LeetCode returned no question data");
+            }
 
             int questionId =
                     node.path("data").path("question").path("questionId").asInt();
@@ -168,7 +172,11 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             String link = "https://leetcode.com/problems/" + titleSlug;
             String difficulty =
                     node.path("data").path("question").path("difficulty").asText();
-            String question = node.path("data").path("question").path("content").asText();
+            String question = questionNode.path("content").asText(null);
+            if (question != null && question.isBlank()) {
+                question = null;
+            }
+            boolean isPaidOnly = questionNode.path("isPaidOnly").asBoolean(false);
 
             String statsJson = node.path("data").path("question").path("stats").asText();
             JsonNode stats = mapper.readTree(statsJson);
@@ -193,6 +201,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
                     .titleSlug(titleSlug)
                     .difficulty(difficulty)
                     .question(question)
+                    .isPaidOnly(isPaidOnly)
                     .acceptanceRate(acRate)
                     .topics(tags)
                     .build();

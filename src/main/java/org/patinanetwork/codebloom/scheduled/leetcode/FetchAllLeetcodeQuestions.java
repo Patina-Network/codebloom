@@ -122,6 +122,7 @@ public class FetchAllLeetcodeQuestions {
         }
 
         List<QuestionBank> deletedFromLeetcode = bankQuestion.stream()
+                .filter(q -> !q.isPaidOnly())
                 .filter(q -> !slugsFromLeetcode.contains(q.getQuestionSlug()))
                 .collect(Collectors.toList());
 

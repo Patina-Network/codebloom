@@ -20,6 +20,8 @@ public class LeetcodeQuestion {
     private String titleSlug;
     private String difficulty;
     private String question;
+    private boolean isPaidOnly;
+
     private float acceptanceRate;
     private List<LeetcodeTopicTag> topics;
 }

@@ -34,6 +34,8 @@ public class QuestionBank {
     @Builder.Default
     private Optional<String> description = Optional.empty();
 
+    private boolean isPaidOnly;
+
     private float acceptanceRate;
 
     private OffsetDateTime createdAt;

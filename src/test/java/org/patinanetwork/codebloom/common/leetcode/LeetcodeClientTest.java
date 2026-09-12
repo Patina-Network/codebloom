@@ -832,4 +832,26 @@ public class LeetcodeClientTest {
             Thread.interrupted();
         }
     }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void paidOnlyFlagPreservesNullContent(boolean isPaidOnly) throws Exception {
+        when(httpResponse.statusCode()).thenReturn(200);
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var data = new java.util.HashMap<String, Object>();
+        data.put("questionId", "1");
+        data.put("title", "Premium");
+        data.put("titleSlug", "premium");
+        data.put("difficulty", "Medium");
+        data.put("content", null);
+        data.put("isPaidOnly", isPaidOnly);
+        data.put("stats", "{\"acRate\":\"50%\"}");
+        data.put("topicTags", List.of());
+        when(httpResponse.body()).thenReturn(mapper.writeValueAsString(Map.of("data", Map.of("question", data))));
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+        var question = leetcodeClient.findQuestionBySlug("premium");
+        assertEquals(isPaidOnly, question.isPaidOnly());
+        assertNull(question.getQuestion());
+    }
 }
