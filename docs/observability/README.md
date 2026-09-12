@@ -2,7 +2,7 @@
 
 <img src="./dashboard.png" alt="Grafana">
 
-Codebloom uses Spring Boot Actuator and Prometheus to provide operational insights into the running application. We also collect logs via OpenSearch, which is setup through the DigitalOcean App Platform [(view app spec here)](../../.do/specs.ts). Both of these data sources are then fed to a Grafana instance hosted on [monitor.tahmid.io](https://monitor.tahmid.io)
+Codebloom uses Spring Boot Actuator and Prometheus to provide operational insights into the running application. The application deployment now targets Kubernetes; see [infrastructure documentation](../../infra/README.md). OpenSearch and Grafana infrastructure configuration is not stored in this repository. Both of these data sources are then fed to a Grafana instance hosted on [monitor.tahmid.io](https://monitor.tahmid.io)
 
 ## Grafana
 
@@ -17,20 +17,13 @@ Spring Boot Actuator exposes operational information about the running applicati
 
 ### Security
 
-All actuator endpoints are protected with HTTP Basic Authentication to prevent unauthorized access to sensitive operational data.
-
-**Authentication Details:**
-
-- **Authentication Type:** HTTP Basic Auth
-- **Role Required:** `ACTUATOR`
-- **Credentials:** Stored in environment variables
-  - `ACTUATOR_USERNAME` - Username for actuator endpoints
-  - `ACTUATOR_PASSWORD` - Password for actuator endpoints (generate with `openssl rand -base64 48 | head -c 64`)
+The checked-in [SecurityConfig.java](../../src/main/java/org/patinanetwork/codebloom/api/auth/security/SecurityConfig.java) permits these requests and does not configure HTTP Basic authentication or an `ACTUATOR` role. `ACTUATOR_USERNAME` and `ACTUATOR_PASSWORD` are not wired into the application configuration. Any access restrictions applied by deployment infrastructure must be checked in that infrastructure separately.
 
 ### Available Endpoints
 
 Currently exposed endpoints:
 
+- **`/actuator/health`** - Application health
 - **`/actuator/prometheus`** - Prometheus-formatted metrics endpoint for scraping
 
 ## Prometheus Metrics
@@ -45,7 +38,7 @@ Prometheus metrics provide detailed insights into application performance, JVM s
 http://localhost:8080/actuator/prometheus
 ```
 
-(Requires HTTP Basic Auth with actuator credentials)
+
 
 **Staging:**
 
@@ -63,12 +56,10 @@ https://codebloom.patinanetwork.org/actuator/prometheus
 
 To test the actuator endpoint locally:
 
-1. Ensure your `.env` file has `ACTUATOR_USERNAME` and `ACTUATOR_PASSWORD` set
-2. Start the application (`just dev`)
-3. Access the endpoint using curl:
+1. Start the application (`just dev`).
+2. Request an exposed endpoint:
 
 ```bash
-curl -u actuator:your_password http://localhost:8080/actuator/prometheus
+curl http://localhost:8080/actuator/prometheus
+curl http://localhost:8080/actuator/health
 ```
-
-Or use a browser and enter the username/password when prompted.
