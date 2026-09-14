@@ -12,8 +12,8 @@ This directory holds the Codebloom infrastructure code. That includes workflows 
 ├── ai-review.yml               # Qodo review agent (includes custom logic to inject Notion task context to AI agent)
 ├── approval.yml                # DEPRECATED - used to handle custom approval rules not natively supported by GitHub
 ├── ci-cd.yml                   # Main CI/CD pipeline that runs tests, builds images, triggers deployments, and more.
-├── copy-db.yml                 # command to copy prod db to staging db
-├── deploy-stg.yml              # command to deploy to staging
+├── copy-command.yml                 # command to copy prod db to staging db
+├── e2e.yml                     # daily E2E tests
 ├── help-command.yml            # one-time command on PR launch to show all available slash commands
 ├── pr-verifications.yml        # validates PR & commits against Notion
 └── slash.yml                   # helper workflow to trigger slash command invocations to the right workflow
@@ -30,7 +30,7 @@ This directory holds the Codebloom infrastructure code. That includes workflows 
 
 All PRs must be tested in our staging environment to make sure that it won't break anything (if there's a reason it cannot be tested in staging, it must be indicated in the PR description).
 
-To trigger deployment to staging, you just have to comment `/deploy` as a comment in the PR.
+`/deploy` is registered, but its target `deploy-command.yml` workflow is missing from this checkout, so it cannot currently trigger staging deployment.
 
 > [!NOTE]
 > It should be a regular comment inside of the first page of the PR; writing the command as a review on a file or line(s) will not trigger deployment.

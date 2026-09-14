@@ -18,13 +18,9 @@
 > [!WARNING]
 > Should be used sparingly
 
-`just copy-stg` - Will pull credentials from `infra/.env.production` and do the following:
+`just migrate-stg` - Migrate staging using `.env.staging` and versioned migrations only.
 
-1. Drop all tables from staging db
-2. Copy all data from production db to staging db
-3. Scrub/sanitize all records/tables that should not be allowed in staging db.
-    > [!WARNING]
-    > Should be used sparingly
+`just copy-stg` currently references the missing `infra/copy-prod-db.sh` and does not work. The implemented production-to-staging copy is the `/copy` PR command, backed by [copy-command.yml](../../.github/workflows/copy-command.yml) and [copy-prod-db/index.ts](../../.github/scripts/copy-prod-db/index.ts). It replaces staging data and then sanitizes it.
 
 # Frontend
 
@@ -34,7 +30,7 @@
 
 `just frontend-dev` - Will only start the frontend Vite dev server.
 
-`just types-gen` - Regenerate the `schema.ts` file.
+`just type-gen` - Regenerate the `schema.ts` file.
 
 > [!WARNING]
 > The backend must be running
@@ -49,9 +45,9 @@
 
 `just backend-dev-debug` - Will only start the backend Spring dev server, but will wait for a JVM debugger to attach to port 5005 first.
 
-`just backend-test` - Run Checkstyle and then the full test suite.
+`just backend-test` - Check Spotless formatting, then run Checkstyle and Maven verification with the `ci` profile, loading `.env` and `.env.shared`.
 
-`just backend-coverage` - Runs `just backend-test` and opens up the JaCoCo test coverage page in your default browser.
+After `just backend-test`, view the JaCoCo report at `target/site/jacoco/index.html`. There is currently no `backend-coverage` recipe.
 
 `just backend-spotless` - Runs the backend formatter (currently Spotless with Palantir Java Formatter) and indicates whether or not you need to run the formatter on any files.
 
