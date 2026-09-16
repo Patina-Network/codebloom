@@ -1,7 +1,7 @@
 import SchoolEmailModal from "@/app/settings/_components/SchoolEmailModal";
 import { schoolVerificationFormSchema } from "@/lib/api/schema/school";
 import { TestUtils } from "@/lib/test";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const mutate = vi.fn();
@@ -11,7 +11,8 @@ vi.mock("@/lib/api/queries/auth/school", () => ({
 
 beforeEach(() => mutate.mockReset());
 
-it("shows CUNY alias and inbox instructions beside the student email field", () => {
+it("expands and collapses CUNY enrollment instructions", async () => {
+  const user = userEvent.setup();
   TestUtils.getRenderWithAllProvidersFn()(
     <SchoolEmailModal enabled toggle={vi.fn()} />,
   );
@@ -19,12 +20,25 @@ it("shows CUNY alias and inbox instructions beside the student email field", () 
     screen.getByRole("dialog", { name: "Verify your student email" }),
   ).toBeInTheDocument();
   expect(screen.getByLabelText("Student email")).toBeInTheDocument();
+  const help = screen.getByRole("button", {
+    name: "How do I enroll if I'm a CUNY student",
+  });
+  expect(help).toHaveAttribute("aria-expanded", "false");
+  await user.click(help);
+  expect(help).toHaveAttribute("aria-expanded", "true");
   expect(
     screen.getByText(/@stu-mail.hunter.cuny.edu for Hunter College/),
   ).toBeInTheDocument();
   expect(
     screen.getByText(/sign in to Outlook with your @login.cuny.edu login/),
-  ).toBeInTheDocument();
+  ).toBeVisible();
+  await user.click(help);
+  expect(help).toHaveAttribute("aria-expanded", "false");
+  await waitFor(() => {
+    expect(
+      screen.queryByText(/@stu-mail.hunter.cuny.edu for Hunter College/),
+    ).not.toBeVisible();
+  });
 });
 
 it("blocks a shared CUNY login and allows the student to correct it to an alias", async () => {
