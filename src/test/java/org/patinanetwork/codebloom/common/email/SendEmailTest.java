@@ -64,7 +64,7 @@ public class SendEmailTest extends NoJdaRequired {
 
     @Test
     void testValidSchoolEmail() throws JsonProcessingException {
-        String payload = buildTestEmailPayload("TIMMY.APPLES420@myhunter.cuny.edu");
+        String payload = buildTestEmailPayload("TIMMY.APPLES420@stu-mail.hunter.cuny.edu");
 
         ApiResponder<Empty> apiResponder = RestAssured.given()
                 .header("Content-Type", "application/json")

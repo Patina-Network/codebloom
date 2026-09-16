@@ -3,15 +3,15 @@ package org.patinanetwork.codebloom.common.schools;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
 
 public enum SchoolEnum {
-    HUNTER("@myhunter.cuny.edu", Tag.Hunter),
+    HUNTER("@stu-mail.hunter.cuny.edu", Tag.Hunter),
     NYU("@nyu.edu", Tag.Nyu),
-    BARUCH("@baruchmail.cuny.edu", Tag.Baruch),
+    BARUCH("@stu-mail.baruch.cuny.edu", Tag.Baruch),
     RPI("@rpi.edu", Tag.Rpi),
     SBU("@stonybrook.edu", Tag.Sbu),
-    CCNY("@citymail.cuny.edu", Tag.Ccny),
+    CCNY("@stu-mail.ccny.cuny.edu", Tag.Ccny),
     COLUMBIA("@columbia.edu", Tag.Columbia),
     CORNELL("@cornell.edu", Tag.Cornell),
-    BMCC("@stu.bmcc.cuny.edu", Tag.Bmcc);
+    BMCC("@stu-mail.bmcc.cuny.edu", Tag.Bmcc);
 
     private final String emailDomain;
     private final Tag internalTag;
