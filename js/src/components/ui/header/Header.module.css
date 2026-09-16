@@ -6,7 +6,7 @@
     gap: 1rem;
 }
 
-header > :nth-child(2) {
+.header > :nth-child(2) {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
