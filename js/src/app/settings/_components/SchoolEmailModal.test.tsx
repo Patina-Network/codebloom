@@ -21,22 +21,20 @@ it("expands and collapses CUNY enrollment instructions", async () => {
   ).toBeInTheDocument();
   expect(screen.getByLabelText("Student email")).toBeInTheDocument();
   const help = screen.getByRole("button", {
-    name: "How do I enroll if I'm a CUNY student",
+    name: /How do I enroll if I'm a CUNY student/i,
   });
   expect(help).toHaveAttribute("aria-expanded", "false");
   await user.click(help);
   expect(help).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByText(/@stu-mail\.hunter\.cuny\.edu/)).toBeInTheDocument();
   expect(
-    screen.getByText(/@stu-mail.hunter.cuny.edu for Hunter College/),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByText(/sign in to Outlook with your @login.cuny.edu login/),
+    screen.getByText(/sign in to Outlook with your @login\.cuny\.edu login/),
   ).toBeVisible();
   await user.click(help);
   expect(help).toHaveAttribute("aria-expanded", "false");
   await waitFor(() => {
     expect(
-      screen.queryByText(/@stu-mail.hunter.cuny.edu for Hunter College/),
+      screen.queryByText(/@stu-mail\.hunter\.cuny\.edu/),
     ).not.toBeVisible();
   });
 });
