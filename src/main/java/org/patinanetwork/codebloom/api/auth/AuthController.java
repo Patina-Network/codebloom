@@ -204,6 +204,12 @@ public class AuthController {
 
         String email = emailBody.getEmail();
         String domain = email.substring(email.indexOf("@")).toLowerCase();
+        if (domain.equals("@login.cuny.edu") || domain.equals("@cuny.edu")) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "CUNY students: use your college email alias (for example, firstname.lastname##@stu-mail.hunter.cuny.edu). "
+                            + "Then sign in to Outlook with your @login.cuny.edu credentials to open the verification link.");
+        }
         Set<String> supportedDomains = Stream.of(SchoolEnum.values())
                 .map(school -> school.getEmailDomain())
                 .collect(Collectors.toSet());
@@ -285,13 +291,6 @@ public class AuthController {
             return new RedirectView("/settings?success=false&message=ID does not match current user");
         }
 
-        user.setSchoolEmail(magicLink.getEmail());
-        boolean isSuccessful = userRepository.updateUser(user);
-
-        if (!isSuccessful) {
-            throw new RuntimeException("User repository failed to update user and add school email.");
-        }
-
         String emailDomain = magicLink
                 .getEmail()
                 .substring(magicLink.getEmail().indexOf("@"))
@@ -303,6 +302,13 @@ public class AuthController {
                 .orElse(null);
         if (schoolEnum == null) {
             return new RedirectView("/settings?success=false&message=This email is not supported");
+        }
+
+        user.setSchoolEmail(magicLink.getEmail());
+        boolean isSuccessful = userRepository.updateUser(user);
+
+        if (!isSuccessful) {
+            throw new RuntimeException("User repository failed to update user and add school email.");
         }
 
         UserTag schoolTag = UserTag.builder()
