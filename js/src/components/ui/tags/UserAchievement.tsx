@@ -5,6 +5,7 @@ import { ApiUtils } from "@/lib/api/utils";
 import { Image, Tooltip, Box, Text, Stack, Divider } from "@mantine/core";
 import dayjs from "dayjs";
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 
 type AchievementDto = Api<"AchievementDto">;
 interface UserAchievementProps {
@@ -80,7 +81,11 @@ function GlobalTrophyBadge({ achievement }: AchievementBadgeProps) {
       withArrow
       position="top"
     >
-      <Box style={{ position: "relative", display: "inline-block" }}>
+      <Box
+        style={{ position: "relative", display: "inline-block" }}
+        component={Link}
+        to={`/leaderboard/${achievement.leaderboardId}`}
+      >
         <Text fz={34} lh={1}>
           🏆
         </Text>
@@ -124,7 +129,11 @@ function LeaderboardAchievementBadge({
       withArrow
       position="top"
     >
-      <Box style={{ position: "relative", display: "inline-block" }}>
+      <Box
+        style={{ position: "relative", display: "inline-block" }}
+        component={Link}
+        to={`/leaderboard/${achievement.leaderboardId}?${achievement.leaderboard.toLowerCase()}=true`}
+      >
         <Image
           src={metadata.icon}
           alt={metadata.alt}
