@@ -1,7 +1,7 @@
 import type { Environment, Type } from "types";
 
 import { GitHubClient } from "@tahminator/pipeline";
-import { _migrateDb } from "redeploy/db";
+import { _migrateDb } from "redeploy/db/util";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
