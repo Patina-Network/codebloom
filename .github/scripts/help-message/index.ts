@@ -28,6 +28,7 @@ export async function main() {
     message: `
 ### Available PR Commands
 
+- \`/migrate\` - Applies this PR's database migrations to the staging DB (can only be run by someone on \`@Patina-Network/codebloom\`)
 - \`/copy\` - Triggers copy from production to staging db (can only be run by \`tahminator\` or \`angelayu0530\`)
 `.trim(),
   });
