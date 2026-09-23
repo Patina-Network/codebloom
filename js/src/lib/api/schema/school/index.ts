@@ -12,6 +12,7 @@ export const schoolVerificationFormSchema = z.object({
         !["login.cuny.edu", "cuny.edu"].includes(
           email.split("@")[1]?.toLowerCase(),
         ),
-      "Please make sure to use your college email alias (e.g., jane.smith03@stu-mail.hunter.cuny.edu) so we can identify your school.",
+      "CUNY students: use your college email alias (for example, firstname.lastname##@stu-mail.hunter.cuny.edu). " +
+        "Then sign in to Outlook with your @login.cuny.edu credentials to open the verification link.",
     ),
 });
