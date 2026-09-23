@@ -22,9 +22,14 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.patinanetwork.codebloom.api.auth.body.EmailBody;
 import org.patinanetwork.codebloom.common.db.models.Session;
 import org.patinanetwork.codebloom.common.db.models.user.User;
+import org.patinanetwork.codebloom.common.db.models.usertag.UserTag;
 import org.patinanetwork.codebloom.common.db.repos.session.SessionRepository;
 import org.patinanetwork.codebloom.common.db.repos.user.UserRepository;
 import org.patinanetwork.codebloom.common.db.repos.usertag.UserTagRepository;
@@ -34,6 +39,7 @@ import org.patinanetwork.codebloom.common.email.options.SendEmailOptions;
 import org.patinanetwork.codebloom.common.email.template.ReactEmailTemplater;
 import org.patinanetwork.codebloom.common.jwt.JWTClient;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
+import org.patinanetwork.codebloom.common.schools.SchoolEnum;
 import org.patinanetwork.codebloom.common.schools.magic.MagicLink;
 import org.patinanetwork.codebloom.common.security.AuthenticationObject;
 import org.patinanetwork.codebloom.common.security.Protector;
@@ -249,7 +255,7 @@ public class AuthControllerTest {
         Session session = createRandomSession(user.getId());
         AuthenticationObject authObj = createAuthenticationObject(user, session);
 
-        EmailBody emailBody = new EmailBody("test@myhunter.cuny.edu");
+        EmailBody emailBody = new EmailBody("test@stu-mail.hunter.cuny.edu");
 
         when(simpleRedis.containsKey(user.getId())).thenReturn(true);
         when(simpleRedis.get(user.getId())).thenReturn(System.currentTimeMillis());
@@ -271,7 +277,7 @@ public class AuthControllerTest {
         Session session = createRandomSession(user.getId());
         AuthenticationObject authObj = createAuthenticationObject(user, session);
 
-        EmailBody emailBody = new EmailBody("test@myhunter.cuny.edu");
+        EmailBody emailBody = new EmailBody("test@stu-mail.hunter.cuny.edu");
 
         when(jwtClient.encode(any(MagicLink.class), any(Duration.class))).thenReturn("mock-token");
         when(serverUrlUtils.getUrl()).thenReturn("http://localhost:8080");
@@ -294,7 +300,7 @@ public class AuthControllerTest {
         Session session = createRandomSession(user.getId());
         AuthenticationObject authObj = createAuthenticationObject(user, session);
 
-        EmailBody emailBody = new EmailBody("test@myhunter.cuny.edu");
+        EmailBody emailBody = new EmailBody("test@stu-mail.hunter.cuny.edu");
 
         when(simpleRedis.containsKey(user.getId())).thenReturn(false);
         when(jwtClient.encode(any(MagicLink.class), any(Duration.class))).thenReturn("mock-token");
@@ -359,7 +365,7 @@ public class AuthControllerTest {
         AuthenticationObject authObj = createAuthenticationObject(user, session);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
-        MagicLink magicLink = new MagicLink("test@myhunter.cuny.edu", "different-user-id");
+        MagicLink magicLink = new MagicLink("test@stu-mail.hunter.cuny.edu", "different-user-id");
 
         when(protector.validateSession(request)).thenReturn(authObj);
         when(request.getParameter("state")).thenReturn("valid-token");
@@ -382,7 +388,7 @@ public class AuthControllerTest {
         AuthenticationObject authObj = createAuthenticationObject(user, session);
 
         HttpServletRequest request = mock(HttpServletRequest.class);
-        MagicLink magicLink = new MagicLink("test@myhunter.cuny.edu", user.getId());
+        MagicLink magicLink = new MagicLink("test@stu-mail.hunter.cuny.edu", user.getId());
 
         when(protector.validateSession(request)).thenReturn(authObj);
         when(request.getParameter("state")).thenReturn("valid-token");
@@ -398,5 +404,57 @@ public class AuthControllerTest {
         verify(jwtClient, times(1)).decode("valid-token", MagicLink.class);
         verify(userRepository, times(1)).updateUser(any(User.class));
         verify(userTagRepository, times(1)).createTag(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(SchoolEnum.class)
+    void enrollAndVerifyEverySchoolAlias(final SchoolEnum school) throws Exception {
+        User user = createRandomUser();
+        Session session = createRandomSession(user.getId());
+        AuthenticationObject auth = createAuthenticationObject(user, session);
+        String email = "student03" + school.getEmailDomain().toUpperCase(java.util.Locale.ROOT);
+        when(jwtClient.encode(any(MagicLink.class), any(Duration.class))).thenReturn("alias-token");
+        when(serverUrlUtils.getUrl()).thenReturn("http://localhost:8080");
+        when(reactEmailTemplater.schoolEmailTemplate(any())).thenReturn("<html>Verify</html>");
+
+        assertEquals(
+                HttpStatus.OK,
+                authController.enrollSchool(new EmailBody(email), auth).getStatusCode());
+        ArgumentCaptor<SendEmailOptions> sent = ArgumentCaptor.forClass(SendEmailOptions.class);
+        verify(emailClient).sendMessage(sent.capture());
+        assertEquals(email, sent.getValue().getRecipientEmail());
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(protector.validateSession(request)).thenReturn(auth);
+        when(request.getParameter("state")).thenReturn("alias-token");
+        when(jwtClient.decode("alias-token", MagicLink.class)).thenReturn(new MagicLink(email, user.getId()));
+        when(userRepository.updateUser(any(User.class))).thenReturn(true);
+        assertEquals(
+                "/settings?success=true&message=The email has been verified!",
+                authController.verifySchoolEmail(request).getUrl());
+        ArgumentCaptor<UserTag> tag = ArgumentCaptor.forClass(UserTag.class);
+        verify(userTagRepository).createTag(tag.capture());
+        assertEquals(school.getInternalTag(), tag.getValue().getTag());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"student@login.cuny.edu", "student@CUNY.EDU"})
+    void sharedCunyAddressesExplainHowToUseAliases(final String email) {
+        User user = createRandomUser();
+        AuthenticationObject auth = createAuthenticationObject(user, createRandomSession(user.getId()));
+        var error = assertThrows(
+                ResponseStatusException.class, () -> authController.enrollSchool(new EmailBody(email), auth));
+        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        assertTrue(error.getReason().contains("college email alias"));
+        org.mockito.Mockito.verifyNoInteractions(emailClient, userRepository, userTagRepository);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"student@stu-mail.hunter.cuny.edu.evil.com", "student@stu-mail.unknown.cuny.edu"})
+    void rejectsUnrecognizedAliasDomains(final String email) {
+        User user = createRandomUser();
+        AuthenticationObject auth = createAuthenticationObject(user, createRandomSession(user.getId()));
+        assertThrows(ResponseStatusException.class, () -> authController.enrollSchool(new EmailBody(email), auth));
+        org.mockito.Mockito.verifyNoInteractions(emailClient);
     }
 }
