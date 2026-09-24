@@ -73,7 +73,6 @@ This slash command will return a refreshed leaderboard embed (similar to the aut
 
 Current restrcitions:
 
-- We cannot currently update the leaderboard via Discord (though we are working on that now!)
 - If the club requested a leaderboard update before 5 minutes have elapsed, the command will then fail & indicate how long to wait until you can request a new update.
   - **NOTE**: it will not show the fail response to every user, but only to the user who triggered the command.
 

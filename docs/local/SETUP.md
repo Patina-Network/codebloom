@@ -8,7 +8,7 @@ The following general software needs to be installed on your local machine:
 1. `dotenvx` - Used to load environment variables from the root `.env` file.
 1. `node` - Javascript runtime to run our frontend TypeScript code.
 1. `corepack` - A package manager for package managers (???) to help us set a consistent `pnpm` version across all devs.
-1. `pnpm@9` - Package manager that works faster than the default npm package manager.
+1. `pnpm@10.24.0` - Package manager that works faster than the default npm package manager.
 
 ## MacOS
 
@@ -196,7 +196,7 @@ You can feel free to use any viewer you want, but we would recommend [DataGrip](
 
 # Secrets
 
-You can speed up the setup process by making a copy of `.env.example` to `.env`.
+You can speed up the setup process by making a copy of `example.env` to `.env`.
 You will also find explanations and documentation about how to source the value for each key.
 
 If there is a key specific to an environment (such as `CI` or `staging` environment), please consult the tech docs within the `CI` group.

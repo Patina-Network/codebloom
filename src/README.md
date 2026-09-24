@@ -133,7 +133,7 @@ src/main
 
 ### Security Details
 
-- **CSRF Protection** - Automatically managed by Spring Security, so no additional configuration is required.
+- **CSRF Protection** - Disabled in the main OAuth security chain.
 - **Auth Validator / Session Token Cookie Setter** - Managed by the `CustomAuthenticationSuccessHandler`.
   - Cookie Settings:
     - Name: `session_token`
@@ -229,10 +229,10 @@ The [`LeetcodeClient.java`](https://github.com/tahminator/codebloom/blob/main/sr
 
 We have a scheduled task at [`LeetcodeAuthStealer.java`](https://github.com/tahminator/codebloom/blob/main/src/main/java/org/patinanetwork/codebloom/scheduled/auth/LeetcodeAuthStealer.java) that:
 
-- Runs every 30 minutes to refresh session cookies
+- Runs hourly and reuses database session cookies less than four hours old
 - Uses Playwright to automate GitHub OAuth login flow
 - Stores the `LEETCODE_SESSION` cookie in our database
-- Falls back to email alerts if authentication fails
+- Supports asynchronous cookie reloads when authentication needs refreshing
 
 This is necessary because leetcode.com requires authenticated requests for most API calls.
 
