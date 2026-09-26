@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.models.user;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
@@ -49,6 +50,10 @@ public class User {
 
     @NullColumn
     private String schoolEmail;
+
+    /** can be null if it's an old entry */
+    @NullColumn
+    private OffsetDateTime createdAt;
 
     /**
      * If you want to update tags in the database, you have to use the
