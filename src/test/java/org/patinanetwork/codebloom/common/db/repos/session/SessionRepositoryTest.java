@@ -66,6 +66,7 @@ public class SessionRepositoryTest extends BaseRepositoryTest {
         Session found = sessionRepository.getSessionById(sessionId).get();
         assertNotNull(found);
         assertEquals(testSession.getId().get(), found.getId().get());
+        assertEquals(testSession, found);
     }
 
     @Test
