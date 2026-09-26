@@ -82,11 +82,3 @@ dev *args:
 # Run the dev servers (backend & frontend) but the backend will launch a debugger server.
 devd *args:
   npx concurrently "just backend-dev-debug" "just frontend-dev" {{args}}
-
-# Interactive script to add a user's GPG public key so they can decrypt keys
-git-crypt-add-user:
-  cd internal/scripts && pnpm i && pnpm run git-crypt-add-user && clear && node git-crypt/add-user
-
-# Interactive script to generate a GPG key for you and direct you to upload your public key to GitHub
-git-crypt-generate-key:
-  cd internal/scripts && pnpm i && pnpm run git-crypt-generate-key && clear && node git-crypt/generate-key
