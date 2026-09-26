@@ -2,6 +2,9 @@ DO $$
 BEGIN
     CASE current_database()
         WHEN 'codebloom-prod', 'codebloom-stg' THEN
+            ALTER TABLE "User"
+            DROP CONSTRAINT "ck_user_createdAt_not_null";
+
             UPDATE "User" u
             SET "schoolEmail" = split_part(u."schoolEmail", '@', 1) || '@' || domains.new_domain
             FROM (VALUES
@@ -11,6 +14,9 @@ BEGIN
                 ('stu.bmcc.cuny.edu', 'stu-mail.bmcc.cuny.edu')
             ) AS domains(old_domain, new_domain)
             WHERE lower(substring(u."schoolEmail" FROM '@(.*)$')) = domains.old_domain;
+
+            ALTER TABLE "User"
+            ADD CONSTRAINT "ck_user_createdAt_not_null" CHECK ("createdAt" IS NOT NULL) NOT VALID;
         ELSE
             RAISE NOTICE 'Skipping prod/staging only backfill: Current database is %', current_database();
     END CASE;
