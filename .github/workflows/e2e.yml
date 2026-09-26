@@ -6,6 +6,9 @@ concurrency:
   group: deploy-staging-pr-${{ inputs.prId }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 on:
   schedule:
     - cron: "18 17 * * *" # 12:17 PM ET daily
