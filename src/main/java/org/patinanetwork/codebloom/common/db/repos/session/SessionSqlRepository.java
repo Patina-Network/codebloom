@@ -1,9 +1,12 @@
 package org.patinanetwork.codebloom.common.db.repos.session;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.Session;
+import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
@@ -15,6 +18,7 @@ public class SessionSqlRepository implements SessionRepository {
             .id(Optional.of(rs.getString("id")))
             .userId(rs.getString("userId"))
             .expiresAt(rs.getTimestamp("expiresAt").toLocalDateTime())
+            .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
             .build();
 
     private JdbcClient jdbcClient;
@@ -25,7 +29,8 @@ public class SessionSqlRepository implements SessionRepository {
 
     @Override
     public void createSession(final Session session) {
-        String sql = "INSERT INTO \"Session\" (id, \"userId\", \"expiresAt\") VALUES (?, ?, ?) RETURNING \"id\"";
+        String sql =
+                "INSERT INTO \"Session\" (id, \"userId\", \"expiresAt\") VALUES (?, ?, ?) RETURNING \"id\", \"createdAt\"";
         // Don't want dashes inside of the cookie, so better to just remove it from the
         // ID altogether.
         session.setId(Optional.of(UUID.randomUUID().toString().replace("-", "")));
@@ -39,21 +44,24 @@ public class SessionSqlRepository implements SessionRepository {
                                         () -> new IllegalStateException("Session ID must be present for insertion.")))
                 .param(2, UUID.fromString(session.getUserId()))
                 .param(3, session.getExpiresAt())
-                .query((rs, rowNum) -> rs.getString("id"))
+                .query((rs, rowNum) -> Map.entry(rs.getString("id"), rs.getObject("createdAt", OffsetDateTime.class)))
                 .optional()
-                .ifPresent(id -> session.setId(Optional.of(id)));
+                .ifPresent(entry -> {
+                    session.setId(Optional.of(entry.getKey()));
+                    session.setCreatedAt(StandardizedOffsetDateTime.normalize(entry.getValue()));
+                });
     }
 
     @Override
     public Optional<Session> getSessionById(final String id) {
-        String sql = "SELECT id, \"userId\", \"expiresAt\" FROM \"Session\" WHERE id=?";
+        String sql = "SELECT id, \"userId\", \"expiresAt\", \"createdAt\" FROM \"Session\" WHERE id=?";
 
         return jdbcClient.sql(sql).param(1, id).query(SESSION_ROW_MAPPER).optional();
     }
 
     @Override
     public ArrayList<Session> getSessionsByUserId(final String id) {
-        String sql = "SELECT id, \"userId\", \"expiresAt\" FROM \"Session\" WHERE \"userId\"=?";
+        String sql = "SELECT id, \"userId\", \"expiresAt\", \"createdAt\" FROM \"Session\" WHERE \"userId\"=?";
 
         return new ArrayList<>(jdbcClient
                 .sql(sql)

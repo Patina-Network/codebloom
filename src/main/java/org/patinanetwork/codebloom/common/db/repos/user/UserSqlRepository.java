@@ -1,12 +1,15 @@
 package org.patinanetwork.codebloom.common.db.repos.user;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.user.User;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
 import org.patinanetwork.codebloom.common.db.repos.achievements.AchievementRepository;
 import org.patinanetwork.codebloom.common.db.repos.user.options.UserFilterOptions;
 import org.patinanetwork.codebloom.common.db.repos.usertag.UserTagRepository;
+import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
@@ -41,6 +44,7 @@ public class UserSqlRepository implements UserRepository {
                     .admin(rs.getBoolean("admin"))
                     .schoolEmail(rs.getString("schoolEmail"))
                     .profileUrl(rs.getString("profileUrl"))
+                    .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
                     .tags(this.userTagRepository.findTagsByUserId(id))
                     .achievements(this.achievementRepository.getAchievementsByUserId(id))
                     .build();
@@ -58,6 +62,7 @@ public class UserSqlRepository implements UserRepository {
                     .admin(rs.getBoolean("admin"))
                     .schoolEmail(rs.getString("schoolEmail"))
                     .profileUrl(rs.getString("profileUrl"))
+                    .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
                     .tags(this.userTagRepository.findTagsByUserId(id))
                     .achievements(this.achievementRepository.getAchievementsByUserId(id))
                     .totalScore(rs.getInt("totalScore"))
@@ -77,11 +82,11 @@ public class UserSqlRepository implements UserRepository {
             VALUES
                 (:id, :discordName, :discordId, :leetcodeUsername, :nickname, :schoolEmail, :admin , :profileUrl)
             RETURNING
-                "verifyKey"
+                "verifyKey", "createdAt"
             """;
         user.setId(UUID.randomUUID().toString());
 
-        String verifyKey = jdbcClient
+        jdbcClient
                 .sql(sql)
                 .param("id", UUID.fromString(user.getId()))
                 .param("discordName", user.getDiscordName())
@@ -91,11 +96,13 @@ public class UserSqlRepository implements UserRepository {
                 .param("schoolEmail", user.getSchoolEmail())
                 .param("admin", user.isAdmin())
                 .param("profileUrl", user.getProfileUrl())
-                .query((rs, rowNum) -> rs.getString("verifyKey"))
+                .query((rs, rowNum) ->
+                        Map.entry(rs.getString("verifyKey"), rs.getObject("createdAt", OffsetDateTime.class)))
                 .optional()
-                .orElse(null);
-
-        user.setVerifyKey(verifyKey);
+                .ifPresent(entry -> {
+                    user.setVerifyKey(entry.getKey());
+                    user.setCreatedAt(StandardizedOffsetDateTime.normalize(entry.getValue()));
+                });
     }
 
     @Override
@@ -110,7 +117,8 @@ public class UserSqlRepository implements UserRepository {
                 "schoolEmail",
                 admin,
                 "verifyKey",
-                "profileUrl"
+                "profileUrl",
+                "createdAt"
             FROM "User"
             WHERE
                 id=:id
@@ -136,7 +144,8 @@ public class UserSqlRepository implements UserRepository {
                     "schoolEmail",
                     admin,
                     "verifyKey",
-                    "profileUrl"
+                    "profileUrl",
+                    "createdAt"
                 FROM "User"
                 WHERE "leetcodeUsername" = :leetcodeUsername
             """;
@@ -161,7 +170,8 @@ public class UserSqlRepository implements UserRepository {
                 "schoolEmail",
                 admin,
                 "verifyKey",
-                "profileUrl"
+                "profileUrl",
+                "createdAt"
             FROM "User"
             WHERE
                 "discordId" = :discordId
@@ -228,7 +238,8 @@ public class UserSqlRepository implements UserRepository {
                 "schoolEmail",
                 admin,
                 "verifyKey",
-                "profileUrl"
+                "profileUrl",
+                "createdAt"
             FROM "User"
             """;
 
@@ -247,7 +258,8 @@ public class UserSqlRepository implements UserRepository {
                     "schoolEmail",
                     admin,
                     "verifyKey",
-                    "profileUrl"
+                    "profileUrl",
+                    "createdAt"
                 FROM
                     "User"
                 WHERE
@@ -298,6 +310,7 @@ public class UserSqlRepository implements UserRepository {
                     u.admin,
                     u."verifyKey",
                     u."profileUrl",
+                    u."createdAt",
                     m."totalScore"
                 FROM
                     "User" u
@@ -329,6 +342,7 @@ public class UserSqlRepository implements UserRepository {
                     u.nickname,
                     u.admin,
                     u."profileUrl",
+                    u."createdAt",
                     u."verifyKey",
                     m."totalScore"
                 FROM
