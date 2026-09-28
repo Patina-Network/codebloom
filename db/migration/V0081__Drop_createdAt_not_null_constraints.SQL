@@ -1,5 +1,3 @@
-SET LOCAL lock_timeout = '5s';
-
 ALTER TABLE "User"
 DROP CONSTRAINT "ck_user_createdAt_not_null";
 
