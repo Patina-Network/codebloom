@@ -113,6 +113,7 @@ async function main() {
   tags.forEach((tag) => console.log(tag));
 
   const buildArgs = {
+    ...(type === "web" ? { COMMIT_SHA: gitSha } : {}),
     ...(environment === "staging" ?
       {
         VITE_STAGING: true,

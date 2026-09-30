@@ -114,7 +114,7 @@ server:
 
 app:
   commit:
-    sha: "@commit.sha@"
+    sha: "${VERSION:@commit.sha@}"
 
 jedis:
   url: ${REDIS_URL}
