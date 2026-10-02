@@ -128,7 +128,7 @@ async function main() {
     tags,
     shouldUpload: dockerUpload,
     buildArgs,
-    platforms: ["linux/amd64"],
+    platforms: ["linux/amd64", "linux/arm64"],
   });
 
   console.log("Image pushed successfully.");
