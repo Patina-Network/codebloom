@@ -12,6 +12,10 @@ inputs:
   SECRETS:
     description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
     required: false
+  ARCH:
+    description: "Target architecture to build natively (amd64 or arm64). arm64 pushes to codebloom-arm instead of codebloom."
+    required: false
+    default: amd64
 
 outputs:
   tag:
@@ -64,4 +68,5 @@ runs:
             --environment "${{ inputs.ENVIRONMENT }}" \
             --docker-upload="${{ inputs.DOCKER_UPLOAD }}" \
             --getGhaOutput=true \
+            --arch="${{ inputs.ARCH }}" \
             --prId="${{ github.event.pull_request.number }}"

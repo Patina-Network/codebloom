@@ -78,11 +78,19 @@ jobs:
           SECRETS: ${{ toJSON(secrets) }}
 
   buildStagingImage:
-    name: Build staging image
-    runs-on: ubuntu-latest
+    name: Build staging image (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     needs: backendPreTest
 
     if: github.ref_name != 'main'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout repository
@@ -123,12 +131,21 @@ jobs:
         with:
           ENVIRONMENT: staging
           DOCKER_UPLOAD: "true"
+          ARCH: ${{ matrix.arch }}
 
   buildStagingStandupBotImage:
-    name: Build staging image for codebloom-standup-bot
-    runs-on: ubuntu-latest
+    name: Build staging image for codebloom-standup-bot (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
 
     if: github.ref_name != 'main'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout repository
@@ -140,6 +157,7 @@ jobs:
           SECRETS: ${{ toJSON(secrets) }}
           ENVIRONMENT: staging
           DOCKER_UPLOAD: "true"
+          ARCH: ${{ matrix.arch }}
 
   validateDBSchema:
     name: Validate DB Schema on Prod DB
@@ -159,11 +177,19 @@ jobs:
           HEADSCALE_PREAUTHKEY: ${{ secrets.HEADSCALE_PREAUTHKEY }}
 
   buildImage:
-    name: Build Docker Image & Upload to Registry
-    runs-on: ubuntu-latest
+    name: Build Docker Image & Upload to Registry (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     needs: [validateDBSchema, backendTests, frontendTests]
 
     if: github.ref_name == 'main'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout repository
@@ -174,12 +200,21 @@ jobs:
         with:
           environment: production
           SECRETS: ${{ toJSON(secrets) }}
+          ARCH: ${{ matrix.arch }}
 
   buildStandupBotImage:
-    name: Build codebloom-standup-bot Docker Image & Upload to Registry
-    runs-on: ubuntu-latest
+    name: Build codebloom-standup-bot Docker Image & Upload to Registry (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
 
     if: github.ref_name == 'main'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout repository
@@ -189,6 +224,7 @@ jobs:
         uses: ./.github/composite/build-image/internal/standup-bot
         with:
           SECRETS: ${{ toJSON(secrets) }}
+          ARCH: ${{ matrix.arch }}
 
   deploy:
     name: deploy codebloom to K8S
