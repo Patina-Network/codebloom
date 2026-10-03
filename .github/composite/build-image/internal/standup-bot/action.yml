@@ -13,6 +13,10 @@ inputs:
     description: "Boolean indicating whether the image should be uploaded to Docker registry or not."
     required: false
     default: true
+  ARCH:
+    description: "Target architecture to build natively (amd64 or arm64). Each arch pushes to its own Docker repository (codebloom-standup-bot / codebloom-standup-bot-arm)."
+    required: false
+    default: amd64
 
 outputs:
   tag:
@@ -44,5 +48,6 @@ runs:
             --docker-upload="${{ inputs.DOCKER_UPLOAD }}" \
             --getGhaOutput=true \
             --type="standup-bot" \
+            --arch="${{ inputs.ARCH }}" \
             --environment="${{ inputs.ENVIRONMENT }}" \
             --prId="${{ github.event.pull_request.number }}"

@@ -16,6 +16,7 @@ const {
   getGhaOutput,
   githubOutputFile,
   type,
+  arch,
   prId,
 } = await yargs(hideBin(process.argv))
   .option("environment", {
@@ -45,6 +46,12 @@ const {
     demandOption: true,
     default: "web" as Type,
   })
+  .option("arch", {
+    choices: ["amd64", "arm64"] as const,
+    describe:
+      "Target architecture, built natively (no QEMU) on a matching runner; arm64 pushes to a separate `-arm`-suffixed repository",
+    default: "amd64" as const,
+  })
   .option("prId", {
     type: "string",
     default: "",
@@ -54,6 +61,17 @@ const {
   .parse();
 
 const tagPrefix = environment === "staging" ? "staging-" : "";
+
+const dockerRepository =
+  type === "web" ?
+    arch === "arm64" ?
+      "codebloom-arm"
+    : "codebloom"
+  : arch === "arm64" ? "codebloom-standup-bot-arm"
+  : "codebloom-standup-bot";
+// both types build natively per-arch on their own runner (no QEMU), one
+// repo per arch, matrixed at the workflow level.
+const platforms = [`linux/${arch}`];
 
 async function main() {
   const {
@@ -122,13 +140,13 @@ async function main() {
   };
 
   await dockerClient.buildImage({
-    dockerRepository: type === "web" ? "codebloom" : "codebloom-standup-bot",
+    dockerRepository,
     dockerFileLocation:
       type === "web" ? "infra/Dockerfile" : "internal/standup-bot/Dockerfile",
     tags,
     shouldUpload: dockerUpload,
     buildArgs,
-    platforms: ["linux/amd64", "linux/arm64"],
+    platforms,
   });
 
   console.log("Image pushed successfully.");
@@ -151,9 +169,9 @@ async function main() {
         prId,
         owner: "Patina-Network",
         repository: "codebloom",
-        message: `The image has been uploaded to https://hub.docker.com/r/patinanetwork/${type === "web" ? "codebloom" : "codebloom-standup-bot"}/tags under the following tags:
+        message: `The image has been uploaded to https://hub.docker.com/r/patinanetwork/${dockerRepository}/tags under the following tags:
 
-${tags.map((t) => `- \`${type === "web" ? "codebloom" : "codebloom-standup-bot"}:${t}\``).join("\n")}
+${tags.map((t) => `- \`${dockerRepository}:${t}\``).join("\n")}
 `,
       });
     }
