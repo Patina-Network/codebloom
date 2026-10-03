@@ -16,6 +16,7 @@ const {
   getGhaOutput,
   githubOutputFile,
   type,
+  arch,
   prId,
 } = await yargs(hideBin(process.argv))
   .option("environment", {
@@ -45,6 +46,12 @@ const {
     demandOption: true,
     default: "web" as Type,
   })
+  .option("arch", {
+    choices: ["amd64", "arm64"] as const,
+    describe:
+      "Target architecture for type=standup-bot (built natively per-arch, one repo per arch); ignored for type=web, which always builds both in one multi-platform job",
+    default: "amd64" as const,
+  })
   .option("prId", {
     type: "string",
     default: "",
@@ -54,6 +61,17 @@ const {
   .parse();
 
 const tagPrefix = environment === "staging" ? "staging-" : "";
+
+// `web` always builds both platforms in one multi-platform buildx job.
+// `standup-bot` builds natively per-arch (no QEMU) to a separate repo per
+// arch instead, since it has a large enough dependency tree that emulated
+// compiles are impractically slow.
+const dockerRepository =
+  type === "web" ? "codebloom"
+  : arch === "arm64" ? "codebloom-standup-bot-arm"
+  : "codebloom-standup-bot";
+const platforms =
+  type === "web" ? ["linux/amd64", "linux/arm64"] : [`linux/${arch}`];
 
 async function main() {
   const {
@@ -122,13 +140,13 @@ async function main() {
   };
 
   await dockerClient.buildImage({
-    dockerRepository: type === "web" ? "codebloom" : "codebloom-standup-bot",
+    dockerRepository,
     dockerFileLocation:
       type === "web" ? "infra/Dockerfile" : "internal/standup-bot/Dockerfile",
     tags,
     shouldUpload: dockerUpload,
     buildArgs,
-    platforms: ["linux/amd64", "linux/arm64"],
+    platforms,
   });
 
   console.log("Image pushed successfully.");
@@ -151,9 +169,9 @@ async function main() {
         prId,
         owner: "Patina-Network",
         repository: "codebloom",
-        message: `The image has been uploaded to https://hub.docker.com/r/patinanetwork/${type === "web" ? "codebloom" : "codebloom-standup-bot"}/tags under the following tags:
+        message: `The image has been uploaded to https://hub.docker.com/r/patinanetwork/${dockerRepository}/tags under the following tags:
 
-${tags.map((t) => `- \`${type === "web" ? "codebloom" : "codebloom-standup-bot"}:${t}\``).join("\n")}
+${tags.map((t) => `- \`${dockerRepository}:${t}\``).join("\n")}
 `,
       });
     }
