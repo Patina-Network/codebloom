@@ -6,74 +6,31 @@ on:
     types: [created]
 
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 jobs:
   slashCommandDispatch:
+    if: >-
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/')
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get PR head SHA
-        id: pr-head
-        uses: actions/github-script@v8
-        with:
-          result-encoding: string
-          script: |
-            const prId = ${{ github.event.issue.number }};
-            const { data: pr } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: parseInt(prId, 10)
-            });
-             return pr.head.sha;
-
-      - name: Get branch
-        id: branch
-        uses: actions/github-script@v8
-        with:
-          result-encoding: string
-          script: |
-            const prId = ${{ github.event.issue.number }};
-            const { data: pr } = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: parseInt(prId, 10)
-            });
-            return pr.head.ref;
-
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ steps.pr-head.outputs.result }}
+          # stay on trusted default-branch code until the commands action authorizes the commenter
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
 
-      - name: Setup CI
-        uses: ./.github/composite/setup-ci
+      - name: Setup pipeline
+        uses: tahminator/pipeline/actions/setup@ff36293f28519b2b90d7e28918a6885d9baf019e # 1.0.90
         with:
-          SECRETS: ${{ toJSON(secrets) }}
-
-      - name: Run script
-        run: bun run .github/scripts/load-slash-commands --get-gha-output=true
-        id: cmds
-
-      - name: Create GitHub App Token
-        uses: actions/create-github-app-token@v3
-        id: app-token
-        with:
-          app-id: ${{ secrets._GITHUB_APP_APP_ID }}
-          private-key: ${{ secrets._GITHUB_APP_PEM_CONTENT }}
+          LINT_CI: true
 
       - name: Slash Command Dispatch
-        uses: peter-evans/slash-command-dispatch@v4
+        uses: tahminator/pipeline/actions/commands@ff36293f28519b2b90d7e28918a6885d9baf019e # 1.0.90
         with:
-          dispatch-type: workflow
-          token: ${{ steps.app-token.outputs.token }}
-          commands: |
-            ${{ steps.cmds.outputs.commands }}
-          static-args: |
-            repository=${{ github.repository }}
-            comment-id=${{ github.event.comment.id }}
-            prId=${{ github.event.issue.number }}
-            author=${{ github.actor }}
-            ref=${{ steps.branch.outputs.result }}
+          APP_ID: ${{ secrets._GITHUB_APP_APP_ID }}
+          PRIVATE_KEY: ${{ secrets._GITHUB_APP_PEM_CONTENT }}
+          DYNAMIC_COMMANDS_BUN_SCRIPT: .github/scripts/load-slash-commands/index.ts
