@@ -48,7 +48,7 @@ async function main() {
     originRepo: ["Patina-Network", "codebloom"],
     manifestRepo: ["Patina-Network", "k8s-manifests"],
     kustomizationFilePath: `base/${environment}/${type === "web" ? "codebloom" : "codebloom-standup-bot"}/kustomization.yaml`,
-    imageName: `patinanetwork/${type === "web" ? "codebloom" : "codebloom-standup-bot"}`,
+    imageName: `patinanetwork/${type === "web" ? "codebloom-arm" : "codebloom-standup-bot-arm"}`,
     environment: `${environment}`,
     newTag: environment === "staging" ? `staging-${resolvedSha}` : resolvedSha,
   });
