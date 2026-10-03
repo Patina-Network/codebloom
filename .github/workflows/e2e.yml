@@ -24,8 +24,9 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup CI
-        uses: ./.github/composite/setup-ci
+        uses: tahminator/pipeline/actions/setup@ff36293f28519b2b90d7e28918a6885d9baf019e # 1.0.90
         with:
+          LINT_CI: true
           SECRETS: ${{ toJSON(secrets) }}
 
       - name: Set up pnpm
