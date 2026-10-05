@@ -51,6 +51,34 @@ public class LeetcodeClientTest {
     }
 
     @Test
+    void explicitNullQuestionIsNotFound() throws Exception {
+        when(httpResponse.statusCode()).thenReturn(200);
+        when(httpResponse.body()).thenReturn("{\"data\":{\"question\":null}}");
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        assertThrows(LeetcodeQuestionNotFoundException.class, () -> leetcodeClient.findQuestionBySlug("old-slug"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "{\"data\":{\"question\":null},\"errors\":[{\"message\":\"Unauthorized\"}]}",
+                "{\"data\":{}}",
+                "{\"data\":null}",
+                "invalid json"
+            })
+    void unsuccessfulOrMalformedResponseIsNotNotFound(String body) throws Exception {
+        when(httpResponse.statusCode()).thenReturn(200);
+        when(httpResponse.body()).thenReturn(body);
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("example"));
+        assertFalse(error instanceof LeetcodeQuestionNotFoundException);
+    }
+
+    @Test
     void testFindQuestionBySlug() throws Exception {
         String responseJson = """
             {

@@ -82,6 +82,9 @@ public interface QuestionRepository {
      */
     List<Question> getAllQuestionsWithNoTopics();
 
+    /** Permanently excludes this submission from topic lookup without changing its historical metadata. */
+    void skipTopicLookup(String questionId);
+
     /**
      * @note - Returns all incomplete questions with user information, ordered by most recently submitted. Incomplete
      *     questions are those missing either a runtime, memory, code, or language.

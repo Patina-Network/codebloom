@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.patinanetwork.codebloom.common.db.models.question.Question;
 import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.topic.QuestionTopicRepository;
+import org.patinanetwork.codebloom.common.leetcode.LeetcodeQuestionNotFoundException;
 import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
 import org.patinanetwork.codebloom.common.time.StandardizedLocalDateTime;
 import org.slf4j.LoggerFactory;
@@ -69,11 +70,56 @@ public class AttachTagsToExistingQuestionTest {
 
         attachTagsToExistingQuestion.attachTagsToExistingQuestions();
         verifyNoInteractions(questionTopicRepository);
+        verify(questionRepository, never()).skipTopicLookup(anyString());
         assertTrue(logWatcher.list.stream()
                 .anyMatch(log -> log.getLevel().equals(Level.ERROR)
                         && log.getFormattedMessage().contains("LeetcodeClient threw an exception")
                         && log.getFormattedMessage().contains(mockQuestion.getId())
                         && log.getFormattedMessage().contains(mockQuestion.getQuestionSlug())));
+    }
+
+    @Test
+    void notFoundQuestionIsExcludedAndOtherQuestionsContinue() {
+        var missing = Question.builder().id("missing").questionSlug("old-slug").build();
+        var valid = Question.builder().id("valid").questionSlug("valid-slug").build();
+        when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(missing, valid), List.of(valid));
+        when(leetcodeClient.findQuestionBySlug("old-slug"))
+                .thenThrow(new LeetcodeQuestionNotFoundException("old-slug"));
+        when(leetcodeClient.findQuestionBySlug("valid-slug"))
+                .thenReturn(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion.builder()
+                        .topics(List.of())
+                        .build());
+
+        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+
+        verify(questionRepository).skipTopicLookup("missing");
+        verify(leetcodeClient).findQuestionBySlug("old-slug");
+        verify(leetcodeClient, times(2)).findQuestionBySlug("valid-slug");
+        verifyNoInteractions(questionTopicRepository);
+    }
+
+    @Test
+    void failedExclusionWriteDoesNotStopOtherLookups() {
+        var missing = Question.builder().id("missing").questionSlug("old-slug").build();
+        var valid = Question.builder().id("valid").questionSlug("valid-slug").build();
+        when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(missing, valid));
+        when(leetcodeClient.findQuestionBySlug("old-slug"))
+                .thenThrow(new LeetcodeQuestionNotFoundException("old-slug"));
+        doThrow(new RuntimeException("Database unavailable"))
+                .when(questionRepository)
+                .skipTopicLookup("missing");
+        when(leetcodeClient.findQuestionBySlug("valid-slug"))
+                .thenReturn(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion.builder()
+                        .topics(List.of())
+                        .build());
+
+        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+
+        verify(leetcodeClient).findQuestionBySlug("valid-slug");
+        assertTrue(logWatcher.list.stream()
+                .anyMatch(log -> log.getLevel().equals(Level.ERROR)
+                        && log.getFormattedMessage().contains("Failed to save topic lookup exclusion")));
     }
 
     @Test

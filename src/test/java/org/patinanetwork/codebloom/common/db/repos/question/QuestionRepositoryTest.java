@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,6 +24,7 @@ import org.patinanetwork.codebloom.common.db.repos.BaseRepositoryTest;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -31,6 +33,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class QuestionRepositoryTest extends BaseRepositoryTest {
 
     private QuestionRepository questionRepository;
+
+    @Autowired
+    private JdbcClient jdbcClient;
+
     private Question testQuestion;
     private String mockSuperUserId = "ed3bfe18-e42a-467f-b4fa-07e8da4d2555";
 
@@ -204,6 +210,29 @@ public class QuestionRepositoryTest extends BaseRepositoryTest {
 
         assertNotNull(questions);
         assertTrue(questions.size() > 0);
+    }
+
+    @Test
+    @Order(8)
+    void skippedTopicLookupPreservesSubmissionAndExcludesFutureRuns() {
+        var before = questionRepository.getQuestionById(testQuestion.getId()).orElseThrow();
+        assertTrue(questionRepository.getAllQuestionsWithNoTopics().stream()
+                .anyMatch(question -> question.getId().equals(testQuestion.getId())));
+        try {
+            questionRepository.skipTopicLookup(testQuestion.getId());
+            for (int run = 0; run < 2; run++) {
+                assertFalse(questionRepository.getAllQuestionsWithNoTopics().stream()
+                        .anyMatch(question -> question.getId().equals(testQuestion.getId())));
+            }
+            assertEquals(
+                    before,
+                    questionRepository.getQuestionById(testQuestion.getId()).orElseThrow());
+        } finally {
+            jdbcClient
+                    .sql("UPDATE \"Question\" SET \"skipTopicLookup\" = FALSE WHERE id = :id")
+                    .param("id", UUID.fromString(testQuestion.getId()))
+                    .update();
+        }
     }
 
     @Test

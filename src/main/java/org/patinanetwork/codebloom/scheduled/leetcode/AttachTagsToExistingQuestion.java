@@ -9,6 +9,7 @@ import org.patinanetwork.codebloom.common.db.models.question.topic.QuestionTopic
 import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.topic.QuestionTopicRepository;
 import org.patinanetwork.codebloom.common.leetcode.LeetcodeClient;
+import org.patinanetwork.codebloom.common.leetcode.LeetcodeQuestionNotFoundException;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion;
 import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
 import org.springframework.context.annotation.Profile;
@@ -48,6 +49,22 @@ public class AttachTagsToExistingQuestion {
             LeetcodeQuestion leetcodeQuestion;
             try {
                 leetcodeQuestion = leetcodeClient.findQuestionBySlug(question.getQuestionSlug());
+            } catch (LeetcodeQuestionNotFoundException e) {
+                try {
+                    questionRepository.skipTopicLookup(question.getId());
+                } catch (Exception persistenceError) {
+                    log.error(
+                            "Failed to save topic lookup exclusion for question id {} and slug {}",
+                            question.getId(),
+                            question.getQuestionSlug(),
+                            persistenceError);
+                    continue;
+                }
+                log.info(
+                        "Skipping future topic lookups for question id {} and slug {} because it was not found",
+                        question.getId(),
+                        question.getQuestionSlug());
+                continue;
             } catch (Exception e) {
                 log.error(
                         "LeetcodeClient threw an exception for question id {} and slug {}",
