@@ -68,8 +68,38 @@ public class AttachTagsToExistingQuestionTest {
                 .thenThrow(new RuntimeException("Expected!"));
 
         attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+        verifyNoInteractions(questionTopicRepository);
         assertTrue(logWatcher.list.stream()
                 .anyMatch(log -> log.getLevel().equals(Level.ERROR)
-                        && log.getFormattedMessage().contains("LeetcodeClient threw an exception")));
+                        && log.getFormattedMessage().contains("LeetcodeClient threw an exception")
+                        && log.getFormattedMessage().contains(mockQuestion.getId())
+                        && log.getFormattedMessage().contains(mockQuestion.getQuestionSlug())));
+    }
+
+    @Test
+    void correctedSlugAttachesTopicsAndContinuesPastFailedQuestion() {
+        var failed = Question.builder().id("failed").questionSlug("old-slug").build();
+        var corrected = Question.builder()
+                .id("corrected")
+                .questionSlug("classes-with-at-least-5-students")
+                .build();
+        when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(failed, corrected));
+        when(leetcodeClient.findQuestionBySlug("old-slug")).thenThrow(new RuntimeException("Missing"));
+        when(leetcodeClient.findQuestionBySlug(corrected.getQuestionSlug()))
+                .thenReturn(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion.builder()
+                        .topics(List.of(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeTopicTag.builder()
+                                .name("Database")
+                                .slug("database")
+                                .build()))
+                        .build());
+
+        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+
+        verify(questionTopicRepository)
+                .createQuestionTopic(
+                        argThat(topic -> topic.getQuestionId().orElseThrow().equals("corrected")
+                                && topic.getTopicSlug().equals("database")));
+        assertTrue(logWatcher.list.stream().anyMatch(log -> log.getFormattedMessage()
+                .contains("Attached 1 topics to question id corrected and slug classes-with-at-least-5-students")));
     }
 }
