@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.patinanetwork.codebloom.common.db.models.question.Question;
 import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.topic.QuestionTopicRepository;
-import org.patinanetwork.codebloom.common.leetcode.LeetcodeQuestionNotFoundException;
+import org.patinanetwork.codebloom.common.leetcode.LeetcodeClientException;
 import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
 import org.patinanetwork.codebloom.common.time.StandardizedLocalDateTime;
 import org.slf4j.LoggerFactory;
@@ -84,7 +84,7 @@ public class AttachTagsToExistingQuestionTest {
         var valid = Question.builder().id("valid").questionSlug("valid-slug").build();
         when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(missing, valid), List.of(valid));
         when(leetcodeClient.findQuestionBySlug("old-slug"))
-                .thenThrow(new LeetcodeQuestionNotFoundException("old-slug"));
+                .thenThrow(new LeetcodeClientException("Question not found", true));
         when(leetcodeClient.findQuestionBySlug("valid-slug"))
                 .thenReturn(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion.builder()
                         .topics(List.of())
@@ -105,7 +105,7 @@ public class AttachTagsToExistingQuestionTest {
         var valid = Question.builder().id("valid").questionSlug("valid-slug").build();
         when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(missing, valid));
         when(leetcodeClient.findQuestionBySlug("old-slug"))
-                .thenThrow(new LeetcodeQuestionNotFoundException("old-slug"));
+                .thenThrow(new LeetcodeClientException("Question not found", true));
         doThrow(new RuntimeException("Database unavailable"))
                 .when(questionRepository)
                 .skipTopicLookup("missing");

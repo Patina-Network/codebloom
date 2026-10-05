@@ -57,7 +57,8 @@ public class LeetcodeClientTest {
         when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(httpResponse);
 
-        assertThrows(LeetcodeQuestionNotFoundException.class, () -> leetcodeClient.findQuestionBySlug("old-slug"));
+        var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("old-slug"));
+        assertTrue(error.isNotFound());
     }
 
     @ParameterizedTest
@@ -75,7 +76,19 @@ public class LeetcodeClientTest {
                 .thenReturn(httpResponse);
 
         var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("example"));
-        assertFalse(error instanceof LeetcodeQuestionNotFoundException);
+        assertFalse(error.isNotFound());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {403, 404, 429, 503})
+    void httpFailureDoesNotPermanentlyExcludeQuestion(int status) throws Exception {
+        when(httpResponse.statusCode()).thenReturn(status);
+        when(httpResponse.body()).thenReturn("{\"data\":{\"question\":null}}");
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("example"));
+        assertFalse(error.isNotFound());
     }
 
     @Test
