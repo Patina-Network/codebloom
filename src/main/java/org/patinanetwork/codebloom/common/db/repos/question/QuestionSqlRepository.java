@@ -465,14 +465,6 @@ public class QuestionSqlRepository implements QuestionRepository {
     }
 
     @Override
-    public void skipTopicLookup(final String questionId) {
-        jdbcClient
-                .sql("UPDATE \"Question\" SET \"skipTopicLookup\" = TRUE WHERE id = :id")
-                .param("id", UUID.fromString(questionId))
-                .update();
-    }
-
-    @Override
     public List<Question> getAllQuestionsWithNoTopics() {
         String sql = """
             SELECT
@@ -495,8 +487,7 @@ public class QuestionSqlRepository implements QuestionRepository {
                 q."submissionId"
             FROM
                 "Question" q
-            WHERE NOT q."skipTopicLookup"
-            AND NOT EXISTS (
+            WHERE NOT EXISTS (
                 SELECT 1
                 FROM "QuestionTopic" qt
                 WHERE qt."questionId" = q.id

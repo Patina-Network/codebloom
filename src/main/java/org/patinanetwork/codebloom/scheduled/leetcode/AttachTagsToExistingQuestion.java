@@ -51,18 +51,8 @@ public class AttachTagsToExistingQuestion {
                 leetcodeQuestion = leetcodeClient.findQuestionBySlug(question.getQuestionSlug());
             } catch (Exception e) {
                 if (e instanceof LeetcodeClientException clientException && clientException.isNotFound()) {
-                    try {
-                        questionRepository.skipTopicLookup(question.getId());
-                    } catch (Exception persistenceError) {
-                        log.error(
-                                "Failed to save topic lookup exclusion for question id {} and slug {}",
-                                question.getId(),
-                                question.getQuestionSlug(),
-                                persistenceError);
-                        continue;
-                    }
                     log.info(
-                            "Skipping future topic lookups for question id {} and slug {} because it was not found",
+                            "Skipping topic lookup for question id {} and slug {} because it was not found",
                             question.getId(),
                             question.getQuestionSlug());
                 } else {

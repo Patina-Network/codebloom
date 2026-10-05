@@ -70,7 +70,6 @@ public class AttachTagsToExistingQuestionTest {
 
         attachTagsToExistingQuestion.attachTagsToExistingQuestions();
         verifyNoInteractions(questionTopicRepository);
-        verify(questionRepository, never()).skipTopicLookup(anyString());
         assertTrue(logWatcher.list.stream()
                 .anyMatch(log -> log.getLevel().equals(Level.ERROR)
                         && log.getFormattedMessage().contains("LeetcodeClient threw an exception")
@@ -79,47 +78,27 @@ public class AttachTagsToExistingQuestionTest {
     }
 
     @Test
-    void notFoundQuestionIsExcludedAndOtherQuestionsContinue() {
-        var missing = Question.builder().id("missing").questionSlug("old-slug").build();
-        var valid = Question.builder().id("valid").questionSlug("valid-slug").build();
-        when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(missing, valid), List.of(valid));
-        when(leetcodeClient.findQuestionBySlug("old-slug"))
-                .thenThrow(new LeetcodeClientException("Question not found", true));
-        when(leetcodeClient.findQuestionBySlug("valid-slug"))
-                .thenReturn(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion.builder()
-                        .topics(List.of())
-                        .build());
-
-        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
-        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
-
-        verify(questionRepository).skipTopicLookup("missing");
-        verify(leetcodeClient).findQuestionBySlug("old-slug");
-        verify(leetcodeClient, times(2)).findQuestionBySlug("valid-slug");
-        verifyNoInteractions(questionTopicRepository);
-    }
-
-    @Test
-    void failedExclusionWriteDoesNotStopOtherLookups() {
+    void notFoundQuestionIsSkippedAndOtherQuestionsContinue() {
         var missing = Question.builder().id("missing").questionSlug("old-slug").build();
         var valid = Question.builder().id("valid").questionSlug("valid-slug").build();
         when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(missing, valid));
         when(leetcodeClient.findQuestionBySlug("old-slug"))
                 .thenThrow(new LeetcodeClientException("Question not found", true));
-        doThrow(new RuntimeException("Database unavailable"))
-                .when(questionRepository)
-                .skipTopicLookup("missing");
         when(leetcodeClient.findQuestionBySlug("valid-slug"))
                 .thenReturn(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion.builder()
                         .topics(List.of())
                         .build());
 
         attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
 
-        verify(leetcodeClient).findQuestionBySlug("valid-slug");
+        verify(leetcodeClient, times(2)).findQuestionBySlug("old-slug");
+        verify(leetcodeClient, times(2)).findQuestionBySlug("valid-slug");
+        verifyNoInteractions(questionTopicRepository);
         assertTrue(logWatcher.list.stream()
-                .anyMatch(log -> log.getLevel().equals(Level.ERROR)
-                        && log.getFormattedMessage().contains("Failed to save topic lookup exclusion")));
+                .anyMatch(log -> log.getLevel().equals(Level.INFO)
+                        && log.getFormattedMessage().contains("Skipping topic lookup for question id missing")));
+        assertFalse(logWatcher.list.stream().anyMatch(log -> log.getLevel().equals(Level.ERROR)));
     }
 
     @Test
