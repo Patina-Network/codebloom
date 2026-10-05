@@ -44,12 +44,16 @@ public class AttachTagsToExistingQuestion {
         }
 
         for (var question : questions) {
-            log.info("Updating question with id of {}", question.getId());
+            log.info("Updating question with id of {} and slug {}", question.getId(), question.getQuestionSlug());
             LeetcodeQuestion leetcodeQuestion;
             try {
                 leetcodeQuestion = leetcodeClient.findQuestionBySlug(question.getQuestionSlug());
             } catch (Exception e) {
-                log.error("LeetcodeClient threw an exception", e);
+                log.error(
+                        "LeetcodeClient threw an exception for question id {} and slug {}",
+                        question.getId(),
+                        question.getQuestionSlug(),
+                        e);
                 continue;
             }
 
@@ -64,6 +68,11 @@ public class AttachTagsToExistingQuestion {
 
                 questionTopicRepository.createQuestionTopic(newQuestionTopic);
             }
+            log.info(
+                    "Attached {} topics to question id {} and slug {}",
+                    leetcodeQuestion.getTopics().size(),
+                    question.getId(),
+                    question.getQuestionSlug());
         }
 
         log.info("This task is complete.");
