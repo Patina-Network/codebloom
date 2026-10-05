@@ -32,7 +32,7 @@ public class QuestionBankDto {
     private String questionTitle;
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
-    private int questionNumber;
+    private long questionNumber;
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private String questionLink;

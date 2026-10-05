@@ -101,7 +101,7 @@ public class ThrottledLeetcodeClientTest {
 
     @Test
     void testFindSubmissionDetailBySubmissionIdFast() {
-        int submissionId = 123;
+        long submissionId = 123L;
         LeetcodeDetailedQuestion detail = new LeetcodeDetailedQuestion(0, null, 0, 0, null, 0, null, null);
         when(leetcodeClientImpl.findSubmissionDetailBySubmissionId(submissionId))
                 .thenReturn(detail);
@@ -112,7 +112,7 @@ public class ThrottledLeetcodeClientTest {
 
     @Test
     void testFindSubmissionDetailBySubmissionId() {
-        int submissionId = 123;
+        long submissionId = 123L;
         LeetcodeDetailedQuestion detail = new LeetcodeDetailedQuestion(0, null, 0, 0, null, 0, null, null);
         when(leetcodeClientImpl.findSubmissionDetailBySubmissionId(submissionId))
                 .thenReturn(detail);

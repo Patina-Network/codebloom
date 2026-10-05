@@ -31,7 +31,7 @@ public class QuestionBankSqlRepository implements QuestionBankRepository {
             var questionBankId = rs.getString("id");
             var questionSlug = rs.getString("questionSlug");
             var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
-            var questionNumber = rs.getInt("questionNumber");
+            var questionNumber = rs.getLong("questionNumber");
             var questionLink = rs.getString("questionLink");
             var questionTitle = rs.getString("questionTitle");
             var description = rs.getString("description");

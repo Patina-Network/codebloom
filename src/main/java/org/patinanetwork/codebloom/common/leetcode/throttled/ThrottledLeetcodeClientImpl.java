@@ -71,7 +71,7 @@ public class ThrottledLeetcodeClientImpl implements ThrottledLeetcodeClient {
     }
 
     @Override
-    public LeetcodeDetailedQuestion findSubmissionDetailBySubmissionIdFast(final int submissionId) {
+    public LeetcodeDetailedQuestion findSubmissionDetailBySubmissionIdFast(final long submissionId) {
         waitForToken(true);
         return leetcodeClient.findSubmissionDetailBySubmissionId(submissionId);
     }
@@ -119,7 +119,7 @@ public class ThrottledLeetcodeClientImpl implements ThrottledLeetcodeClient {
     }
 
     @Override
-    public LeetcodeDetailedQuestion findSubmissionDetailBySubmissionId(int submissionId) {
+    public LeetcodeDetailedQuestion findSubmissionDetailBySubmissionId(long submissionId) {
         waitForToken(false);
         return leetcodeClient.findSubmissionDetailBySubmissionId(submissionId);
     }

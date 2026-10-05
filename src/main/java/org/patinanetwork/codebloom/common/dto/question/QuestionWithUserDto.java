@@ -35,7 +35,7 @@ public class QuestionWithUserDto {
     private QuestionDifficulty questionDifficulty;
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
-    private int questionNumber;
+    private long questionNumber;
 
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     private String questionLink;

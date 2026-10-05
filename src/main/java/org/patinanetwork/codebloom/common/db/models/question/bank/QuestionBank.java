@@ -27,7 +27,7 @@ public class QuestionBank {
 
     private String questionTitle;
 
-    private int questionNumber;
+    private long questionNumber;
 
     private String questionLink;
 

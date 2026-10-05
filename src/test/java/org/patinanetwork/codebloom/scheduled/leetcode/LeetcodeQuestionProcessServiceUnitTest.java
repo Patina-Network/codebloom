@@ -120,7 +120,7 @@ class LeetcodeQuestionProcessServiceUnitTest {
         question.setSubmissionId(Optional.of("123"));
         runQueue();
         assertTrue(cached.isPaidOnly());
-        verify(client, never()).findSubmissionDetailBySubmissionId(anyInt());
+        verify(client, never()).findSubmissionDetailBySubmissionId(anyLong());
         verify(bank).updateQuestion(cached);
         assertEquals(JobStatus.COMPLETE, job.getStatus());
 
@@ -136,8 +136,17 @@ class LeetcodeQuestionProcessServiceUnitTest {
         question.setSubmissionId(Optional.of("123"));
         runQueue();
         verify(client, never()).findQuestionBySlug(anyString());
-        verify(client).findSubmissionDetailBySubmissionId(123);
+        verify(client).findSubmissionDetailBySubmissionId(123L);
         assertEquals(JobStatus.INCOMPLETE, job.getStatus());
+    }
+
+    @Test
+    void fetchesSubmissionDetailsForIdsAboveIntMax() {
+        cached.setPaidOnly(true);
+        question.setCode(Optional.empty());
+        question.setSubmissionId(Optional.of("2163200710"));
+        runQueue();
+        verify(client).findSubmissionDetailBySubmissionId(2163200710L);
     }
 
     @Test

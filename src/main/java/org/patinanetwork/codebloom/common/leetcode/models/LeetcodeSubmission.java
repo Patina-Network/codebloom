@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class LeetcodeSubmission {
 
-    private int id;
+    private long id;
 
     private String title;
     private String titleSlug;
@@ -12,7 +12,7 @@ public class LeetcodeSubmission {
     private String statusDisplay;
 
     public LeetcodeSubmission(
-            final int id,
+            final long id,
             final String title,
             final String titleSlug,
             final LocalDateTime timestamp,
@@ -24,11 +24,11 @@ public class LeetcodeSubmission {
         this.statusDisplay = statusDisplay;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(final int id) {
+    public void setId(final long id) {
         this.id = id;
     }
 

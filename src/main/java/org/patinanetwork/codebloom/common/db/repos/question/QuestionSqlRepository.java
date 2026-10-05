@@ -46,7 +46,7 @@ public class QuestionSqlRepository implements QuestionRepository {
             var userId = rs.getString("userId");
             var questionSlug = rs.getString("questionSlug");
             var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
-            var questionNumber = rs.getInt("questionNumber");
+            var questionNumber = rs.getLong("questionNumber");
             var questionLink = rs.getString("questionLink");
             int points = rs.getInt("pointsAwarded");
             Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
@@ -81,7 +81,7 @@ public class QuestionSqlRepository implements QuestionRepository {
             var userId = rs.getString("userId");
             var questionSlug = rs.getString("questionSlug");
             var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
-            var questionNumber = rs.getInt("questionNumber");
+            var questionNumber = rs.getLong("questionNumber");
             var questionLink = rs.getString("questionLink");
             int points = rs.getInt("pointsAwarded");
             Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
