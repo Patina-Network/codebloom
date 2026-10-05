@@ -77,15 +77,15 @@ public class AttachTagsToExistingQuestionTest {
     }
 
     @Test
-    void correctedSlugAttachesTopicsAndContinuesPastFailedQuestion() {
+    void attachesTopicsAndContinuesPastFailedQuestion() {
         var failed = Question.builder().id("failed").questionSlug("old-slug").build();
-        var corrected = Question.builder()
-                .id("corrected")
+        var valid = Question.builder()
+                .id("valid")
                 .questionSlug("classes-with-at-least-5-students")
                 .build();
-        when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(failed, corrected));
+        when(questionRepository.getAllQuestionsWithNoTopics()).thenReturn(List.of(failed, valid));
         when(leetcodeClient.findQuestionBySlug("old-slug")).thenThrow(new RuntimeException("Missing"));
-        when(leetcodeClient.findQuestionBySlug(corrected.getQuestionSlug()))
+        when(leetcodeClient.findQuestionBySlug(valid.getQuestionSlug()))
                 .thenReturn(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion.builder()
                         .topics(List.of(org.patinanetwork.codebloom.common.leetcode.models.LeetcodeTopicTag.builder()
                                 .name("Database")
@@ -97,9 +97,9 @@ public class AttachTagsToExistingQuestionTest {
 
         verify(questionTopicRepository)
                 .createQuestionTopic(
-                        argThat(topic -> topic.getQuestionId().orElseThrow().equals("corrected")
+                        argThat(topic -> topic.getQuestionId().orElseThrow().equals("valid")
                                 && topic.getTopicSlug().equals("database")));
         assertTrue(logWatcher.list.stream().anyMatch(log -> log.getFormattedMessage()
-                .contains("Attached 1 topics to question id corrected and slug classes-with-at-least-5-students")));
+                .contains("Attached 1 topics to question id valid and slug classes-with-at-least-5-students")));
     }
 }

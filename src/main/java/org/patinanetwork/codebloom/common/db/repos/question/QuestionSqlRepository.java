@@ -487,7 +487,8 @@ public class QuestionSqlRepository implements QuestionRepository {
                 q."submissionId"
             FROM
                 "Question" q
-            WHERE NOT EXISTS (
+            WHERE NOT q."skipTopicLookup"
+            AND NOT EXISTS (
                 SELECT 1
                 FROM "QuestionTopic" qt
                 WHERE qt."questionId" = q.id
