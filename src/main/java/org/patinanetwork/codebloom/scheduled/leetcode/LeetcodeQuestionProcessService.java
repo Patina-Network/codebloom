@@ -214,8 +214,8 @@ public class LeetcodeQuestionProcessService {
                     && question.getSubmissionId().isPresent()
                     && !question.getSubmissionId().get().isEmpty()) {
                 try {
-                    int submissionId =
-                            Integer.parseInt(question.getSubmissionId().get());
+                    long submissionId =
+                            Long.parseLong(question.getSubmissionId().get());
                     log.info("Fetching submission details from Leetcode for submission ID: {}", submissionId);
 
                     var detailedSubmission = leetcodeClient.findSubmissionDetailBySubmissionId(submissionId);

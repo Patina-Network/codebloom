@@ -15,7 +15,7 @@ import lombok.extern.jackson.Jacksonized;
 public class LeetcodeQuestion {
 
     private String link;
-    private int questionId;
+    private long questionId;
     private String questionTitle;
     private String titleSlug;
     private String difficulty;

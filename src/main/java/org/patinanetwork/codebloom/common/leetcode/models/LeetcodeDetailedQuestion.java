@@ -2,20 +2,20 @@ package org.patinanetwork.codebloom.common.leetcode.models;
 
 public class LeetcodeDetailedQuestion {
 
-    private int runtime;
+    private long runtime;
     private String runtimeDisplay;
     private float runtimePercentile;
-    private int memory;
+    private long memory;
     private String memoryDisplay;
     private float memoryPercentile;
     private String code;
     private Lang lang;
 
     public LeetcodeDetailedQuestion(
-            final int runtime,
+            final long runtime,
             final String runtimeDisplay,
             final float runtimePercentile,
-            final int memory,
+            final long memory,
             final String memoryDisplay,
             final float memoryPercentile,
             final String code,
@@ -30,11 +30,11 @@ public class LeetcodeDetailedQuestion {
         this.lang = lang;
     }
 
-    public int getRuntime() {
+    public long getRuntime() {
         return runtime;
     }
 
-    public void setRuntime(final int runtime) {
+    public void setRuntime(final long runtime) {
         this.runtime = runtime;
     }
 
@@ -54,11 +54,11 @@ public class LeetcodeDetailedQuestion {
         this.runtimePercentile = runtimePercentile;
     }
 
-    public int getMemory() {
+    public long getMemory() {
         return memory;
     }
 
-    public void setMemory(final int memory) {
+    public void setMemory(final long memory) {
         this.memory = memory;
     }
 

@@ -35,7 +35,7 @@ public interface ThrottledLeetcodeClient extends LeetcodeClient {
     List<LeetcodeSubmission> findSubmissionsByUsernameFast(String username, int limit);
 
     /** @implNote requires authentication */
-    LeetcodeDetailedQuestion findSubmissionDetailBySubmissionIdFast(int submissionId);
+    LeetcodeDetailedQuestion findSubmissionDetailBySubmissionIdFast(long submissionId);
 
     POTD getPotdFast();
 

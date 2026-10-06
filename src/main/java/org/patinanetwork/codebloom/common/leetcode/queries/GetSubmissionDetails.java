@@ -28,13 +28,13 @@ public class GetSubmissionDetails {
           }
                 """;
 
-    public static String body(final int submissionId) throws JsonProcessingException {
+    public static String body(final long submissionId) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
 
         Map<String, Object> requestBodyMap = new HashMap<>();
         requestBodyMap.put("query", QUERY);
 
-        Map<String, Integer> variables = new HashMap<>();
+        Map<String, Long> variables = new HashMap<>();
         variables.put("submissionId", submissionId);
         requestBodyMap.put("variables", variables);
 

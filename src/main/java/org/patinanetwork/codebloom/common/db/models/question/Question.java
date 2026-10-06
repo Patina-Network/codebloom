@@ -31,7 +31,7 @@ public class Question {
 
     private QuestionDifficulty questionDifficulty;
 
-    private int questionNumber;
+    private long questionNumber;
 
     private String questionLink;
 

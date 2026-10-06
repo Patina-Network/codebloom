@@ -205,6 +205,35 @@ public class LeetcodeClientTest {
     }
 
     @Test
+    void testFindSubmissionsByUsernameParsesIdsAboveIntMax() throws Exception {
+        String responseJson = """
+            {
+              "data": {
+                "recentAcSubmissionList": [
+                  {
+                    "id": "2163200710",
+                    "title": "Search in Rotated Sorted Array II",
+                    "titleSlug": "search-in-rotated-sorted-array-ii",
+                    "timestamp": "1791209563",
+                    "statusDisplay": "Accepted"
+                  }
+                ]
+              }
+            }
+            """;
+
+        when(httpResponse.statusCode()).thenReturn(200);
+        when(httpResponse.body()).thenReturn(responseJson);
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        List<LeetcodeSubmission> result = leetcodeClient.findSubmissionsByUsername("testuser");
+
+        assertEquals(1, result.size());
+        assertEquals(2163200710L, result.get(0).getId());
+    }
+
+    @Test
     void testFindSubmissionDetailBySubmissionId() throws Exception {
         String responseJson = """
             {

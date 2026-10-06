@@ -163,8 +163,8 @@ public class LeetcodeClientImpl implements LeetcodeClient {
                 throw new LeetcodeClientException("LeetCode returned no question data");
             }
 
-            int questionId =
-                    node.path("data").path("question").path("questionId").asInt();
+            long questionId =
+                    node.path("data").path("question").path("questionId").asLong();
             String questionTitle =
                     node.path("data").path("question").path("title").asText();
             String titleSlug =
@@ -258,7 +258,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
                 }
 
                 for (JsonNode submission : submissionsNode) {
-                    int id = submission.path("id").asInt();
+                    long id = submission.path("id").asLong();
                     String title = submission.path("title").asText();
                     String titleSlug = submission.path("titleSlug").asText();
                     String timestampString = submission.path("timestamp").asText();
@@ -285,7 +285,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
     @Override
     @Retry(name = "leetcodeClient")
     @CircuitBreaker(name = "leetcodeClient")
-    public LeetcodeDetailedQuestion findSubmissionDetailBySubmissionId(final int submissionId) {
+    public LeetcodeDetailedQuestion findSubmissionDetailBySubmissionId(final long submissionId) {
         String requestBody;
         try {
             requestBody = GetSubmissionDetails.body(submissionId);
@@ -312,10 +312,10 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             JsonNode node = mapper.readTree(body);
             JsonNode baseNode = node.path("data").path("submissionDetails");
 
-            int runtime = baseNode.path("runtime").asInt();
+            long runtime = baseNode.path("runtime").asLong();
             String runtimeDisplay = baseNode.path("runtimeDisplay").asText();
             float runtimePercentile = (float) baseNode.path("runtimePercentile").asDouble();
-            int memory = baseNode.path("memory").asInt();
+            long memory = baseNode.path("memory").asLong();
             String memoryDisplay = baseNode.path("memoryDisplay").asText();
             float memoryPercentile = (float) baseNode.path("memoryPercentile").asDouble();
             String code = baseNode.path("code").asText();
@@ -531,7 +531,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
                 result.add(LeetcodeQuestion.builder()
                         .link("https://leetcode.com/problems/"
                                 + question.get("titleSlug").asText())
-                        .questionId(question.get("questionFrontendId").asInt())
+                        .questionId(question.get("questionFrontendId").asLong())
                         .questionTitle(question.get("title").asText())
                         .titleSlug(question.get("titleSlug").asText())
                         .difficulty(question.get("difficulty").asText())
