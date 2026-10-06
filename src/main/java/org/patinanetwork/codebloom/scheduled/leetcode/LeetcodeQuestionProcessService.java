@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 @Profile("!ci | thread")
 public class LeetcodeQuestionProcessService {
 
-    private final ReentrantLock lock = new ReentrantLock();
+    private static final ReentrantLock LOCK = new ReentrantLock();
 
     private static final int MAX_JOBS_PER_RUN = 10;
     private static final long REQUESTS_OVER_TIME = 1L;
@@ -89,7 +89,7 @@ public class LeetcodeQuestionProcessService {
     @Scheduled(initialDelay = 0, fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
     @Async
     public CompletableFuture<Empty> drainQueue() {
-        if (!lock.tryLock()) {
+        if (!LOCK.tryLock()) {
             log.info("thread attempted to drain queue, but queue is already being drained.");
             return CompletableFuture.completedFuture(Empty.of());
         }
@@ -119,7 +119,7 @@ public class LeetcodeQuestionProcessService {
                 }
             }
         } finally {
-            lock.unlock();
+            LOCK.unlock();
         }
         return CompletableFuture.completedFuture(Empty.of());
     }
