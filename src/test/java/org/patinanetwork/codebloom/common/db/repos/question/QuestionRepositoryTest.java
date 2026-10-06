@@ -31,7 +31,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class QuestionRepositoryTest extends BaseRepositoryTest {
 
     private QuestionRepository questionRepository;
-
     private Question testQuestion;
     private String mockSuperUserId = "ed3bfe18-e42a-467f-b4fa-07e8da4d2555";
 

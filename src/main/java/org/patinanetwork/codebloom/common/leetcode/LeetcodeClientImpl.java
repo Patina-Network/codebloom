@@ -214,10 +214,10 @@ public class LeetcodeClientImpl implements LeetcodeClient {
                     .topics(tags)
                     .build();
         } catch (LeetcodeClientException e) {
-            errorCounter().increment();
             if (e.isNotFound()) {
                 throw e;
             }
+            errorCounter().increment();
             throw new LeetcodeClientException("Error fetching the API", e);
         } catch (InterruptedException e) {
             errorCounter().increment();

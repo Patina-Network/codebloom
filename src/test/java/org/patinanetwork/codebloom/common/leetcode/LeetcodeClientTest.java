@@ -59,6 +59,7 @@ public class LeetcodeClientTest {
 
         var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("old-slug"));
         assertTrue(error.isNotFound());
+        assertNull(meterRegistry.find("leetcode.client.exception").counter());
     }
 
     @ParameterizedTest
@@ -77,6 +78,8 @@ public class LeetcodeClientTest {
 
         var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("example"));
         assertFalse(error.isNotFound());
+        assertEquals(
+                1.0, meterRegistry.get("leetcode.client.exception").counter().count());
     }
 
     @ParameterizedTest

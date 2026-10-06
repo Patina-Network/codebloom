@@ -69,6 +69,8 @@ public class AttachTagsToExistingQuestionTest {
                 .thenThrow(new RuntimeException("Expected!"));
 
         attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+        attachTagsToExistingQuestion.attachTagsToExistingQuestions();
+        verify(leetcodeClient, times(2)).findQuestionBySlug(mockQuestion.getQuestionSlug());
         verifyNoInteractions(questionTopicRepository);
         assertTrue(logWatcher.list.stream()
                 .anyMatch(log -> log.getLevel().equals(Level.ERROR)
