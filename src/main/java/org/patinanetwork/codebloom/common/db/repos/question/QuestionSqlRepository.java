@@ -2,6 +2,7 @@ package org.patinanetwork.codebloom.common.db.repos.question;
 
 import java.sql.Array;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.OffsetDateTime;
@@ -41,79 +42,40 @@ public class QuestionSqlRepository implements QuestionRepository {
         this.jdbcClient = jdbcClient;
         this.questionTopicRepository = questionTopicRepository;
         this.questionTopicService = questionTopicService;
-        this.questionRowMapper = (rs, rowNum) -> {
-            var questionId = rs.getString("id");
-            var userId = rs.getString("userId");
-            var questionSlug = rs.getString("questionSlug");
-            var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
-            var questionNumber = rs.getLong("questionNumber");
-            var questionLink = rs.getString("questionLink");
-            int points = rs.getInt("pointsAwarded");
-            Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
-            var questionTitle = rs.getString("questionTitle");
-            var acceptanceRate = rs.getFloat("acceptanceRate");
-            var createdAt = rs.getTimestamp("createdAt").toLocalDateTime();
-            var submittedAt = rs.getTimestamp("submittedAt").toLocalDateTime();
+        this.questionRowMapper =
+                (rs, rowNum) -> mapQuestionColumns(Question.builder(), rs).build();
+        this.questionWithUserRowMapper = (rs, rowNum) -> mapQuestionColumns(QuestionWithUser.builder(), rs)
+                .discordName(Optional.ofNullable(rs.getString("discordName")))
+                .leetcodeUsername(Optional.ofNullable(rs.getString("leetcodeUsername")))
+                .nickname(Optional.ofNullable(rs.getString("nickname")))
+                .build();
+    }
 
-            return Question.builder()
-                    .id(questionId)
-                    .userId(userId)
-                    .questionSlug(questionSlug)
-                    .questionDifficulty(questionDifficulty)
-                    .questionNumber(questionNumber)
-                    .questionLink(questionLink)
-                    .pointsAwarded(pointsAwarded)
-                    .questionTitle(questionTitle)
-                    .description(Optional.ofNullable(rs.getString("description")))
-                    .acceptanceRate(acceptanceRate)
-                    .createdAt(createdAt)
-                    .submittedAt(submittedAt)
-                    .runtime(Optional.ofNullable(rs.getString("runtime")))
-                    .memory(Optional.ofNullable(rs.getString("memory")))
-                    .code(Optional.ofNullable(rs.getString("code")))
-                    .language(Optional.ofNullable(rs.getString("language")))
-                    .submissionId(Optional.ofNullable(rs.getString("submissionId")))
-                    .topics(questionTopicRepository.findQuestionTopicsByQuestionId(questionId))
-                    .build();
-        };
-        this.questionWithUserRowMapper = (rs, rowNum) -> {
-            var questionId = rs.getString("id");
-            var userId = rs.getString("userId");
-            var questionSlug = rs.getString("questionSlug");
-            var questionDifficulty = QuestionDifficulty.valueOf(rs.getString("questionDifficulty"));
-            var questionNumber = rs.getLong("questionNumber");
-            var questionLink = rs.getString("questionLink");
-            int points = rs.getInt("pointsAwarded");
-            Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
-            var questionTitle = rs.getString("questionTitle");
-            var acceptanceRate = rs.getFloat("acceptanceRate");
-            var createdAt = rs.getTimestamp("createdAt").toLocalDateTime();
-            var submittedAt = rs.getTimestamp("submittedAt").toLocalDateTime();
+    private <B extends Question.QuestionBuilder<?, ?>> B mapQuestionColumns(final B builder, final ResultSet rs)
+            throws SQLException {
+        var questionId = rs.getString("id");
+        int points = rs.getInt("pointsAwarded");
+        Optional<Integer> pointsAwarded = rs.wasNull() ? Optional.empty() : Optional.of(points);
 
-            return QuestionWithUser.builder()
-                    .id(questionId)
-                    .userId(userId)
-                    .questionSlug(questionSlug)
-                    .questionDifficulty(questionDifficulty)
-                    .questionNumber(questionNumber)
-                    .questionLink(questionLink)
-                    .pointsAwarded(pointsAwarded)
-                    .questionTitle(questionTitle)
-                    .description(Optional.ofNullable(rs.getString("description")))
-                    .acceptanceRate(acceptanceRate)
-                    .createdAt(createdAt)
-                    .submittedAt(submittedAt)
-                    .runtime(Optional.ofNullable(rs.getString("runtime")))
-                    .memory(Optional.ofNullable(rs.getString("memory")))
-                    .code(Optional.ofNullable(rs.getString("code")))
-                    .language(Optional.ofNullable(rs.getString("language")))
-                    .submissionId(Optional.ofNullable(rs.getString("submissionId")))
-                    .discordName(Optional.ofNullable(rs.getString("discordName")))
-                    .leetcodeUsername(Optional.ofNullable(rs.getString("leetcodeUsername")))
-                    .nickname(Optional.ofNullable(rs.getString("nickname")))
-                    .topics(questionTopicRepository.findQuestionTopicsByQuestionId(questionId))
-                    .build();
-        };
+        builder.id(questionId)
+                .userId(rs.getString("userId"))
+                .questionSlug(rs.getString("questionSlug"))
+                .questionDifficulty(QuestionDifficulty.valueOf(rs.getString("questionDifficulty")))
+                .questionNumber(rs.getLong("questionNumber"))
+                .questionLink(rs.getString("questionLink"))
+                .pointsAwarded(pointsAwarded)
+                .questionTitle(rs.getString("questionTitle"))
+                .description(Optional.ofNullable(rs.getString("description")))
+                .acceptanceRate(rs.getFloat("acceptanceRate"))
+                .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
+                .submittedAt(rs.getTimestamp("submittedAt").toLocalDateTime())
+                .runtime(Optional.ofNullable(rs.getString("runtime")))
+                .memory(Optional.ofNullable(rs.getString("memory")))
+                .code(Optional.ofNullable(rs.getString("code")))
+                .language(Optional.ofNullable(rs.getString("language")))
+                .submissionId(Optional.ofNullable(rs.getString("submissionId")))
+                .topics(questionTopicRepository.findQuestionTopicsByQuestionId(questionId));
+        return builder;
     }
 
     @Override
