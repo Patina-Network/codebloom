@@ -4,13 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import io.github.bucket4j.BlockingBucket;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,59 +73,67 @@ public class QueueLockTest {
 
     @Test
     @Timeout(value = 5, unit = TimeUnit.SECONDS)
-    void acquireFastShouldAppendToStartOfQueue() throws InterruptedException {
-        CountDownLatch tickerCallLatch = new CountDownLatch(1);
-        CountDownLatch releaseTicker = new CountDownLatch(1);
+    void acquireFastShouldAppendToStartOfQueue() throws Exception {
+        var tickerStarted = new CountDownLatch(1);
+        var releaseTicker = new CountDownLatch(1);
+        var releaseNormal = new CountDownLatch(1);
+        var normalSelected = new CountDownLatch(1);
+        var calls = new AtomicInteger();
 
         doAnswer(invocation -> {
-                    tickerCallLatch.countDown();
-                    releaseTicker.await();
+                    int call = calls.incrementAndGet();
+                    if (call == 1) {
+                        tickerStarted.countDown();
+                        releaseTicker.await();
+                    } else if (call == 3) {
+                        normalSelected.countDown();
+                        releaseNormal.await();
+                    }
                     return null;
                 })
                 .when(bucket)
                 .consume(1);
 
-        executor.submit(() -> {
-            try {
+        try {
+            var initial = executor.submit(() -> {
                 queueLock.acquire();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-        assertTrue(tickerCallLatch.await(2, TimeUnit.SECONDS));
+                return null;
+            });
+            assertTrue(tickerStarted.await(2, TimeUnit.SECONDS));
 
-        List<String> orderedCalls = Collections.synchronizedList(new ArrayList<>());
-        CountDownLatch doneLatch = new CountDownLatch(2);
-
-        executor.submit(() -> {
-            try {
+            var normal = executor.submit(() -> {
                 queueLock.acquire();
-                orderedCalls.add("T2");
-                doneLatch.countDown();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+                return null;
+            });
+            awaitQueueSize(1);
 
-        Thread.sleep(100);
-
-        executor.submit(() -> {
-            try {
+            var fast = executor.submit(() -> {
                 queueLock.acquireFast();
-                orderedCalls.add("T3");
-                doneLatch.countDown();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
+                return null;
+            });
+            awaitQueueSize(2);
 
-        Thread.sleep(100);
+            releaseTicker.countDown();
+            fast.get(2, TimeUnit.SECONDS);
+            assertTrue(normalSelected.await(2, TimeUnit.SECONDS));
+            assertFalse(normal.isDone(), "Normal request must wait until the fast request is released");
 
-        releaseTicker.countDown();
+            releaseNormal.countDown();
+            normal.get(2, TimeUnit.SECONDS);
+            initial.get(2, TimeUnit.SECONDS);
+            verify(bucket, times(3)).consume(1);
+        } finally {
+            releaseTicker.countDown();
+            releaseNormal.countDown();
+        }
+    }
 
-        assertTrue(doneLatch.await(2, TimeUnit.SECONDS));
-        assertEquals("T3", orderedCalls.get(0));
-        assertEquals("T2", orderedCalls.get(1));
+    private void awaitQueueSize(int expected) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
+        while (queueLock.queue.size() != expected && System.nanoTime() < deadline) {
+            Thread.sleep(1);
+        }
+        assertEquals(expected, queueLock.queue.size(), "Requests did not enter the queue in time");
     }
 
     @Test
