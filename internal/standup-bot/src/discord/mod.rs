@@ -40,13 +40,13 @@ use crate::{
 };
 
 const INTENTS: GatewayIntents = GatewayIntents::GUILD_MEMBERS.union(GatewayIntents::GUILD_MESSAGES);
-const ROLE_ID: u64 = 1534007500121313341;
 
 pub struct DiscordClient {
     http: Arc<Http>,
     cache: Arc<Cache>,
     guild_id: u64,
     channel_id: u64,
+    role_id: u64,
 }
 
 impl DiscordClient {
@@ -79,6 +79,7 @@ impl DiscordClient {
             cache,
             guild_id: creds.guild_id,
             channel_id: creds.channel_id,
+            role_id: creds.role_id,
         })
     }
 
@@ -96,7 +97,7 @@ impl DiscordClient {
             )
             .colour(Colour::from_rgb(69, 129, 103));
         let create_msg = CreateMessage::new()
-            .content(format!("<@&{ROLE_ID}>"))
+            .content(format!("<@&{}>", self.role_id))
             .embed(embed);
         let channel = ChannelId::new(self.channel_id);
 
@@ -117,7 +118,7 @@ impl DiscordClient {
 
     pub async fn get_standup_role_members(&self) -> Result<Vec<Member>, DiscordClientError> {
         let guild = GuildId::new(self.guild_id);
-        let role = RoleId::new(ROLE_ID);
+        let role = RoleId::new(self.role_id);
 
         let members = self
             .cache

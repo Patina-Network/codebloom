@@ -14,6 +14,7 @@ pub struct DiscordCredentials {
     pub token: String,
     pub guild_id: u64,
     pub channel_id: u64,
+    pub role_id: u64,
 }
 
 impl DiscordCredentials {
@@ -35,6 +36,10 @@ impl DiscordCredentials {
                 .context("DISCORD_CHANNEL_ID is missing from environment")?
                 .parse()
                 .context("DISCORD_CHANNEL_ID is not an integer type")?,
+            role_id: env::var("DISCORD_ROLE_ID")
+                .context("DISCORD_ROLE_ID is missing from environment")?
+                .parse()
+                .context("DISCORD_ROLE_ID is not an integer type")?,
         })
     }
 }
