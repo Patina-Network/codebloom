@@ -14,6 +14,10 @@ Codebloom Standup Bot is an internal application written in [Rust](https://rust-
 1. Fill out your `.env` file
 1. Simply run `cargo run` to compile & run the binary.
 
+`DISCORD_ROLE_ID` is required and must be an unsigned 64-bit integer. It selects
+the role mentioned in standup messages and the members eligible for end-of-day
+reminders. Set it in `.env` locally and in the deployed service's environment.
+
 ### Deployment
 
 _Last updated: 02/15/2026_
