@@ -51,6 +51,50 @@ public class LeetcodeClientTest {
     }
 
     @Test
+    void explicitNullQuestionIsNotFound() throws Exception {
+        when(httpResponse.statusCode()).thenReturn(200);
+        when(httpResponse.body()).thenReturn("{\"data\":{\"question\":null}}");
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("old-slug"));
+        assertTrue(error.isNotFound());
+        assertNull(meterRegistry.find("leetcode.client.exception").counter());
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "{\"data\":{\"question\":null},\"errors\":[{\"message\":\"Unauthorized\"}]}",
+                "{\"data\":{}}",
+                "{\"data\":null}",
+                "invalid json"
+            })
+    void unsuccessfulOrMalformedResponseIsNotNotFound(String body) throws Exception {
+        when(httpResponse.statusCode()).thenReturn(200);
+        when(httpResponse.body()).thenReturn(body);
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("example"));
+        assertFalse(error.isNotFound());
+        assertEquals(
+                1.0, meterRegistry.get("leetcode.client.exception").counter().count());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {403, 404, 429, 503})
+    void httpFailureDoesNotPermanentlyExcludeQuestion(int status) throws Exception {
+        when(httpResponse.statusCode()).thenReturn(status);
+        when(httpResponse.body()).thenReturn("{\"data\":{\"question\":null}}");
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(httpResponse);
+
+        var error = assertThrows(LeetcodeClientException.class, () -> leetcodeClient.findQuestionBySlug("example"));
+        assertFalse(error.isNotFound());
+    }
+
+    @Test
     void testFindQuestionBySlug() throws Exception {
         String responseJson = """
             {

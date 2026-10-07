@@ -159,6 +159,14 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             JsonNode node = mapper.readTree(body);
             JsonNode questionNode = node.path("data").path("question");
+            if (!questionNode.isObject()
+                    && node.hasNonNull("errors")
+                    && !node.path("errors").isEmpty()) {
+                throw new LeetcodeClientException("LeetCode returned GraphQL errors for slug " + slug);
+            }
+            if (node.path("data").isObject() && node.path("data").has("question") && questionNode.isNull()) {
+                throw new LeetcodeClientException("LeetCode returned no question for slug " + slug, true);
+            }
             if (!questionNode.isObject()) {
                 throw new LeetcodeClientException("LeetCode returned no question data");
             }
@@ -205,6 +213,12 @@ public class LeetcodeClientImpl implements LeetcodeClient {
                     .acceptanceRate(acRate)
                     .topics(tags)
                     .build();
+        } catch (LeetcodeClientException e) {
+            if (e.isNotFound()) {
+                throw e;
+            }
+            errorCounter().increment();
+            throw new LeetcodeClientException("Error fetching the API", e);
         } catch (InterruptedException e) {
             errorCounter().increment();
             Thread.currentThread().interrupt();
