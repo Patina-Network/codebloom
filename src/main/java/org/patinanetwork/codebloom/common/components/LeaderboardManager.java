@@ -89,6 +89,7 @@ public class LeaderboardManager {
                 String placeString = calculatePlaceString(place);
                 Achievement achievement = Achievement.builder()
                         .userId(user.getId())
+                        .leaderboardId(currentLeaderboard.get().getId())
                         .place(AchievementPlaceEnum.fromInteger(place))
                         .leaderboard(pair.getRight())
                         .title(String.format(
@@ -118,6 +119,7 @@ public class LeaderboardManager {
             UserWithScore user = winners.get(i);
             Achievement achievement = Achievement.builder()
                     .userId(user.getId())
+                    .leaderboardId(currentLeaderboard.get().getId())
                     .place(AchievementPlaceEnum.fromInteger(place))
                     .leaderboard(null)
                     .title(String.format(
