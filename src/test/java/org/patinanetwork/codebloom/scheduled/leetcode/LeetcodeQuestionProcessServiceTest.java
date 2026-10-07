@@ -177,7 +177,7 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
 
     @Test
     void drainQueueValid() {
-        service.drainQueue();
+        service.drainQueue().join();
     }
 
     // TODO: (TAN-32) re-enable

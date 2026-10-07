@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -63,6 +65,34 @@ class LeetcodeQuestionProcessServiceUnitTest {
         new LeetcodeQuestionProcessService(jobs, client, questions, bank)
                 .drainQueue()
                 .join();
+    }
+
+    @Test
+    void independentServiceCanDrainWhileAnotherInstanceIsRunning() {
+        var otherJobs = mock(JobRepository.class);
+        when(otherJobs.findIncompleteJobs(10)).thenReturn(List.of());
+        var otherService = new LeetcodeQuestionProcessService(otherJobs, client, questions, bank);
+        when(jobs.findIncompleteJobs(10)).thenAnswer(invocation -> {
+            CompletableFuture.runAsync(() -> otherService.drainQueue().join()).get(5, TimeUnit.SECONDS);
+            return List.of();
+        });
+
+        runQueue();
+
+        verify(otherJobs).findIncompleteJobs(10);
+    }
+
+    @Test
+    void sameServiceSkipsConcurrentDrain() {
+        var service = new LeetcodeQuestionProcessService(jobs, client, questions, bank);
+        when(jobs.findIncompleteJobs(10)).thenAnswer(invocation -> {
+            CompletableFuture.runAsync(() -> service.drainQueue().join()).get(5, TimeUnit.SECONDS);
+            return List.of();
+        });
+
+        service.drainQueue().join();
+
+        verify(jobs).findIncompleteJobs(10);
     }
 
     @ParameterizedTest
