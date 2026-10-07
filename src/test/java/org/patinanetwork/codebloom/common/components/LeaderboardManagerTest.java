@@ -73,10 +73,12 @@ public class LeaderboardManagerTest {
             final Achievement achievement,
             final Tag leaderboard,
             final AchievementPlaceEnum placeEnum,
-            final String userId) {
+            final String userId,
+            final String leaderboardId) {
         assertEquals(leaderboard, achievement.getLeaderboard());
         assertEquals(placeEnum, achievement.getPlace());
         assertEquals(userId, achievement.getUserId());
+        assertEquals(leaderboardId, achievement.getLeaderboardId());
     }
 
     private static Stream<Arguments> tagGenerator() {
@@ -173,12 +175,14 @@ public class LeaderboardManagerTest {
                 userOneAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -225,24 +229,28 @@ public class LeaderboardManagerTest {
                 userOneSbuAchievement,
                 Tag.Sbu,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoSbuAchievement,
                 Tag.Sbu,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGlobalAchievement = achievements.get(2);
         var userTwoGlobalAchievement = achievements.get(3);
         assertAchievement(
                 userOneGlobalAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGlobalAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -300,36 +308,42 @@ public class LeaderboardManagerTest {
                 userOneSbuAchievement,
                 Tag.Sbu,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoSbuAchievement,
                 Tag.Sbu,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOnePatinaAchievement = achievements.get(2);
         var userTwoPatinaAchievement = achievements.get(3);
         assertAchievement(
                 userOnePatinaAchievement,
                 Tag.Patina,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoPatinaAchievement,
                 Tag.Patina,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGlobalAchievement = achievements.get(4);
         var userTwoGlobalAchievement = achievements.get(5);
         assertAchievement(
                 userOneGlobalAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGlobalAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -387,36 +401,42 @@ public class LeaderboardManagerTest {
                 userOneSbuAchievement,
                 Tag.Sbu,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoSbuAchievement,
                 Tag.Sbu,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGwcAchievement = achievements.get(2);
         var userTwoGwcAchievement = achievements.get(3);
         assertAchievement(
                 userOneGwcAchievement,
                 Tag.Gwc,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGwcAchievement,
                 Tag.Gwc,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGlobalAchievement = achievements.get(4);
         var userTwoGlobalAchievement = achievements.get(5);
         assertAchievement(
                 userOneGlobalAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGlobalAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -463,24 +483,28 @@ public class LeaderboardManagerTest {
                 userOneGwcAchievement,
                 Tag.Gwc,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGwcAchievement,
                 Tag.Gwc,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGlobalAchievement = achievements.get(2);
         var userTwoGlobalAchievement = achievements.get(3);
         assertAchievement(
                 userOneGlobalAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGlobalAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -538,36 +562,42 @@ public class LeaderboardManagerTest {
                 userOneMhcPlusPlusAchievement,
                 Tag.MHCPlusPlus,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoMhcPlusPlusAchievement,
                 Tag.MHCPlusPlus,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGwcAchievement = achievements.get(2);
         var userTwoGwcAchievement = achievements.get(3);
         assertAchievement(
                 userOneGwcAchievement,
                 Tag.Gwc,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGwcAchievement,
                 Tag.Gwc,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGlobalAchievement = achievements.get(4);
         var userTwoGlobalAchievement = achievements.get(5);
         assertAchievement(
                 userOneGlobalAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGlobalAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -638,12 +668,14 @@ public class LeaderboardManagerTest {
                 userOneAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -674,7 +706,8 @@ public class LeaderboardManagerTest {
                 userOneAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                users.get(0).getItem().getId());
+                users.get(0).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
@@ -735,6 +768,7 @@ public class LeaderboardManagerTest {
         var achievements = captor.getAllValues();
         for (var achievement : achievements) {
             assertNull(achievement.getLeaderboard());
+            assertEquals(latestLeaderboard.getId(), achievement.getLeaderboardId());
         }
     }
 
@@ -779,24 +813,28 @@ public class LeaderboardManagerTest {
                 userOnePatinaAchievement,
                 Tag.Patina,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoPatinaAchievement,
                 Tag.Patina,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
         var userOneGlobalAchievement = achievements.get(2);
         var userTwoGlobalAchievement = achievements.get(3);
         assertAchievement(
                 userOneGlobalAchievement,
                 null,
                 AchievementPlaceEnum.ONE,
-                winners.get(0).getItem().getId());
+                winners.get(0).getItem().getId(),
+                latestLeaderboard.getId());
         assertAchievement(
                 userTwoGlobalAchievement,
                 null,
                 AchievementPlaceEnum.TWO,
-                winners.get(1).getItem().getId());
+                winners.get(1).getItem().getId(),
+                latestLeaderboard.getId());
     }
 
     @Test
