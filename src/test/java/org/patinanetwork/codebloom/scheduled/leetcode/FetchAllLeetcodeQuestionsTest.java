@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
@@ -158,5 +159,20 @@ public class FetchAllLeetcodeQuestionsTest {
                         .build()));
         job.updateQuestionBank();
         verify(questionBankRepository, org.mockito.Mockito.never()).deleteQuestionById("premium-id");
+    }
+
+    @Test
+    void skipsResyncWhenLastSyncWasWithin16Hours() {
+        BackgroundTask recentSync = BackgroundTask.builder()
+                .task(BackgroundTaskEnum.LEETCODE_QUESTION_BANK)
+                .completedAt(OffsetDateTime.now().minusHours(1))
+                .build();
+        when(backgroundTaskRepository.getMostRecentlyCompletedBackgroundTaskByTaskEnum(
+                        BackgroundTaskEnum.LEETCODE_QUESTION_BANK))
+                .thenReturn(Optional.of(recentSync));
+
+        job.updateQuestionBank();
+
+        verifyNoInteractions(leetcodeClient, questionBankRepository);
     }
 }

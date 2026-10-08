@@ -45,9 +45,7 @@ public class ControllerExceptionHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Void> handleNoResourceFound(final NoResourceFoundException ex) {
-        if (log.isDebugEnabled()) {
-            log.debug(ex.getMessage());
-        }
+        log.debug(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
