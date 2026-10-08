@@ -2,10 +2,10 @@ import { $ } from "bun";
 
 async function main() {
   // fmt
-  await $`./mvnw spotless:check`;
+  await $`./mvnw -B -ntp spotless:check`;
 
   // lint
-  await $`./mvnw checkstyle:check`;
+  await $`./mvnw -B -ntp checkstyle:check`;
 
   // compile
   await $`./mvnw -B verify -Dmaven.test.skip=true --no-transfer-progress`;

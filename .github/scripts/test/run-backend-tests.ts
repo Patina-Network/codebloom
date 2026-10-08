@@ -37,11 +37,11 @@ async function main() {
 
     await $`./mvnw -B install -D skipTests --no-transfer-progress`;
 
-    await $`./mvnw -B exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps"`;
+    await $`./mvnw -B -ntp exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps"`;
 
     await $`cd email && pnpm i --frozen-lockfile && ./email.sh && cd ..`;
 
-    await $$`./mvnw clean verify -Dspring.profiles.active=ci`;
+    await $$`./mvnw -B -ntp clean verify -Dspring.profiles.active=ci`;
 
     if (shouldUploadCoverage) {
       const { sonarToken } = parseCiEnv(process.env);

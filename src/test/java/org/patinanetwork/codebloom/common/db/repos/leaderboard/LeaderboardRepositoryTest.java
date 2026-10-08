@@ -27,6 +27,7 @@ import org.patinanetwork.codebloom.common.db.repos.user.UserRepository;
 import org.patinanetwork.codebloom.common.db.repos.user.options.UserFilterOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.util.AopTestUtils;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -65,21 +66,21 @@ public class LeaderboardRepositoryTest extends BaseRepositoryTest {
 
     @AfterAll
     void deleteMockLeaderboard() throws Exception {
-        Method deleteLeaderboardMethod =
-                leaderboardRepository.getClass().getDeclaredMethod("deleteLeaderboardById", String.class);
-        Method enableLeaderboardMethod =
-                leaderboardRepository.getClass().getDeclaredMethod("enableLeaderboardById", String.class);
+        // repository is proxied (e.g. @Timed), so private methods only exist on the target
+        LeaderboardRepository target = AopTestUtils.getTargetObject(leaderboardRepository);
+
+        Method deleteLeaderboardMethod = target.getClass().getDeclaredMethod("deleteLeaderboardById", String.class);
+        Method enableLeaderboardMethod = target.getClass().getDeclaredMethod("enableLeaderboardById", String.class);
 
         deleteLeaderboardMethod.setAccessible(true);
         enableLeaderboardMethod.setAccessible(true);
 
-        boolean deleteLeaderboardSuccessful =
-                (Boolean) deleteLeaderboardMethod.invoke(leaderboardRepository, mockLeaderboard.getId());
+        boolean deleteLeaderboardSuccessful = (Boolean) deleteLeaderboardMethod.invoke(target, mockLeaderboard.getId());
 
         assertTrue(deleteLeaderboardSuccessful, "failed to delete mock leaderboard");
 
         boolean enableLeaderboardSuccessful =
-                (Boolean) enableLeaderboardMethod.invoke(leaderboardRepository, previousLeaderboard.getId());
+                (Boolean) enableLeaderboardMethod.invoke(target, previousLeaderboard.getId());
 
         assertTrue(enableLeaderboardSuccessful, "failed to restore previous leaderboard");
     }

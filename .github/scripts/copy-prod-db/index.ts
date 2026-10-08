@@ -67,7 +67,9 @@ async function main() {
     };
 
     console.log("Cleaning staging database...");
-    await $.env(flywayEnv)`./mvnw flyway:clean -Dflyway.cleanDisabled=false`;
+    await $.env(
+      flywayEnv,
+    )`./mvnw -B -ntp flyway:clean -Dflyway.cleanDisabled=false`;
 
     console.log("Copying production database to staging...");
     // extensions are provisioned by `platform-infra`,
