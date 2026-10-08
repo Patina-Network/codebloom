@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.question.topic;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class QuestionTopicSqlRepository implements QuestionTopicRepository {
 
     private static final RowMapper<QuestionTopic> QUESTION_TOPIC_ROW_MAPPER = (rs, rowNum) -> QuestionTopic.builder()

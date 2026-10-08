@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.leaderboard;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -27,6 +28,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class LeaderboardSqlRepository implements LeaderboardRepository {
 
     private static final String SHOULD_EXPIRE_BY = "shouldExpireBy";

@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.api;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class ApiKeySqlRepository implements ApiKeyRepository {
 
     private static final RowMapper<ApiKey> API_KEY_ROW_MAPPER = (rs, rowNum) -> ApiKey.builder()

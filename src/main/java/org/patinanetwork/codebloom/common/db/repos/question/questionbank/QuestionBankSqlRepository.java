@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.question.questionbank;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Timed(value = "repository.execution")
 public class QuestionBankSqlRepository implements QuestionBankRepository {
 
     private final JdbcClient jdbcClient;

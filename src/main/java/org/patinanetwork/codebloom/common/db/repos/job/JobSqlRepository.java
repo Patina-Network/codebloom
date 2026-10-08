@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.job;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class JobSqlRepository implements JobRepository {
 
     private static final RowMapper<Job> JOB_ROW_MAPPER = (rs, rowNum) -> Job.builder()

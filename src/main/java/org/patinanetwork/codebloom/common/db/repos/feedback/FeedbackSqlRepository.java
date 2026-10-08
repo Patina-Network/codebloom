@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.feedback;
 
+import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class FeedbackSqlRepository implements FeedbackRepository {
 
     private static final RowMapper<Feedback> FEEDBACK_ROW_MAPPER = (rs, rowNum) -> Feedback.builder()

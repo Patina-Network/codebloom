@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.usertag;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class UserTagSqlRepository implements UserTagRepository {
 
     private static final RowMapper<UserTag> USER_TAG_ROW_MAPPER = (rs, rowNum) -> {
