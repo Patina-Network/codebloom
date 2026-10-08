@@ -67,7 +67,7 @@ public class FetchAllLeetcodeQuestions {
         if (recentLeetcodeTask.isPresent()) {
             if (StandardizedOffsetDateTime.now()
                     .isBefore(recentLeetcodeTask.get().getCompletedAt().plusHours(16))) {
-                log.error("Not time yet to resync question bank");
+                log.info("Not time yet to resync question bank");
                 return;
             }
         }
