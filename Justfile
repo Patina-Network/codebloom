@@ -77,7 +77,7 @@ email-gen *args:
 
 # Run the dev servers (backend & frontend)
 dev *args:
-  cp internal/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit && npx concurrently "just backend-dev" "just frontend-dev" {{args}}
+  npx concurrently "just backend-dev" "just frontend-dev" {{args}}
 
 # Run the dev servers (backend & frontend) but the backend will launch a debugger server.
 devd *args:
