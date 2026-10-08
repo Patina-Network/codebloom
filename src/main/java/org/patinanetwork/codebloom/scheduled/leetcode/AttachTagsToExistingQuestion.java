@@ -44,7 +44,6 @@ public class AttachTagsToExistingQuestion {
         }
 
         for (var question : questions) {
-            log.info("Updating question with id of {}", question.getId());
             LeetcodeQuestion leetcodeQuestion;
             try {
                 leetcodeQuestion = leetcodeClient.findQuestionBySlug(question.getQuestionSlug());
