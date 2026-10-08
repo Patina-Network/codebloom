@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.club;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.club.Club;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class ClubSqlRepository implements ClubRepository {
 
     private static final RowMapper<Club> CLUB_ROW_MAPPER = (rs, rowNum) -> {

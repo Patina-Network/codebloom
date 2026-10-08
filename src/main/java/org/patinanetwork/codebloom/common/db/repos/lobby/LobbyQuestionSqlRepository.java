@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.lobby;
 
+import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +11,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class LobbyQuestionSqlRepository implements LobbyQuestionRepository {
 
     private static final RowMapper<LobbyQuestion> LOBBY_QUESTION_ROW_MAPPER = (rs, rowNum) -> LobbyQuestion.builder()

@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.announcement;
 
+import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class AnnouncementSqlRepository implements AnnouncementRepository {
 
     private static final RowMapper<Announcement> ANNOUNCEMENT_ROW_MAPPER = (rs, rowNum) -> Announcement.builder()

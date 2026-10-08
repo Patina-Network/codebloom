@@ -52,7 +52,9 @@ async function start() {
 
     console.log("postres started, running migrations...");
 
-    await $.env(env)`./mvnw flyway:migrate -Dflyway.locations=filesystem:./db`;
+    await $.env(
+      env,
+    )`./mvnw -B -ntp flyway:migrate -Dflyway.locations=filesystem:./db`;
 
     console.log("postgres ready");
 

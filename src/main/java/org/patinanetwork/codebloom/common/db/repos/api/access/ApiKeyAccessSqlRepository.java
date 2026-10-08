@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.api.access;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
 
     private static final RowMapper<ApiKeyAccess> API_KEY_ACCESS_ROW_MAPPER = (rs, rowNum) -> ApiKeyAccess.builder()

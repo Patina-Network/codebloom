@@ -29,6 +29,6 @@ export async function _migrateDb({
   await $.env({
     ...migratorEnv,
     DATABASE_NAME,
-  })`./mvnw flyway:migrate -Dflyway.locations=filesystem:./db/migration`;
+  })`./mvnw -B -ntp flyway:migrate -Dflyway.locations=filesystem:./db/migration`;
   return "success";
 }

@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.patinanetwork.codebloom.common.env.Env;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 public class ControllerExceptionHandlerTest {
     private final Reporter errorReporter = mock(Reporter.class);
@@ -45,5 +48,23 @@ public class ControllerExceptionHandlerTest {
         assertTrue(logWatcher.list.stream()
                 .anyMatch(log -> log.getLevel().equals(Level.ERROR)
                         && log.getFormattedMessage().contains("Expected error!")));
+    }
+
+    @Test
+    void testHandleExceptionReturns500AndReports() {
+        var response = controllerExceptionHandler.handleThrowable(new Exception("Expected error!"));
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(errorReporter).error(eq("handleThrowable"), any());
+    }
+
+    @Test
+    void testNoResourceFoundReturns404WithoutReportingOrErrorLog() {
+        var response =
+                controllerExceptionHandler.handleNoResourceFound(new NoResourceFoundException(HttpMethod.GET, ".env"));
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verifyNoInteractions(errorReporter);
+        assertTrue(logWatcher.list.stream().noneMatch(log -> log.getLevel().equals(Level.ERROR)));
     }
 }

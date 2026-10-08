@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.potd;
 
+import io.micrometer.core.annotation.Timed;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class POTDSqlRepository implements POTDRepository {
 
     private static final RowMapper<POTD> POTD_ROW_MAPPER = (rs, rowNum) -> POTD.builder()

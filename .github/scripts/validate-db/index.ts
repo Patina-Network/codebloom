@@ -54,7 +54,7 @@ export async function main() {
   await $.env({
     ...process.env,
     ...appEnv,
-  })`bash -c "./mvnw flyway:validate -Dflyway.locations=filesystem:./db/migration -Dflyway.ignoreMigrationPatterns='*:pending'"`;
+  })`bash -c "./mvnw -B -ntp flyway:validate -Dflyway.locations=filesystem:./db/migration -Dflyway.ignoreMigrationPatterns='*:pending'"`;
 }
 
 main()

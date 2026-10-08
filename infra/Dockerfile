@@ -36,7 +36,7 @@ WORKDIR /app
 COPY mvnw pom.xml ./
 COPY .mvn/ .mvn/
 
-RUN ./mvnw dependency:resolve -B
+RUN ./mvnw -B -ntp dependency:resolve
 
 COPY src ./src
 COPY --from=frontend-build /js/dist/ src/main/resources/static/
@@ -44,7 +44,7 @@ RUN mkdir -p src/main/resources/static/email && rm -f src/main/resources/static/
 COPY --from=email-build /email/out/*.html src/main/resources/static/email/
 
 ARG COMMIT_SHA
-RUN ./mvnw package -DskipTests -Dcommit.sha="${COMMIT_SHA}"
+RUN ./mvnw -B -ntp package -DskipTests -Dcommit.sha="${COMMIT_SHA}"
 
 FROM mirror.gcr.io/library/eclipse-temurin:25-jre-jammy
 
@@ -52,7 +52,7 @@ WORKDIR /app
 
 COPY mvnw pom.xml ./
 COPY .mvn/ .mvn/
-RUN ./mvnw -B exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps"
+RUN ./mvnw -B -ntp exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps"
 COPY --from=backend-build /app/target/*.jar app.jar
 
 ARG SERVER_PROFILES=prod

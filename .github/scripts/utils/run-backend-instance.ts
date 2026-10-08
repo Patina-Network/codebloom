@@ -14,7 +14,13 @@ async function start(env: Record<string, string>) {
 
     const logFile = Bun.file("backend.log");
     be = Bun.spawn(
-      ["./mvnw", "-Dspring-boot.run.profiles=ci", "spring-boot:run"],
+      [
+        "./mvnw",
+        "-B",
+        "-ntp",
+        "-Dspring-boot.run.profiles=ci",
+        "spring-boot:run",
+      ],
       {
         env: { ...process.env, ...env },
         stdout: logFile,

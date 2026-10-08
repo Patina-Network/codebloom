@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.achievements;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class AchievementSqlRepository implements AchievementRepository {
 
     private static final RowMapper<Achievement> ACHIEVEMENT_ROW_MAPPER = (rs, rowNum) -> {

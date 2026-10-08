@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 @Slf4j
@@ -40,6 +41,12 @@ public class ControllerExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ApiResponder<?>> handleMethodArgumentNotValid(final ValidationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponder.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound(final NoResourceFoundException ex) {
+        log.debug(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @ExceptionHandler(Throwable.class)

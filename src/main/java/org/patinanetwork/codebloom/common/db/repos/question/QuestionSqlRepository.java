@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.question;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,6 +25,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class QuestionSqlRepository implements QuestionRepository {
 
     private final DataSource ds;

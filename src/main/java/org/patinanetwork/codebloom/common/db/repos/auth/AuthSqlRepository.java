@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.auth;
 
+import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.auth.Auth;
@@ -9,6 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class AuthSqlRepository implements AuthRepository {
 
     private static final RowMapper<Auth> AUTH_ROW_MAPPER = (rs, rowNum) -> Auth.builder()

@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.task;
 
+import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class BackgroundTaskSqlRepository implements BackgroundTaskRepository {
 
     private static final RowMapper<BackgroundTask> BACKGROUND_TASK_ROW_MAPPER = (rs, rowNum) -> BackgroundTask.builder()

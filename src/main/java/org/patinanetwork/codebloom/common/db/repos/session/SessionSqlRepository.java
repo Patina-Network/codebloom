@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.session;
 
+import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
 @Component
+@Timed(value = "repository.execution")
 public class SessionSqlRepository implements SessionRepository {
 
     private static final RowMapper<Session> SESSION_ROW_MAPPER = (rs, rowNum) -> Session.builder()
