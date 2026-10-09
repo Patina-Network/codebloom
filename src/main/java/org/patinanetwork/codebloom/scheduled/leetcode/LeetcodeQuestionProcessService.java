@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
@@ -32,8 +31,6 @@ import org.springframework.stereotype.Component;
 @Component
 @Profile("!ci | thread")
 public class LeetcodeQuestionProcessService {
-
-    private final ReentrantLock lock = new ReentrantLock();
 
     private static final int MAX_JOBS_PER_RUN = 10;
     private static final long REQUESTS_OVER_TIME = 1L;
@@ -89,37 +86,28 @@ public class LeetcodeQuestionProcessService {
     @Scheduled(initialDelay = 0, fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
     @Async
     public CompletableFuture<Empty> drainQueue() {
-        if (!lock.tryLock()) {
-            log.info("thread attempted to drain queue, but queue is already being drained.");
-            return CompletableFuture.completedFuture(Empty.of());
-        }
+        while (true) {
+            List<Job> jobs = claimBatch(MAX_JOBS_PER_RUN);
 
-        try {
-            while (true) {
-                List<Job> jobs = claimBatch(MAX_JOBS_PER_RUN);
+            if (jobs.isEmpty()) {
+                log.info("No more work to do");
+                break;
+            }
 
-                if (jobs.isEmpty()) {
-                    log.info("No more work to do");
-                    break;
-                }
+            log.info("Found {} jobs to process", jobs.size());
 
-                log.info("Found {} jobs to process", jobs.size());
-
-                for (Job job : jobs) {
-                    try {
-                        waitForToken();
-                        fetchAndUpdate(job);
-                    } catch (Exception e) {
-                        log.error(
-                                "Failed to process job with id: {} for questionId: {}",
-                                job.getId(),
-                                job.getQuestionId(),
-                                e);
-                    }
+            for (Job job : jobs) {
+                try {
+                    waitForToken();
+                    fetchAndUpdate(job);
+                } catch (Exception e) {
+                    log.error(
+                            "Failed to process job with id: {} for questionId: {}",
+                            job.getId(),
+                            job.getQuestionId(),
+                            e);
                 }
             }
-        } finally {
-            lock.unlock();
         }
         return CompletableFuture.completedFuture(Empty.of());
     }
