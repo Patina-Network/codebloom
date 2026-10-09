@@ -1,7 +1,7 @@
 DO $$
 BEGIN
     CASE current_database()
-        WHEN 'codebloom-prod' THEN
+        WHEN 'codebloom-prod', 'codebloom-stg' THEN
             UPDATE
                 "Question"
             SET
@@ -17,6 +17,6 @@ BEGIN
                 AND "questionSlug" = 'classes-more-than-5-students'
                 AND "questionLink" = 'https://leetcode.com/problems/classes-more-than-5-students';
         ELSE
-            RAISE NOTICE 'Skipping prod only migration: Current database is %', current_database();
+            RAISE NOTICE 'Skipping prod/staging only migration: Current database is %', current_database();
     END CASE;
 END $$;
