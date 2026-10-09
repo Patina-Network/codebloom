@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -83,16 +84,19 @@ class LeetcodeQuestionProcessServiceUnitTest {
     }
 
     @Test
-    void sameServiceSkipsConcurrentDrain() {
+    void sameServiceCanDrainConcurrently() {
         var service = new LeetcodeQuestionProcessService(jobs, client, questions, bank);
+        var firstDrain = new AtomicBoolean(true);
         when(jobs.findIncompleteJobs(10)).thenAnswer(invocation -> {
-            CompletableFuture.runAsync(() -> service.drainQueue().join()).get(5, TimeUnit.SECONDS);
+            if (firstDrain.getAndSet(false)) {
+                CompletableFuture.runAsync(() -> service.drainQueue().join()).get(5, TimeUnit.SECONDS);
+            }
             return List.of();
         });
 
         service.drainQueue().join();
 
-        verify(jobs).findIncompleteJobs(10);
+        verify(jobs, times(2)).findIncompleteJobs(10);
     }
 
     @ParameterizedTest
