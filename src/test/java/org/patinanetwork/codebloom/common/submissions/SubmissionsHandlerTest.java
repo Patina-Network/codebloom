@@ -65,7 +65,7 @@ class SubmissionsHandlerTest {
             .id(USER_ID)
             .discordId("d123")
             .discordName("tester")
-            .leetcodeUsername("leet_tester")
+            .leetcodeUsername(Optional.of("leet_tester"))
             .build();
 
     private final Leaderboard leaderboard = Leaderboard.builder()
@@ -102,12 +102,12 @@ class SubmissionsHandlerTest {
         });
 
         when(userRepository.getUserWithScoreByIdAndLeaderboardId(eq(USER_ID), eq(LEADERBOARD_ID), any()))
-                .thenReturn(UserWithScore.builder()
+                .thenReturn(Optional.of(UserWithScore.builder()
                         .id(USER_ID)
                         .discordId("d123")
                         .discordName("tester")
                         .totalScore(0)
-                        .build());
+                        .build()));
     }
 
     @Test

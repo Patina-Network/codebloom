@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -41,11 +42,11 @@ public class UserRepositoryTest extends BaseRepositoryTest {
         testUser = User.builder()
                 .discordId(uniqueDiscordId)
                 .discordName("TestUser")
-                .leetcodeUsername("testuser")
-                .nickname("TestNickname")
+                .leetcodeUsername(Optional.of("testuser"))
+                .nickname(Optional.of("TestNickname"))
                 .admin(false)
-                .schoolEmail("test@example.com")
-                .profileUrl("")
+                .schoolEmail(Optional.of("test@example.com"))
+                .profileUrl(Optional.of(""))
                 .tags(new ArrayList<>())
                 .build();
 
@@ -63,7 +64,7 @@ public class UserRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void testGetId() {
-        User found = userRepository.getUserById(testUser.getId());
+        User found = userRepository.getUserById(testUser.getId()).orElse(null);
         assertNotNull(found);
         assertEquals(testUser, found);
     }
@@ -71,7 +72,7 @@ public class UserRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(2)
     void testGetUserByDiscordId() {
-        User found = userRepository.getUserByDiscordId(testUser.getDiscordId());
+        User found = userRepository.getUserByDiscordId(testUser.getDiscordId()).orElse(null);
         assertNotNull(found);
         assertEquals(testUser, found);
     }
@@ -79,7 +80,9 @@ public class UserRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(3)
     void testGetUserByLeetcodeUsername() {
-        User found = userRepository.getUserByLeetcodeUsername(testUser.getLeetcodeUsername());
+        User found = userRepository
+                .getUserByLeetcodeUsername(testUser.getLeetcodeUsername().orElse(null))
+                .orElse(null);
         assertNotNull(found);
         assertEquals(testUser, found);
     }
@@ -88,14 +91,14 @@ public class UserRepositoryTest extends BaseRepositoryTest {
     @Order(4)
     void testUpdateUser() {
         String newNickname = "Updated Nickname";
-        testUser.setNickname(newNickname);
+        testUser.setNickname(Optional.ofNullable(newNickname));
 
         boolean updateResult = userRepository.updateUser(testUser);
         assertTrue(updateResult);
 
-        User updatedUser = userRepository.getUserById(testUser.getId());
+        User updatedUser = userRepository.getUserById(testUser.getId()).orElse(null);
         assertNotNull(updatedUser);
-        assertEquals(newNickname, updatedUser.getNickname());
+        assertEquals(newNickname, updatedUser.getNickname().orElse(null));
     }
 
     @Test
@@ -134,7 +137,8 @@ public class UserRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(9)
     void testUserExistsByLeetcodeUsername() {
-        boolean exists = userRepository.userExistsByLeetcodeUsername(testUser.getLeetcodeUsername());
+        boolean exists = userRepository.userExistsByLeetcodeUsername(
+                testUser.getLeetcodeUsername().orElse(null));
         assertTrue(exists);
     }
 }

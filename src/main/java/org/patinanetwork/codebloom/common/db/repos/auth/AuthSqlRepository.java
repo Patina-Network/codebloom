@@ -2,6 +2,7 @@ package org.patinanetwork.codebloom.common.db.repos.auth;
 
 import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.auth.Auth;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
@@ -16,7 +17,7 @@ public class AuthSqlRepository implements AuthRepository {
     private static final RowMapper<Auth> AUTH_ROW_MAPPER = (rs, rowNum) -> Auth.builder()
             .id(rs.getString("id"))
             .token(rs.getString("token"))
-            .csrf(rs.getString("csrf"))
+            .csrf(Optional.ofNullable(rs.getString("csrf")))
             .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
             .build();
 
@@ -42,7 +43,7 @@ public class AuthSqlRepository implements AuthRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(auth.getId()))
                 .param("token", auth.getToken())
-                .param("csrf", auth.getCsrf())
+                .param("csrf", auth.getCsrf().orElse(null))
                 .query((rs, rowNum) ->
                         StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
                 .optional()
@@ -66,14 +67,14 @@ public class AuthSqlRepository implements AuthRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(auth.getId()))
                 .param("token", auth.getToken())
-                .param("csrf", auth.getCsrf())
+                .param("csrf", auth.getCsrf().orElse(null))
                 .update();
 
         return rowsAffected > 0;
     }
 
     @Override
-    public Auth getAuthById(final String inputtedId) {
+    public Optional<Auth> getAuthById(final String inputtedId) {
         String sql = """
             SELECT
                 id, token, csrf, "createdAt"
@@ -86,12 +87,11 @@ public class AuthSqlRepository implements AuthRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(inputtedId))
                 .query(AUTH_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
-    public Auth getMostRecentAuth() {
+    public Optional<Auth> getMostRecentAuth() {
         String sql = """
             SELECT
                 id, token, csrf, "createdAt"
@@ -100,7 +100,7 @@ public class AuthSqlRepository implements AuthRepository {
             LIMIT 1
             """;
 
-        return jdbcClient.sql(sql).query(AUTH_ROW_MAPPER).optional().orElse(null);
+        return jdbcClient.sql(sql).query(AUTH_ROW_MAPPER).optional();
     }
 
     @Override

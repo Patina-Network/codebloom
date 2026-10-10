@@ -1,6 +1,7 @@
 package org.patinanetwork.codebloom.common.db.repos.job;
 
 import java.util.List;
+import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 
 public interface JobRepository {
@@ -24,9 +25,9 @@ public interface JobRepository {
      * Finds a job by its ID.
      *
      * @param id the job ID
-     * @return the job if found, null otherwise
+     * @return the job if found, Optional.empty() otherwise
      */
-    Job findJobById(String id);
+    Optional<Job> findJobById(String id);
 
     /**
      * Returns all the jobs with the specified question id.

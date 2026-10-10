@@ -36,7 +36,7 @@ public class AnnouncementDto {
                 .id(announcement.getId())
                 .createdAt(announcement.getCreatedAt())
                 .expiresAt(announcement.getExpiresAt())
-                .showTimer(announcement.isShowTimer())
+                .showTimer(announcement.getShowTimer().orElse(false))
                 .message(announcement.getMessage())
                 .build();
     }

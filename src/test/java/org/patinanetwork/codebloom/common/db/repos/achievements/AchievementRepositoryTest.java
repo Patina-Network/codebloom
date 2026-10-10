@@ -3,6 +3,7 @@ package org.patinanetwork.codebloom.common.db.repos.achievements;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.patinanetwork.codebloom.common.db.models.achievements.Achievement;
@@ -35,13 +36,13 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
         testAchievement = Achievement.builder()
                 .userId(mockUserId)
                 .place(AchievementPlaceEnum.ONE)
-                .leaderboard(null)
+                .leaderboard(Optional.empty())
                 .leaderboardId(mockLeaderboardId)
                 .title("Test Achievement")
-                .description("Integration test achievement")
+                .description(Optional.of("Integration test achievement"))
                 .isActive(true)
                 .createdAt(StandardizedOffsetDateTime.now())
-                .deletedAt(null)
+                .deletedAt(Optional.empty())
                 .build();
 
         repo.createAchievement(testAchievement);
@@ -58,7 +59,7 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void testGetAchievementById() {
-        Achievement found = repo.getAchievementById(testAchievement.getId());
+        Achievement found = repo.getAchievementById(testAchievement.getId()).orElse(null);
         assertNotNull(found);
         assertEquals(testAchievement.getId(), found.getId());
         assertEquals(testAchievement, found);
@@ -80,21 +81,21 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
                 .id(testAchievement.getId())
                 .userId(testAchievement.getUserId())
                 .place(AchievementPlaceEnum.THREE)
-                .leaderboard(Tag.Patina)
+                .leaderboard(Optional.of(Tag.Patina))
                 .leaderboardId(mockLeaderboardId)
                 .title("Updated Title")
-                .description("Updated Description")
+                .description(Optional.of("Updated Description"))
                 .isActive(false)
                 .createdAt(testAchievement.getCreatedAt())
                 .deletedAt(testAchievement.getDeletedAt())
                 .build();
 
-        Achievement result = repo.updateAchievement(updatedAchievement);
+        Achievement result = repo.updateAchievement(updatedAchievement).orElse(null);
 
         assertNotNull(result);
 
         assertEquals("Updated Title", result.getTitle());
-        assertEquals("Updated Description", result.getDescription());
+        assertEquals(Optional.of("Updated Description"), result.getDescription());
         assertFalse(result.isActive());
     }
 
@@ -104,25 +105,25 @@ public class AchievementRepositoryTest extends BaseRepositoryTest {
         deletableAchievement = Achievement.builder()
                 .userId(mockUserId)
                 .place(AchievementPlaceEnum.ONE)
-                .leaderboard(null)
+                .leaderboard(Optional.empty())
                 .leaderboardId(mockLeaderboardId)
                 .title("Deletable Achievement")
-                .description("Should be deleted")
+                .description(Optional.of("Should be deleted"))
                 .isActive(true)
                 .createdAt(StandardizedOffsetDateTime.now())
-                .deletedAt(null)
+                .deletedAt(Optional.empty())
                 .build();
 
         repo.createAchievement(deletableAchievement);
 
-        Achievement found = repo.getAchievementById(deletableAchievement.getId());
+        Achievement found =
+                repo.getAchievementById(deletableAchievement.getId()).orElse(null);
         assertNotNull(found);
         assertEquals(deletableAchievement.getId(), found.getId());
 
         boolean deleted = repo.deleteAchievementById(deletableAchievement.getId());
         assertTrue(deleted);
 
-        Achievement deletedFetched = repo.getAchievementById(deletableAchievement.getId());
-        assertNull(deletedFetched);
+        assertTrue(repo.getAchievementById(deletableAchievement.getId()).isEmpty());
     }
 }

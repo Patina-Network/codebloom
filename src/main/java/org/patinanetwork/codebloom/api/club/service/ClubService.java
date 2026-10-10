@@ -15,7 +15,7 @@ public class ClubService {
     }
 
     public ClubDto getClubDtoBySlug(final String slug) {
-        Club club = clubRepository.getClubBySlug(slug);
+        Club club = clubRepository.getClubBySlug(slug).orElse(null);
         if (club == null) {
             return null;
         }
@@ -34,6 +34,6 @@ public class ClubService {
     }
 
     public Club getClubBySlug(final String slug) {
-        return clubRepository.getClubBySlug(slug);
+        return clubRepository.getClubBySlug(slug).orElse(null);
     }
 }

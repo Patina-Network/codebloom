@@ -54,11 +54,11 @@ public class UserMetricsRepositoryTest extends BaseRepositoryTest {
         testUser = User.builder()
                 .discordId("test-metrics-" + System.currentTimeMillis())
                 .discordName("TestMetricsUser")
-                .leetcodeUsername("testmetricsuser")
-                .nickname("TestMetricsNickname")
+                .leetcodeUsername(Optional.of("testmetricsuser"))
+                .nickname(Optional.of("TestMetricsNickname"))
                 .admin(false)
-                .schoolEmail("testmetrics@example.com")
-                .profileUrl("")
+                .schoolEmail(Optional.of("testmetrics@example.com"))
+                .profileUrl(Optional.of(""))
                 .tags(new ArrayList<>())
                 .build();
         userRepository.createUser(testUser);

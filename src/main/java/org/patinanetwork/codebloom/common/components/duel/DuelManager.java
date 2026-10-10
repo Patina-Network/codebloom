@@ -3,7 +3,6 @@ package org.patinanetwork.codebloom.common.components.duel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -111,7 +110,7 @@ public class DuelManager {
 
         return lobbyPlayers.stream()
                 .map(lobbyPlayer -> userRepository.getUserById(lobbyPlayer.getPlayerId()))
-                .filter(Objects::nonNull)
+                .flatMap(Optional::stream)
                 .map(UserDto::fromUser)
                 .collect(Collectors.toList());
     }
@@ -290,8 +289,8 @@ public class DuelManager {
                     .map(QuestionBank::getQuestionTitle)
                     .collect(Collectors.toSet());
 
-            List<LeetcodeSubmission> leetcodeSubmissions =
-                    leetcodeClient.findSubmissionsByUsername(user.getLeetcodeUsername(), MAX_LEETCODE_SUBMISSIONS);
+            List<LeetcodeSubmission> leetcodeSubmissions = leetcodeClient.findSubmissionsByUsername(
+                    user.getLeetcodeUsername().orElse(null), MAX_LEETCODE_SUBMISSIONS);
 
             var solvedLeetcodeSubmissions = leetcodeSubmissions.stream()
                     .filter(s -> solvableQuestionTitlesSet.contains(s.getTitle()))

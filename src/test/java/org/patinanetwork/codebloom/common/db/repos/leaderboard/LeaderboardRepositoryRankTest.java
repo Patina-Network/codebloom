@@ -119,8 +119,8 @@ public class LeaderboardRepositoryRankTest extends BaseRepositoryTest {
             } else {
                 // Rule 2: For tied scores, check zero-score leetcode username logic
                 if (current.getTotalScore() == 0) {
-                    boolean currentHasLeetcode = current.getLeetcodeUsername() != null;
-                    boolean nextHasLeetcode = next.getLeetcodeUsername() != null;
+                    boolean currentHasLeetcode = current.getLeetcodeUsername().isPresent();
+                    boolean nextHasLeetcode = next.getLeetcodeUsername().isPresent();
 
                     if (currentHasLeetcode != nextHasLeetcode) {
                         assertTrue(

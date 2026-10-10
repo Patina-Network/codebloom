@@ -267,8 +267,10 @@ public class SubmissionsHandler {
             acceptedSubmissions.add(
                     new AcceptedSubmission(bankQuestion.getQuestionTitle(), createdQuestion.getId(), points));
 
-            UserWithScore recentUserMetadata = userRepository.getUserWithScoreByIdAndLeaderboardId(
-                    user.getId(), recentLeaderboard.get().getId(), UserFilterOptions.DEFAULT);
+            UserWithScore recentUserMetadata = userRepository
+                    .getUserWithScoreByIdAndLeaderboardId(
+                            user.getId(), recentLeaderboard.get().getId(), UserFilterOptions.DEFAULT)
+                    .orElse(null);
 
             leaderboardRepository.updateUserPointsFromLeaderboard(
                     recentLeaderboard.get().getId(), user.getId(), recentUserMetadata.getTotalScore() + points);

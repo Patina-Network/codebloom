@@ -8,8 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NullColumn;
 
 @Getter
 @Setter
@@ -19,22 +17,16 @@ import org.patinanetwork.codebloom.common.db.helper.annotations.NullColumn;
 @ToString
 public class QuestionTopic {
 
-    @NotNullColumn
     private String id;
 
-    @NullColumn
     private Optional<String> questionId;
 
-    @NullColumn
     private Optional<String> questionBankId;
 
-    @NotNullColumn
     private String topicSlug;
 
-    @NotNullColumn
     private LeetcodeTopicEnum topic;
 
-    @NotNullColumn
     private LocalDateTime createdAt;
 
     public static class QuestionTopicBuilder {

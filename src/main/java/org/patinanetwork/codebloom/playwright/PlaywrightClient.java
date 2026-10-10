@@ -131,8 +131,10 @@ public class PlaywrightClient {
                 String csrf = cookieMap.get("csrftoken");
                 if (sessionToken != null) {
                     log.info("Cookie found!");
-                    return Optional.of(
-                            Auth.builder().token(sessionToken).csrf(csrf).build());
+                    return Optional.of(Auth.builder()
+                            .token(sessionToken)
+                            .csrf(Optional.ofNullable(csrf))
+                            .build());
                 }
             } else {
                 log.info("Should be authenticated but not authenticated.");

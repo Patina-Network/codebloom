@@ -55,10 +55,9 @@ public class ExternalController {
     public ResponseEntity<ApiResponder<List<UserWithScore>>> getGwcUsers(
             @RequestHeader("X-API-Key") final String apiKey,
             @RequestParam("leaderboardId") final String leaderboardId) {
-        ApiKey validApiKey = apiKeyRepository.getApiKeyByHash(apiKey);
-        if (validApiKey == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key");
-        }
+        ApiKey validApiKey = apiKeyRepository
+                .getApiKeyByHash(apiKey)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid API key"));
 
         List<ApiKeyAccess> accesses = apiKeyAccessRepository.getApiKeyAccessesByApiKeyId(validApiKey.getId());
         boolean hasGwcAccess =

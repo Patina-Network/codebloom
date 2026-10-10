@@ -95,7 +95,7 @@ public class AuthControllerTest {
                 .id(randomUUID())
                 .discordId(String.valueOf(faker.number().randomNumber(18, true)))
                 .discordName(faker.name().username())
-                .leetcodeUsername(faker.name().username())
+                .leetcodeUsername(Optional.ofNullable(faker.name().username()))
                 .admin(false)
                 .verifyKey(faker.crypto().md5())
                 .build();

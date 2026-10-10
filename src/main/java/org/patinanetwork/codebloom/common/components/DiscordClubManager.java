@@ -311,8 +311,9 @@ public class DiscordClubManager {
 
         String userId = user.getId();
 
-        UserWithScore scoredUser = userRepository.getUserWithScoreByIdAndLeaderboardId(
-                userId, currentLeaderboard.getId(), UserFilterOptions.DEFAULT);
+        UserWithScore scoredUser = userRepository
+                .getUserWithScoreByIdAndLeaderboardId(userId, currentLeaderboard.getId(), UserFilterOptions.DEFAULT)
+                .orElse(null);
 
         int score = scoredUser.getTotalScore();
         Indexed<UserWithScore> globalIndex = leaderboardRepository

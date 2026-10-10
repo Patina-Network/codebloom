@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
@@ -65,7 +66,7 @@ public class JobRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void testFindJobById() {
-        Job foundJob = jobRepository.findJobById(testJob.getId());
+        Job foundJob = jobRepository.findJobById(testJob.getId()).orElse(null);
         assertNotNull(foundJob);
         assertEquals(testJob, foundJob);
     }
@@ -81,19 +82,20 @@ public class JobRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(3)
     void testUpdateJob() {
-        testJob.setProcessedAt(StandardizedOffsetDateTime.now());
-        testJob.setCompletedAt(StandardizedOffsetDateTime.now().plusMinutes(5));
+        testJob.setProcessedAt(Optional.ofNullable(StandardizedOffsetDateTime.now()));
+        testJob.setCompletedAt(
+                Optional.ofNullable(StandardizedOffsetDateTime.now().plusMinutes(5)));
         testJob.setNextAttemptAt(StandardizedOffsetDateTime.now().plusMinutes(30));
         testJob.setStatus(JobStatus.COMPLETE);
 
         boolean updateResult = jobRepository.updateJob(testJob);
         assertTrue(updateResult);
 
-        Job updatedJob = jobRepository.findJobById(testJob.getId());
+        Job updatedJob = jobRepository.findJobById(testJob.getId()).orElse(null);
         assertNotNull(updatedJob);
         assertEquals(JobStatus.COMPLETE, updatedJob.getStatus());
-        assertNotNull(updatedJob.getProcessedAt());
-        assertNotNull(updatedJob.getCompletedAt());
+        assertTrue(updatedJob.getProcessedAt().isPresent());
+        assertTrue(updatedJob.getCompletedAt().isPresent());
         assertNotNull(updatedJob.getNextAttemptAt());
     }
 

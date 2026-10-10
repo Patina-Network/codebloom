@@ -52,14 +52,14 @@ public class AchievementDto {
         return AchievementDto.builder()
                 .id(achievement.getId())
                 .userId(achievement.getUserId())
-                .leaderboard(achievement.getLeaderboard())
+                .leaderboard(achievement.getLeaderboard().orElse(null))
                 .place(achievement.getPlace())
                 .title(achievement.getTitle())
                 .leaderboardId(achievement.getLeaderboardId())
-                .description(achievement.getDescription())
+                .description(achievement.getDescription().orElse(null))
                 .isActive(achievement.isActive())
                 .createdAt(achievement.getCreatedAt())
-                .deletedAt(achievement.getDeletedAt())
+                .deletedAt(achievement.getDeletedAt().orElse(null))
                 .build();
     }
 }

@@ -2,6 +2,7 @@ package org.patinanetwork.codebloom.common.db.repos.auth;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.Optional;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
@@ -34,7 +35,7 @@ public class AuthRepositoryTest extends BaseRepositoryTest {
     void createTestAuth() {
         testAuth = Auth.builder()
                 .token(UUID.randomUUID().toString())
-                .csrf(UUID.randomUUID().toString())
+                .csrf(Optional.ofNullable(UUID.randomUUID().toString()))
                 .build();
 
         authRepository.createAuth(testAuth);
@@ -43,7 +44,7 @@ public class AuthRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void findMostRecentAuth() {
-        Auth possibleAuth = authRepository.getMostRecentAuth();
+        Auth possibleAuth = authRepository.getMostRecentAuth().orElse(null);
 
         if (possibleAuth == null) {
             fail("most recent auth not found");
@@ -58,7 +59,7 @@ public class AuthRepositoryTest extends BaseRepositoryTest {
 
     @Test
     void findAuthById() {
-        Auth possibleAuth = authRepository.getAuthById(testAuth.getId());
+        Auth possibleAuth = authRepository.getAuthById(testAuth.getId()).orElse(null);
 
         if (possibleAuth == null) {
             fail("most recent auth not found");

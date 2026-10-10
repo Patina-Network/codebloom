@@ -1,14 +1,15 @@
 package org.patinanetwork.codebloom.common.db.repos.announcement;
 
 import java.util.List;
+import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.announcement.Announcement;
 
 public interface AnnouncementRepository {
     List<Announcement> getAllAnnouncements();
 
-    Announcement getAnnouncementById(String id);
+    Optional<Announcement> getAnnouncementById(String id);
 
-    Announcement getRecentAnnouncement();
+    Optional<Announcement> getRecentAnnouncement();
 
     /**
      * @note The id property of the object will be overriden.

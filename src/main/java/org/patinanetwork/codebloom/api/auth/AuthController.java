@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -304,7 +305,7 @@ public class AuthController {
             return new RedirectView("/settings?success=false&message=This email is not supported");
         }
 
-        user.setSchoolEmail(magicLink.getEmail());
+        user.setSchoolEmail(Optional.ofNullable(magicLink.getEmail()));
         boolean isSuccessful = userRepository.updateUser(user);
 
         if (!isSuccessful) {
@@ -324,7 +325,7 @@ public class AuthController {
                     Report.builder()
                             .data(String.format(
                                     "User %s\nAlready has tag %s",
-                                    user.getNickname() != null ? user.getNickname() : user.getDiscordName(),
+                                    user.getNickname().orElse(user.getDiscordName()),
                                     schoolEnum.getInternalTag().name()))
                             .build());
         } else {
