@@ -1,7 +1,8 @@
 import { GitHubClient } from "@tahminator/pipeline";
-import { _migrateDb } from "redeploy/db/util";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { _migrateDb } from "@/redeploy/db/util";
 
 const { runUrl, sha, username } = await yargs(hideBin(process.argv))
   .option("runUrl", {
@@ -23,8 +24,7 @@ const { runUrl, sha, username } = await yargs(hideBin(process.argv))
   .parse();
 
 export async function main() {
-  const { githubAppAppId, githubAppInstallationId, githubAppPrivateKey } =
-    parseCiEnv(process.env);
+  const { githubAppAppId, githubAppInstallationId, githubAppPrivateKey } = parseCiEnv(process.env);
 
   const ghClient = await GitHubClient.createWithGithubAppToken({
     appId: githubAppAppId,
@@ -42,8 +42,7 @@ export async function main() {
     detailsUrl: runUrl,
     output: {
       title: "Checking authorization",
-      summary:
-        "Verifying the caller's membership in @Patina-Network/codebloom...",
+      summary: "Verifying the caller's membership in @Patina-Network/codebloom...",
     },
   });
   if (!check) {
@@ -59,7 +58,7 @@ export async function main() {
   try {
     const isTeamMember = await ghClient.isTeamMember({
       org: "Patina-Network",
-      teamSlug: "codebloom",
+      teamSlug: "dino",
       username,
     });
     if (!isTeamMember) {
@@ -73,8 +72,7 @@ export async function main() {
       status: "in_progress",
       output: {
         title: "Running staging migrations",
-        summary:
-          "Checking database changes and applying pending migrations to codebloom-stg.",
+        summary: "Checking database changes and applying pending migrations to codebloom-stg.",
       },
     });
 
@@ -84,12 +82,11 @@ export async function main() {
       status: "completed",
       conclusion: result,
       output: {
-        title:
-          result === "skipped" ? "Migration skipped" : "Migration successful",
+        title: result === "skipped" ? "Migration skipped" : "Migration successful",
         summary:
-          result === "skipped" ?
-            "No changes under db/ were found when compared with main."
-          : "Staging database migrations completed successfully.",
+          result === "skipped"
+            ? "No changes under db/ were found when compared with main."
+            : "Staging database migrations completed successfully.",
       },
     });
   } catch (error) {
@@ -100,8 +97,7 @@ export async function main() {
         conclusion: "failure",
         output: {
           title: "Staging migration failed",
-          summary:
-            "Staging migration failed. See the workflow logs for details.",
+          summary: "Staging migration failed. See the workflow logs for details.",
         },
       })
       .catch((statusError) => {

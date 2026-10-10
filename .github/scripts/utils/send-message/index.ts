@@ -13,11 +13,7 @@ const [owner, repo] = (() => {
   return v.split("/") as [string, string];
 })();
 
-export async function sendMessage(
-  prId: number,
-  message: string,
-  token?: string,
-) {
+export async function sendMessage(prId: number, message: string, token?: string) {
   try {
     if (!token && !githubToken) {
       throw new Error("Some token should be set");
@@ -36,7 +32,7 @@ export async function sendMessage(
       });
     } catch (e) {
       const s = JSON.stringify(e);
-      throw new Error(`GitHub API Error\n\n${s}`);
+      throw new Error(`GitHub API Error\n\n${s}`, { cause: e });
     }
   } catch (e) {
     console.error("Failed to post GitHub error message\n", e);

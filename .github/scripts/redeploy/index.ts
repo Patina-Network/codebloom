@@ -1,9 +1,10 @@
-import type { Environment, Type } from "types";
-
 import { GitHubClient } from "@tahminator/pipeline";
-import { _migrateDb } from "redeploy/db/util";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import type { Environment, Type } from "@/types";
+
+import { _migrateDb } from "@/redeploy/db/util";
 
 const { environment, sha, type } = await yargs(hideBin(process.argv))
   .option("environment", {
@@ -28,8 +29,7 @@ const { environment, sha, type } = await yargs(hideBin(process.argv))
 async function main() {
   const resolvedSha = resolveSha(sha, process.env.GITHUB_SHA);
 
-  const { githubAppAppId, githubAppInstallationId, githubAppPrivateKey } =
-    parseCiEnv(process.env);
+  const { githubAppAppId, githubAppInstallationId, githubAppPrivateKey } = parseCiEnv(process.env);
 
   const ghClient = await GitHubClient.createWithGithubAppToken({
     appId: githubAppAppId,

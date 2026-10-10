@@ -1,7 +1,8 @@
 import { $ } from "bun";
-import { getEnvVariablesByPrefix } from "load-secrets/env/load";
-import { backend } from "utils/run-backend-instance";
-import { db } from "utils/run-local-db";
+
+import { getEnvVariablesByPrefix } from "@/utils/env";
+import { backend } from "@/utils/run-backend-instance";
+import { db } from "@/utils/run-local-db";
 
 async function main() {
   const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");

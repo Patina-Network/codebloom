@@ -1,4 +1,4 @@
-import { sendMessage } from "utils/send-message";
+import { sendMessage } from "@/utils/send-message";
 
 const prId = (() => {
   const v = process.env.PR_ID;

@@ -26,40 +26,26 @@ runs:
   using: "composite"
   steps:
     - name: Setup CI
-      uses: tahminator/pipeline/actions/setup@ff36293f28519b2b90d7e28918a6885d9baf019e # 1.0.90
+      uses: tahminator/pipeline/actions/setup@a424f92d486342e1255fcdf377a7569eb230aabe # 1.0.97
       with:
         LINT_CI: true
         SECRETS: ${{ inputs.SECRETS }}
-
-    - name: Set up pnpm
-      uses: pnpm/action-setup@v5
-      with:
-        version: 10.24.0
-        cache: true
-        cache_dependency_path: js/pnpm-lock.yaml
-        package_json_file: js/package.json
+        INSTALL_JAVA: true
+        JAVA_VERSION: "25"
+        JAVA_CACHE_KEY: ${{ github.job }}-${{ hashFiles('**/pom.xml') }}
+        JAVA_CACHE_PATH: |
+          ~/.m2
+          ~/repository
+        INSTALL_PNPM: true
+        PNPM_VERSION: "10.24.0"
+        PNPM_CACHE: true
+        PNPM_CACHE_DEPENDENCY_PATH: js/pnpm-lock.yaml
+        PNPM_PACKAGE_JSON_FILE: js/package.json
 
     - name: Install JS dependencies
       shell: bash
       run: pnpm install --frozen-lockfile
       working-directory: js
-
-    - name: Set up OpenJDK 25
-      uses: actions/setup-java@v5
-      with:
-        distribution: "temurin"
-        java-version: "25"
-
-    - name: Cache Maven packages
-      uses: actions/cache@v5
-      with:
-        path: |
-          ~/.m2
-          ~/repository
-        key: ${{ github.job }}-${{ hashFiles('**/pom.xml') }}
-
-    - name: Expose GitHub Runtime
-      uses: crazy-max/ghaction-github-runtime@v4
 
     - name: Run script
       id: build-image

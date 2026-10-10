@@ -1,6 +1,6 @@
 import { $ } from "bun";
 
-import { brightMagenta } from "@/../utils/colors";
+import { brightMagenta } from "@/utils/colors";
 
 async function start() {
   try {
@@ -22,9 +22,7 @@ async function start() {
     const attempts = 30;
 
     for (let i = 1; i <= attempts; i++) {
-      const check = await $`docker exec codebloom-db pg_isready -U postgres`
-        .quiet()
-        .nothrow();
+      const check = await $`docker exec codebloom-db pg_isready -U postgres`.quiet().nothrow();
 
       if (check.exitCode === 0) {
         console.log("postgres is ready!");
@@ -52,16 +50,14 @@ async function start() {
 
     console.log("postres started, running migrations...");
 
-    await $.env(
-      env,
-    )`./mvnw -B -ntp flyway:migrate -Dflyway.locations=filesystem:./db`;
+    await $.env(env)`./mvnw -B -ntp flyway:migrate -Dflyway.locations=filesystem:./db`;
 
     console.log("postgres ready");
 
     return env;
   } catch (e) {
     console.error(e);
-    end();
+    await end();
   }
 }
 

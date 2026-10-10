@@ -12,8 +12,7 @@ const { prId } = await yargs(hideBin(process.argv))
   .parse();
 
 export async function main() {
-  const { githubAppAppId, githubAppInstallationId, githubAppPrivateKey } =
-    parseCiEnv(process.env);
+  const { githubAppAppId, githubAppInstallationId, githubAppPrivateKey } = parseCiEnv(process.env);
 
   const githubClient = await GitHubClient.createWithGithubAppToken({
     appId: githubAppAppId,
@@ -66,4 +65,4 @@ function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   };
 }
 
-main();
+await main();
