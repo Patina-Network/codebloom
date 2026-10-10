@@ -44,11 +44,11 @@ public class AnnouncementController {
             })
     @GetMapping("")
     public ResponseEntity<ApiResponder<AnnouncementDto>> getLatestAnnouncement() {
-        Announcement announcement = announcementRepository.getRecentAnnouncement();
-
-        if (announcement == null) {
+        var announcementResult = announcementRepository.getRecentAnnouncement();
+        if (announcementResult.isEmpty()) {
             return ResponseEntity.ok().body(ApiResponder.failure("No announcement available: check back later."));
         }
+        Announcement announcement = announcementResult.get();
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         boolean isExpired = announcement.getExpiresAt().isBefore(now);
 

@@ -1,11 +1,12 @@
 package org.patinanetwork.codebloom.common.db.repos.weekly;
 
+import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.weekly.WeeklyMessage;
 
 public interface WeeklyMessageRepository {
-    WeeklyMessage getLatestWeeklyMessage();
+    Optional<WeeklyMessage> getLatestWeeklyMessage();
 
-    WeeklyMessage getWeeklyMessageById(String id);
+    Optional<WeeklyMessage> getWeeklyMessageById(String id);
 
     /**
      * @note - The provided object's methods will be overriden with any returned data from the database.

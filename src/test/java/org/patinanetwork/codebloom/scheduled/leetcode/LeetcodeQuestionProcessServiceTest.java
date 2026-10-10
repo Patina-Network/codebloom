@@ -167,7 +167,7 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
         boolean updateSuccess = jobRepository.updateJob(processingJob);
         assertTrue(updateSuccess);
 
-        Job updatedJob = jobRepository.findJobById(processingJob.getId());
+        Job updatedJob = jobRepository.findJobById(processingJob.getId()).orElse(null);
         assertTrue(updatedJob != null);
         assertEquals(JobStatus.PROCESSING, updatedJob.getStatus());
 

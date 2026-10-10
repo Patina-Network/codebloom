@@ -2,6 +2,7 @@ package org.patinanetwork.codebloom.common.db.repos.club;
 
 import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
+import java.util.Optional;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.club.Club;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
@@ -63,7 +64,7 @@ public class ClubSqlRepository implements ClubRepository {
     }
 
     @Override
-    public Club updateClub(final Club club) {
+    public Optional<Club> updateClub(final Club club) {
         String sql = """
             UPDATE
                 "Club"
@@ -90,11 +91,11 @@ public class ClubSqlRepository implements ClubRepository {
         if (rowsAffected > 0) {
             return getClubById(club.getId());
         }
-        return null;
+        return Optional.empty();
     }
 
     @Override
-    public Club getClubById(final String id) {
+    public Optional<Club> getClubById(final String id) {
         String sql = """
             SELECT
                 id,
@@ -114,12 +115,11 @@ public class ClubSqlRepository implements ClubRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(id))
                 .query(CLUB_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
-    public Club getClubBySlug(final String slug) {
+    public Optional<Club> getClubBySlug(final String slug) {
         String sql = """
             SELECT
                 id,
@@ -135,12 +135,7 @@ public class ClubSqlRepository implements ClubRepository {
                 "slug" = :slug
             """;
 
-        return jdbcClient
-                .sql(sql)
-                .param("slug", slug)
-                .query(CLUB_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+        return jdbcClient.sql(sql).param("slug", slug).query(CLUB_ROW_MAPPER).optional();
     }
 
     @Override

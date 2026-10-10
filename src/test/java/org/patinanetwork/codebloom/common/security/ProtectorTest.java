@@ -111,7 +111,7 @@ class ProtectorTest {
 
         when(request.getCookies()).thenReturn(new Cookie[] {new Cookie("session_token", "session-1")});
         when(sessionRepository.getSessionById("session-1")).thenReturn(Optional.of(validSession));
-        when(userRepository.getUserById("missing-user")).thenReturn(null);
+        when(userRepository.getUserById("missing-user")).thenReturn(Optional.empty());
 
         ResponseStatusException exception =
                 assertThrows(ResponseStatusException.class, () -> protector.validateSession(request));
@@ -138,7 +138,7 @@ class ProtectorTest {
 
         when(request.getCookies()).thenReturn(new Cookie[] {new Cookie("session_token", "session-2")});
         when(sessionRepository.getSessionById("session-2")).thenReturn(Optional.of(validSession));
-        when(userRepository.getUserById("user-2")).thenReturn(user);
+        when(userRepository.getUserById("user-2")).thenReturn(Optional.of(user));
 
         AuthenticationObject auth = protector.validateSession(request);
 
@@ -165,7 +165,7 @@ class ProtectorTest {
 
         when(request.getCookies()).thenReturn(new Cookie[] {new Cookie("session_token", "session-3")});
         when(sessionRepository.getSessionById("session-3")).thenReturn(Optional.of(validSession));
-        when(userRepository.getUserById("user-3")).thenReturn(nonAdminUser);
+        when(userRepository.getUserById("user-3")).thenReturn(Optional.of(nonAdminUser));
 
         ResponseStatusException exception =
                 assertThrows(ResponseStatusException.class, () -> protector.validateAdminSession(request));
@@ -192,7 +192,7 @@ class ProtectorTest {
 
         when(request.getCookies()).thenReturn(new Cookie[] {new Cookie("session_token", "session-4")});
         when(sessionRepository.getSessionById("session-4")).thenReturn(Optional.of(validSession));
-        when(userRepository.getUserById("user-4")).thenReturn(adminUser);
+        when(userRepository.getUserById("user-4")).thenReturn(Optional.of(adminUser));
 
         AuthenticationObject auth = protector.validateAdminSession(request);
 

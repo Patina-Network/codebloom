@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.auth;
 
+import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.auth.Auth;
 
 public interface AuthRepository {
@@ -25,9 +26,9 @@ public interface AuthRepository {
      */
     boolean updateAuthById(Auth auth);
 
-    Auth getAuthById(String id);
+    Optional<Auth> getAuthById(String id);
 
-    Auth getMostRecentAuth();
+    Optional<Auth> getMostRecentAuth();
 
     boolean deleteAuthById(String id);
 }

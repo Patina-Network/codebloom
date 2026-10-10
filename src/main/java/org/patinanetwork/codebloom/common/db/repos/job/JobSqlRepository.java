@@ -4,6 +4,7 @@ import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
@@ -18,8 +19,8 @@ public class JobSqlRepository implements JobRepository {
     private static final RowMapper<Job> JOB_ROW_MAPPER = (rs, rowNum) -> Job.builder()
             .id(rs.getString("id"))
             .createdAt(rs.getObject("createdAt", OffsetDateTime.class))
-            .processedAt(rs.getObject("processedAt", OffsetDateTime.class))
-            .completedAt(rs.getObject("completedAt", OffsetDateTime.class))
+            .processedAt(Optional.ofNullable(rs.getObject("processedAt", OffsetDateTime.class)))
+            .completedAt(Optional.ofNullable(rs.getObject("completedAt", OffsetDateTime.class)))
             .nextAttemptAt(rs.getObject("nextAttemptAt", OffsetDateTime.class))
             .status(JobStatus.valueOf(rs.getString("status")))
             .questionId(rs.getString("questionId"))
@@ -63,7 +64,7 @@ public class JobSqlRepository implements JobRepository {
     }
 
     @Override
-    public Job findJobById(final String id) {
+    public Optional<Job> findJobById(final String id) {
         String sql = """
             SELECT
                 id,
@@ -84,8 +85,7 @@ public class JobSqlRepository implements JobRepository {
                 .sql(sql)
                 .param(1, UUID.fromString(id))
                 .query(JOB_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
@@ -157,8 +157,8 @@ public class JobSqlRepository implements JobRepository {
 
         int rowsAffected = jdbcClient
                 .sql(sql)
-                .param(1, job.getProcessedAt())
-                .param(2, job.getCompletedAt())
+                .param(1, job.getProcessedAt().orElse(null))
+                .param(2, job.getCompletedAt().orElse(null))
                 .param(3, job.getNextAttemptAt())
                 .param(4, job.getStatus().name(), Types.OTHER)
                 .param(5, job.getAttempts())

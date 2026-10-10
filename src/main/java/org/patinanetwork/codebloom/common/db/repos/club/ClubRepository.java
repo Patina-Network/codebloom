@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.club;
 
+import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.club.Club;
 
 public interface ClubRepository {
@@ -30,13 +31,13 @@ public interface ClubRepository {
      *       <li>tag
      *     </ul>
      *
-     * @return updated club if successful
+     * @return the updated club if found, or an empty Optional if no matching row exists
      */
-    Club updateClub(Club club);
+    Optional<Club> updateClub(Club club);
 
-    Club getClubById(String id);
+    Optional<Club> getClubById(String id);
 
-    Club getClubBySlug(String slug);
+    Optional<Club> getClubBySlug(String slug);
 
     boolean deleteClubBySlug(String slug);
 

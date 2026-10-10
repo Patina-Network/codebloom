@@ -127,11 +127,11 @@ public class AdminController {
         final String userId = newAdminBody.getId();
         final boolean toggleTo = newAdminBody.getToggleTo();
 
-        User user = userRepository.getUserById(userId);
-
-        if (user == null) {
+        var userResult = userRepository.getUserById(userId);
+        if (userResult.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponder.failure("User has not been found."));
         }
+        User user = userResult.get();
 
         user.setAdmin(toggleTo);
         boolean isSuccessful = userRepository.updateUser(user);
@@ -177,7 +177,7 @@ public class AdminController {
 
         Announcement announcement = Announcement.builder()
                 .expiresAt(expiresAtWithOffset)
-                .showTimer(createAnnouncementBody.isShowTimer())
+                .showTimer(Optional.of(createAnnouncementBody.isShowTimer()))
                 .message(createAnnouncementBody.getMessage())
                 .createdAt(nowWithOffset)
                 .build();
@@ -209,10 +209,9 @@ public class AdminController {
     public ResponseEntity<ApiResponder<Empty>> deleteAnnouncement(
             @Valid @RequestBody final DeleteAnnouncementBody deleteAnnouncementBody,
             @Protected(admin = true) final AuthenticationObject authenticationObject) {
-        Announcement announcement = announcementRepository.getAnnouncementById(deleteAnnouncementBody.getId());
-        if (announcement == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Announcement does not exist");
-        }
+        Announcement announcement = announcementRepository
+                .getAnnouncementById(deleteAnnouncementBody.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Announcement does not exist"));
         OffsetDateTime nowWithOffset = StandardizedOffsetDateTime.now();
         announcement.setExpiresAt(nowWithOffset);
         boolean updatedAnnouncement = announcementRepository.updateAnnouncement(announcement);

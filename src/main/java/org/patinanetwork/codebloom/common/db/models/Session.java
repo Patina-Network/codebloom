@@ -8,8 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NullColumn;
 
 @Getter
 @Setter
@@ -21,15 +19,13 @@ public class Session {
     @Builder.Default
     private Optional<String> id = Optional.empty();
 
-    @NotNullColumn
     private String userId;
 
-    @NotNullColumn
     private LocalDateTime expiresAt;
 
-    /** can be null if it's an old entry */
-    @NullColumn
-    private OffsetDateTime createdAt;
+    /** can be empty if it's an old entry */
+    @Builder.Default
+    private Optional<OffsetDateTime> createdAt = Optional.empty();
 
     // public Session(final String userId, final LocalDateTime expiresAt) {
     // this.userId = userId;

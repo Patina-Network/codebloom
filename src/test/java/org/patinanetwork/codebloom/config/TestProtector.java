@@ -37,7 +37,9 @@ public class TestProtector {
         return new Protector(sesssionRepository, userRepository) {
             @Override
             public AuthenticationObject validateSession(final HttpServletRequest request) {
-                User mockAdminUser = userRepository.getUserById("ed3bfe18-e42a-467f-b4fa-07e8da4d2555");
+                User mockAdminUser = userRepository
+                        .getUserById("ed3bfe18-e42a-467f-b4fa-07e8da4d2555")
+                        .orElse(null);
                 Optional<Session> mockAdminSessionOp =
                         sesssionRepository.getSessionById("d99e10a2-6285-46f0-8150-ba4727b520f4");
 

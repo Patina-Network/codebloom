@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
 
 @Getter
 @Setter
@@ -14,6 +13,5 @@ import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
 @EqualsAndHashCode(callSuper = true)
 public class UserWithScore extends User {
 
-    @NotNullColumn
     private int totalScore;
 }

@@ -2,7 +2,6 @@ package org.patinanetwork.codebloom.common.db.repos.api.access;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -70,8 +69,9 @@ public class ApiKeyAccessRepositoryTest extends BaseRepositoryTest {
         boolean deleted = apiKeyAccessRepository.deleteApiKeyAccessesByApiKeyId(deletableApiKeyAccess.getApiKeyId());
         assertTrue(deleted);
 
-        ApiKeyAccess deletedFetched = apiKeyAccessRepository.getApiKeyAccessById(deletableApiKeyAccess.getId());
-        assertNull(deletedFetched);
+        assertTrue(apiKeyAccessRepository
+                .getApiKeyAccessById(deletableApiKeyAccess.getId())
+                .isEmpty());
     }
 
     /**
@@ -83,7 +83,9 @@ public class ApiKeyAccessRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void findApiKeyAccessById() {
-        ApiKeyAccess possibleTestApiKeyAccess = apiKeyAccessRepository.getApiKeyAccessById(testApiKeyAccess.getId());
+        ApiKeyAccess possibleTestApiKeyAccess = apiKeyAccessRepository
+                .getApiKeyAccessById(testApiKeyAccess.getId())
+                .orElse(null);
 
         if (possibleTestApiKeyAccess == null) {
             fail("most recent apiKeyAccess doesn't exist, even though we created a test apiKeyAccess");
@@ -129,7 +131,9 @@ public class ApiKeyAccessRepositoryTest extends BaseRepositoryTest {
             fail("failure to update updateApiKeyAccessById");
         }
 
-        ApiKeyAccess resultApiKeyAccess = apiKeyAccessRepository.getApiKeyAccessById(testApiKeyAccess.getId());
+        ApiKeyAccess resultApiKeyAccess = apiKeyAccessRepository
+                .getApiKeyAccessById(testApiKeyAccess.getId())
+                .orElse(null);
 
         assertNotNull(resultApiKeyAccess);
         assertEquals(resultApiKeyAccess.getId(), testApiKeyAccess.getId());

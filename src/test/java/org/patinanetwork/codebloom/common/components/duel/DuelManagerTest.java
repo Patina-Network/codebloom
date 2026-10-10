@@ -74,7 +74,7 @@ public class DuelManagerTest {
                 .id(UUID.randomUUID().toString())
                 .discordId(String.valueOf(faker.number().randomNumber(18, true)))
                 .discordName(faker.name().username())
-                .leetcodeUsername(faker.name().username())
+                .leetcodeUsername(Optional.ofNullable(faker.name().username()))
                 .admin(false)
                 .verifyKey(faker.crypto().md5())
                 .build();
@@ -256,8 +256,8 @@ public class DuelManagerTest {
                 .build();
 
         when(lobbyPlayerRepository.findPlayersByLobbyId(lobbyId)).thenReturn(List.of(player1, player2));
-        when(userRepository.getUserById(playerId1)).thenReturn(user1);
-        when(userRepository.getUserById(playerId2)).thenReturn(user2);
+        when(userRepository.getUserById(playerId1)).thenReturn(Optional.of(user1));
+        when(userRepository.getUserById(playerId2)).thenReturn(Optional.of(user2));
 
         when(lobbyRepository.findLobbyById(lobbyId)).thenReturn(Optional.empty());
         when(lobbyQuestionRepository.findLobbyQuestionsByLobbyId(lobbyId)).thenReturn(List.of());
@@ -1400,7 +1400,8 @@ public class DuelManagerTest {
         when(lobbyQuestionRepository.findLobbyQuestionsByLobbyId(eq(activeLobby.getId())))
                 .thenReturn(List.of(lobbyQuestion));
         when(questionBankRepository.getQuestionById(eq(questionBank.getId()))).thenReturn(Optional.of(questionBank));
-        when(throttledLeetcodeClient.findSubmissionsByUsername(eq(user.getLeetcodeUsername()), eq(5)))
+        when(throttledLeetcodeClient.findSubmissionsByUsername(
+                        eq(user.getLeetcodeUsername().orElse(null)), eq(5)))
                 .thenReturn(List.of(leetcodeSubmission));
         when(submissionsHandler.handleSubmissions(any(), eq(user), eq(true))).thenReturn(new ArrayList<>() {
             {
@@ -1420,7 +1421,8 @@ public class DuelManagerTest {
         verify(lobbyPlayerRepository, times(1)).findValidLobbyPlayerByPlayerId(eq(user.getId()));
         verify(lobbyQuestionRepository, times(1)).findLobbyQuestionsByLobbyId(eq(activeLobby.getId()));
         verify(questionBankRepository, times(1)).getQuestionById(eq(questionBank.getId()));
-        verify(throttledLeetcodeClient, times(1)).findSubmissionsByUsername(eq(user.getLeetcodeUsername()), eq(5));
+        verify(throttledLeetcodeClient, times(1))
+                .findSubmissionsByUsername(eq(user.getLeetcodeUsername().orElse(null)), eq(5));
         verify(submissionsHandler, times(1)).handleSubmissions(any(), eq(user), eq(true));
         verify(lobbyPlayerQuestionRepository, times(1)).createLobbyPlayerQuestion(any());
         verify(lobbyPlayerRepository, times(1)).updateLobbyPlayer(any());

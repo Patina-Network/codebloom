@@ -1,6 +1,7 @@
 package org.patinanetwork.codebloom.common.db.repos.user;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.user.User;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
 import org.patinanetwork.codebloom.common.db.repos.user.options.UserFilterOptions;
@@ -31,15 +32,17 @@ public interface UserRepository {
      */
     boolean updateUser(User user);
 
-    User getUserById(String id);
+    Optional<User> getUserById(String id);
 
-    User getUserByLeetcodeUsername(String leetcodeUsername);
+    Optional<User> getUserByLeetcodeUsername(String leetcodeUsername);
 
-    UserWithScore getUserWithScoreByIdAndLeaderboardId(String userId, String leaderboardId, UserFilterOptions options);
+    Optional<UserWithScore> getUserWithScoreByIdAndLeaderboardId(
+            String userId, String leaderboardId, UserFilterOptions options);
 
-    UserWithScore getUserWithScoreByLeetcodeUsernameAndLeaderboardId(String userLeetcodeUsername, String leaderboardId);
+    Optional<UserWithScore> getUserWithScoreByLeetcodeUsernameAndLeaderboardId(
+            String userLeetcodeUsername, String leaderboardId);
 
-    User getUserByDiscordId(String discordId);
+    Optional<User> getUserByDiscordId(String discordId);
 
     int getUserCount();
 

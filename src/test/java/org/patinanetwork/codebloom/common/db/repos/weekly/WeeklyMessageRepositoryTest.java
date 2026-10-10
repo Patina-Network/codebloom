@@ -47,7 +47,7 @@ public class WeeklyMessageRepositoryTest extends BaseRepositoryTest {
 
     @AfterAll
     void cleanUp() {
-        WeeklyMessage latest = weeklyMessageRepository.getLatestWeeklyMessage();
+        WeeklyMessage latest = weeklyMessageRepository.getLatestWeeklyMessage().orElse(null);
         boolean isSuccessful = latest != null && weeklyMessageRepository.deleteWeeklyMessageById(latest.getId());
 
         if (!isSuccessful) {
@@ -58,7 +58,8 @@ public class WeeklyMessageRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void testGetLatestWeeklyMessage() {
-        WeeklyMessage possibleTestWeeklyMessage = weeklyMessageRepository.getLatestWeeklyMessage();
+        WeeklyMessage possibleTestWeeklyMessage =
+                weeklyMessageRepository.getLatestWeeklyMessage().orElse(null);
 
         assertNotNull(possibleTestWeeklyMessage, "Latest weekly message should not be null");
         log.info("testWeeklyMessage: {}", testWeeklyMessage);
@@ -73,8 +74,9 @@ public class WeeklyMessageRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(2)
     void findWeeklyMessageById() {
-        WeeklyMessage latest = weeklyMessageRepository.getLatestWeeklyMessage();
-        WeeklyMessage possibleTestWeeklyMessage = weeklyMessageRepository.getWeeklyMessageById(latest.getId());
+        WeeklyMessage latest = weeklyMessageRepository.getLatestWeeklyMessage().orElse(null);
+        WeeklyMessage possibleTestWeeklyMessage =
+                weeklyMessageRepository.getWeeklyMessageById(latest.getId()).orElse(null);
 
         log.info("testWeeklyMessage: {}", testWeeklyMessage.toString());
         log.info(

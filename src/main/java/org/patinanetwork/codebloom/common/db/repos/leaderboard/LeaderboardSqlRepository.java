@@ -319,11 +319,12 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
 
     @Override
     public Optional<Indexed<UserWithScore>> getGlobalRankedUserById(final String leaderboardId, final String userId) {
-        UserWithScore user = userRepository.getUserWithScoreByIdAndLeaderboardId(
+        var userResult = userRepository.getUserWithScoreByIdAndLeaderboardId(
                 userId, leaderboardId, UserFilterOptions.builder().build());
-        if (user == null) {
+        if (userResult.isEmpty()) {
             return Optional.empty();
         }
+        UserWithScore user = userResult.get();
 
         String sql = """
             WITH ranks AS (
@@ -375,11 +376,12 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
     @Override
     public Optional<Indexed<UserWithScore>> getFilteredRankedUserById(
             final String leaderboardId, final String userId, final LeaderboardFilterOptions options) {
-        UserWithScore user = userRepository.getUserWithScoreByIdAndLeaderboardId(
+        var userResult = userRepository.getUserWithScoreByIdAndLeaderboardId(
                 userId, leaderboardId, UserFilterOptions.builder().build());
-        if (user == null) {
+        if (userResult.isEmpty()) {
             return Optional.empty();
         }
+        UserWithScore user = userResult.get();
 
         String sql = """
             WITH ranks AS (
@@ -577,12 +579,14 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                     var leaderboardId = rs.getString("leaderboardId");
                     var leaderboardDeletedAt = rs.getObject("leaderboardDeletedAt", OffsetDateTime.class);
 
-                    return userRepository.getUserWithScoreByIdAndLeaderboardId(
-                            userId,
-                            leaderboardId,
-                            UserFilterOptions.builder()
-                                    .pointOfTime(leaderboardDeletedAt)
-                                    .build());
+                    return userRepository
+                            .getUserWithScoreByIdAndLeaderboardId(
+                                    userId,
+                                    leaderboardId,
+                                    UserFilterOptions.builder()
+                                            .pointOfTime(leaderboardDeletedAt)
+                                            .build())
+                            .orElse(null);
                 })
                 .list();
 
@@ -677,12 +681,14 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                     var leaderboardId = rs.getString("leaderboardId");
                     var leaderboardDeletedAt = rs.getObject("leaderboardDeletedAt", OffsetDateTime.class);
 
-                    return userRepository.getUserWithScoreByIdAndLeaderboardId(
-                            userId,
-                            leaderboardId,
-                            UserFilterOptions.builder()
-                                    .pointOfTime(leaderboardDeletedAt)
-                                    .build());
+                    return userRepository
+                            .getUserWithScoreByIdAndLeaderboardId(
+                                    userId,
+                                    leaderboardId,
+                                    UserFilterOptions.builder()
+                                            .pointOfTime(leaderboardDeletedAt)
+                                            .build())
+                            .orElse(null);
                 })
                 .list();
 

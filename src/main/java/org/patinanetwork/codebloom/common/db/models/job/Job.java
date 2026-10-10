@@ -1,13 +1,12 @@
 package org.patinanetwork.codebloom.common.db.models.job;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NullColumn;
 
 @Setter
 @Getter
@@ -16,27 +15,21 @@ import org.patinanetwork.codebloom.common.db.helper.annotations.NullColumn;
 @EqualsAndHashCode
 public class Job {
 
-    @NotNullColumn
     private String id;
 
-    @NotNullColumn
     private OffsetDateTime createdAt;
 
-    @NullColumn
-    private OffsetDateTime processedAt;
+    @Builder.Default
+    private Optional<OffsetDateTime> processedAt = Optional.empty();
 
-    @NullColumn
-    private OffsetDateTime completedAt;
+    @Builder.Default
+    private Optional<OffsetDateTime> completedAt = Optional.empty();
 
-    @NotNullColumn
     private OffsetDateTime nextAttemptAt;
 
-    @NotNullColumn
     private JobStatus status;
 
-    @NotNullColumn
     private String questionId;
 
-    @NotNullColumn
     private int attempts;
 }
