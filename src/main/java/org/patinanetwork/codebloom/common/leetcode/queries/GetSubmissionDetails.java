@@ -9,8 +9,8 @@ public class GetSubmissionDetails {
 
     public static final String QUERY = """
         #graphql
-        query submissionDetails($submissionId: Int!) {
-            submissionDetails(submissionId: $submissionId) {
+        query submissionDetails($submissionId: ID!) {
+            submissionDetails(submissionIdV2: $submissionId) {
               runtime
               runtimeDisplay
               runtimePercentile
