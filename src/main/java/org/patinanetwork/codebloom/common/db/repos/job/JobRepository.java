@@ -66,6 +66,16 @@ public interface JobRepository {
     boolean updateJob(Job job);
 
     /**
+     * Unstuck jobs that have been stuck in {@code JobStatus.PROCESSING} for atleast 1 hour(s).
+     *
+     * @note Jobs will not be picked up immediately. The job processor's rules still apply, which at the time of
+     *     writing, will either run anytime a new submission is picked up or scheduled every 30 minutes, whichever comes
+     *     first.
+     * @return number of jobs that we have restarted.
+     */
+    int unstickStuckJobs();
+
+    /**
      * Deletes a job by its ID.
      *
      * @param id the job ID to delete

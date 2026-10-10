@@ -189,4 +189,23 @@ public class JobSqlRepository implements JobRepository {
         int rowsAffected = jdbcClient.sql(sql).update();
         return rowsAffected == 1;
     }
+
+    @Override
+    public int unstickStuckJobs() {
+        String sql = """
+            UPDATE
+                "Job"
+            SET
+                status = 'INCOMPLETE',
+                "processedAt" = NULL,
+                "nextAttemptAt" = NOW()
+            WHERE
+                status = 'PROCESSING'
+            AND
+                "processedAt" < NOW() - INTERVAL '1 hour';
+        """;
+
+        int rowsAffected = jdbcClient.sql(sql).update();
+        return rowsAffected;
+    }
 }

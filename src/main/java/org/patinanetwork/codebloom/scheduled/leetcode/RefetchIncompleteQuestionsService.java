@@ -51,4 +51,11 @@ public class RefetchIncompleteQuestionsService {
             jobRepository.createJob(newJob);
         }
     }
+
+    @Scheduled(initialDelay = 0, fixedDelay = 24, timeUnit = TimeUnit.HOURS)
+    public void unstickStuckQuestionJobs() {
+        int unstuckJobs = jobRepository.unstickStuckJobs();
+
+        LOGGER.info("unstuck {} jobs that were stuck", unstuckJobs);
+    }
 }
