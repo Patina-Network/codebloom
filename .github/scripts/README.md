@@ -21,7 +21,6 @@ This directory contains helper scripts that are used in our CI/CD workflows. The
 │   ├── run-frontend-instance.ts        # shared function to run frontend in CI asynchronously
 │   ├── run-local-db.ts                 # shared function to run a local pg db in CI asynchronously
 │   ├── send-message                    # shared function to send a message to GitHub PR
-│   ├── update-commit-status            # shared function to add/update commit status to GitHub commit
 │   ├── update-pr-description.ts        # shared function to update description of GitHub PR
 │   └── upload.ts                       # shared function to deploy test coverage information to our test coverage providers
 └── validate-db                         # helps validate current db changes against a certain database to ensure data integrity

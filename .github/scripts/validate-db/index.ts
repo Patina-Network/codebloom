@@ -1,9 +1,10 @@
-import type { Environment } from "types";
-
 import { $ } from "bun";
-import { getEnvVariablesByPrefix } from "load-secrets/env/load";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import type { Environment } from "@/types";
+
+import { getEnvVariablesByPrefix } from "@/utils/env";
 
 const { environment, sha } = await yargs(hideBin(process.argv))
   .option("environment", {
@@ -44,12 +45,12 @@ export async function main() {
   }
 
   const appEnv =
-    environment === "staging" ?
-      getEnvVariablesByPrefix("STAGING_DB_MIGRATIOR_")
-    : {
-        ...getEnvVariablesByPrefix("DB_MIGRATIOR_"),
-        DATABASE_NAME: "codebloom-prod",
-      };
+    environment === "staging"
+      ? getEnvVariablesByPrefix("STAGING_DB_MIGRATIOR_")
+      : {
+          ...getEnvVariablesByPrefix("DB_MIGRATIOR_"),
+          DATABASE_NAME: "codebloom-prod",
+        };
 
   await $.env({
     ...process.env,

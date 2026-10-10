@@ -1,14 +1,14 @@
-import type { Location } from "types";
-
 import { DefaultArtifactClient } from "@actions/artifact";
 import { $ } from "bun";
 import path from "node:path";
 
+import type { Location } from "@/types";
+
 import { backendExclusions, frontendExclusions } from "../../../exclusions";
 
 const getDir = (loc: Location) => {
-  return loc === "frontend" ?
-      path.join(process.cwd(), "js/coverage/")
+  return loc === "frontend"
+    ? path.join(process.cwd(), "js/coverage/")
     : path.join(process.cwd(), "target/site/jacoco/");
 };
 
@@ -56,17 +56,8 @@ async function _uploadToCodecov(token: string, loc: Location) {
   }
 
   try {
-    console.log(
-      `Uploading reports from ${dir} to Codecov with flag: ${loc}...`,
-    );
-    const p2 = Bun.spawnSync([
-      "./codecov",
-      "do-upload",
-      "--dir",
-      dir,
-      "--flag",
-      loc,
-    ]);
+    console.log(`Uploading reports from ${dir} to Codecov with flag: ${loc}...`);
+    const p2 = Bun.spawnSync(["./codecov", "do-upload", "--dir", dir, "--flag", loc]);
     if (p2.exitCode != 0) {
       throw new Error(`Failed to load Codecov process\n\n${p2.stderr}`);
     }
@@ -106,9 +97,7 @@ async function uploadToSonar(token: string, loc: Location) {
 
   if (loc === "backend") {
     args.push("-Dsonar.java.binaries=target/classes");
-    args.push(
-      "-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml",
-    );
+    args.push("-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml");
     if (backendExclusions.length) {
       args.push(`-Dsonar.coverage.exclusions=${backendExclusions}`);
     }
@@ -135,11 +124,7 @@ async function uploadArtifact(artifactName: string, loc: Location) {
   const dir = getDir(loc);
   const client = new DefaultArtifactClient();
 
-  const { id, size } = await client.uploadArtifact(
-    artifactName,
-    [dir],
-    process.cwd(),
-  );
+  const { id, size } = await client.uploadArtifact(artifactName, [dir], process.cwd());
 
   console.log(`Artifact ID ${id} uploaded (Size: ${size} bytes)`);
 }
