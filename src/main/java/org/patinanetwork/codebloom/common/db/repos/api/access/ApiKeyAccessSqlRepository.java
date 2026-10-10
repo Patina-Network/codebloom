@@ -3,6 +3,7 @@ package org.patinanetwork.codebloom.common.db.repos.api.access;
 import io.micrometer.core.annotation.Timed;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.api.ApiKeyAccessEnum;
 import org.patinanetwork.codebloom.common.db.models.api.access.ApiKeyAccess;
@@ -27,7 +28,7 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
     }
 
     @Override
-    public ApiKeyAccess getApiKeyAccessById(final String id) {
+    public Optional<ApiKeyAccess> getApiKeyAccessById(final String id) {
         String sql = """
             SELECT
                 id,
@@ -43,8 +44,7 @@ public class ApiKeyAccessSqlRepository implements ApiKeyAccessRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(id))
                 .query(API_KEY_ACCESS_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -89,18 +90,24 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             discordId = attributes.get("id").toString();
             discordName = attributes.get("username").toString();
 
-            User existingUser = userRepository.getUserByDiscordId(discordId);
+            var existingUserResult = userRepository.getUserByDiscordId(discordId);
+            User existingUser;
 
-            if (existingUser != null) {
+            if (existingUserResult.isPresent()) {
+                existingUser = existingUserResult.get();
                 existingUser.setDiscordName(discordName);
-                if (existingUser.getLeetcodeUsername() != null) {
+                if (existingUser.getLeetcodeUsername().isPresent()) {
                     try {
-                        UserProfile profile = leetcodeClient.getUserProfile(existingUser.getLeetcodeUsername());
+                        UserProfile profile = leetcodeClient.getUserProfile(
+                                existingUser.getLeetcodeUsername().orElseThrow());
                         if (profile != null && profile.getUserAvatar() != null) {
-                            existingUser.setProfileUrl(profile.getUserAvatar());
+                            existingUser.setProfileUrl(Optional.ofNullable(profile.getUserAvatar()));
                         }
                     } catch (RuntimeException ex) {
-                        LOGGER.warn("LeetCode lookup failed for {}", existingUser.getLeetcodeUsername(), ex);
+                        LOGGER.warn(
+                                "LeetCode lookup failed for {}",
+                                existingUser.getLeetcodeUsername().orElseThrow(),
+                                ex);
                     }
                 }
                 userRepository.updateUser(existingUser);
@@ -160,11 +167,13 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                 // TODO: Abstract this logic into `DiscordClub`
                 if ("Patina Network".equals(club.getName())) {
                     if (member.get().getNickname() != null) {
-                        existingUser.setNickname(member.get().getNickname());
+                        existingUser.setNickname(
+                                Optional.ofNullable(member.get().getNickname()));
                     } else if (member.get().getUser().getGlobalName() != null) {
-                        existingUser.setNickname(member.get().getUser().getGlobalName());
+                        existingUser.setNickname(
+                                Optional.ofNullable(member.get().getUser().getGlobalName()));
                     } else {
-                        existingUser.setNickname(existingUser.getDiscordName());
+                        existingUser.setNickname(Optional.ofNullable(existingUser.getDiscordName()));
                     }
                     userRepository.updateUser(existingUser);
                 }

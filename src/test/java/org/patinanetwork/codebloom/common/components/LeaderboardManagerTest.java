@@ -64,7 +64,7 @@ public class LeaderboardManagerTest {
                 .id(UUID.randomUUID().toString())
                 .discordId(randomSnowflake())
                 .discordName(faker.name().username())
-                .leetcodeUsername(faker.name().username())
+                .leetcodeUsername(Optional.ofNullable(faker.name().username()))
                 .admin(faker.bool().bool())
                 .verifyKey(faker.crypto().md5());
     }
@@ -75,7 +75,7 @@ public class LeaderboardManagerTest {
             final AchievementPlaceEnum placeEnum,
             final String userId,
             final String leaderboardId) {
-        assertEquals(leaderboard, achievement.getLeaderboard());
+        assertEquals(Optional.ofNullable(leaderboard), achievement.getLeaderboard());
         assertEquals(placeEnum, achievement.getPlace());
         assertEquals(userId, achievement.getUserId());
         assertEquals(leaderboardId, achievement.getLeaderboardId());
@@ -767,7 +767,7 @@ public class LeaderboardManagerTest {
 
         var achievements = captor.getAllValues();
         for (var achievement : achievements) {
-            assertNull(achievement.getLeaderboard());
+            assertTrue(achievement.getLeaderboard().isEmpty());
             assertEquals(latestLeaderboard.getId(), achievement.getLeaderboardId());
         }
     }

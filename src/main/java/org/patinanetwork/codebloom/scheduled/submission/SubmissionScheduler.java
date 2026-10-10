@@ -60,12 +60,12 @@ public class SubmissionScheduler {
                 return;
             }
 
-            if (user.getLeetcodeUsername() == null) {
+            if (user.getLeetcodeUsername().isEmpty()) {
                 continue;
             }
 
-            List<LeetcodeSubmission> leetcodeSubmissions =
-                    leetcodeClient.findSubmissionsByUsername(user.getLeetcodeUsername());
+            List<LeetcodeSubmission> leetcodeSubmissions = leetcodeClient.findSubmissionsByUsername(
+                    user.getLeetcodeUsername().orElse(null));
 
             submissionsHandler.handleSubmissions(leetcodeSubmissions, user, false);
         }

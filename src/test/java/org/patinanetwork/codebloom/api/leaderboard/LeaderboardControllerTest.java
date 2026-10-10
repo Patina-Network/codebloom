@@ -283,7 +283,7 @@ public class LeaderboardControllerTest {
                 .totalScore(500)
                 .build();
         when(userRepository.getUserWithScoreByIdAndLeaderboardId(eq("u1"), eq(LEADERBOARD_ID), any()))
-                .thenReturn(uws);
+                .thenReturn(Optional.of(uws));
 
         ResponseEntity<ApiResponder<UserWithScoreDto>> response =
                 leaderboardController.getUserCurrentLeaderboardFull(null, "u1");

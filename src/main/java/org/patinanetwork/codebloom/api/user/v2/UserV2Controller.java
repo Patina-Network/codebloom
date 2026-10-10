@@ -54,11 +54,9 @@ public class UserV2Controller {
     public ResponseEntity<ApiResponder<UserDto>> getUserProfileByLeetcodeUsername(
             final HttpServletRequest request, @PathVariable final String leetcodeUsername) {
 
-        User user = userRepository.getUserByLeetcodeUsername(leetcodeUsername);
-
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find user profile.");
-        }
+        User user = userRepository
+                .getUserByLeetcodeUsername(leetcodeUsername)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find user profile."));
 
         return ResponseEntity.ok().body(ApiResponder.success("User profile found!", UserDto.fromUser(user)));
     }

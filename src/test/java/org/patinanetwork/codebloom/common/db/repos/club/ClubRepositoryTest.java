@@ -37,7 +37,7 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
                 .build();
 
         repo.createClub(testClub);
-        testClub = repo.getClubBySlug(testClub.getSlug());
+        testClub = repo.getClubBySlug(testClub.getSlug()).orElse(null);
         assertNotNull(testClub, "Test club should be created and retrievable");
     }
 
@@ -54,7 +54,7 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void testGetClubById() {
-        Club found = repo.getClubById(testClub.getId());
+        Club found = repo.getClubById(testClub.getId()).orElse(null);
         assertNotNull(found);
         assertEquals(testClub.getId(), found.getId());
         assertEquals(testClub, found);
@@ -63,7 +63,7 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(2)
     void testGetClubBySlug() {
-        Club found = repo.getClubBySlug(testClub.getSlug());
+        Club found = repo.getClubBySlug(testClub.getSlug()).orElse(null);
         assertNotNull(found);
         assertEquals(testClub.getSlug(), found.getSlug());
         assertEquals(testClub, found);
@@ -82,7 +82,7 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
                 .tag(Tag.Gwc)
                 .build();
 
-        Club result = repo.updateClub(updatedClub);
+        Club result = repo.updateClub(updatedClub).orElse(null);
 
         assertNotNull(result);
         assertEquals("Updated Club Name", result.getName());
@@ -106,9 +106,9 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
                 .build();
 
         repo.createClub(deletableClub);
-        deletableClub = repo.getClubBySlug(deletableClub.getSlug());
+        deletableClub = repo.getClubBySlug(deletableClub.getSlug()).orElse(null);
 
-        Club found = repo.getClubById(deletableClub.getId());
+        Club found = repo.getClubById(deletableClub.getId()).orElse(null);
         assertNotNull(found);
         assertEquals(deletableClub.getId(), found.getId());
         assertEquals(deletableClub.getName(), found.getName());
@@ -116,8 +116,7 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
         boolean deleted = repo.deleteClubById(deletableClub.getId());
         assertTrue(deleted);
 
-        Club deletedFetched = repo.getClubById(deletableClub.getId());
-        assertNull(deletedFetched);
+        assertTrue(repo.getClubById(deletableClub.getId()).isEmpty());
     }
 
     @Test
@@ -134,9 +133,9 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
                 .build();
 
         repo.createClub(deletableBySlugClub);
-        deletableBySlugClub = repo.getClubBySlug(deletableBySlugClub.getSlug());
+        deletableBySlugClub = repo.getClubBySlug(deletableBySlugClub.getSlug()).orElse(null);
 
-        Club found = repo.getClubBySlug(deletableBySlugClub.getSlug());
+        Club found = repo.getClubBySlug(deletableBySlugClub.getSlug()).orElse(null);
         assertNotNull(found);
         assertEquals(deletableBySlugClub.getSlug(), found.getSlug());
         assertEquals(deletableBySlugClub.getName(), found.getName());
@@ -144,7 +143,6 @@ public class ClubRepositoryTest extends BaseRepositoryTest {
         boolean deleted = repo.deleteClubBySlug(deletableBySlugClub.getSlug());
         assertTrue(deleted);
 
-        Club deletedFetched = repo.getClubBySlug(deletableBySlugClub.getSlug());
-        assertNull(deletedFetched);
+        assertTrue(repo.getClubBySlug(deletableBySlugClub.getSlug()).isEmpty());
     }
 }

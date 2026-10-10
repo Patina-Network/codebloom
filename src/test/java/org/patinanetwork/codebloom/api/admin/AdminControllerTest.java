@@ -340,7 +340,7 @@ public class AdminControllerTest {
         DeleteAnnouncementBody body = DeleteAnnouncementBody.builder()
                 .id("4f6bbb9a-0baa-11f1-9607-77d42f1cf060")
                 .build();
-        when(announcementRepository.getAnnouncementById(anyString())).thenReturn(null);
+        when(announcementRepository.getAnnouncementById(anyString())).thenReturn(Optional.empty());
 
         ResponseStatusException exception =
                 assertThrows(ResponseStatusException.class, () -> adminController.deleteAnnouncement(body, null));
@@ -354,7 +354,7 @@ public class AdminControllerTest {
                 .id("4f6bbb9a-0baa-11f1-9607-77d42f1cf060")
                 .build();
         Announcement mockAnnouncement = mock(Announcement.class);
-        when(announcementRepository.getAnnouncementById(anyString())).thenReturn(mockAnnouncement);
+        when(announcementRepository.getAnnouncementById(anyString())).thenReturn(Optional.of(mockAnnouncement));
         when(announcementRepository.updateAnnouncement(mockAnnouncement)).thenReturn(false);
 
         ResponseEntity<ApiResponder<Empty>> response = adminController.deleteAnnouncement(body, null);
@@ -371,7 +371,7 @@ public class AdminControllerTest {
                 .id("4f6bbb9a-0baa-11f1-9607-77d42f1cf060")
                 .build();
         Announcement mockAnnouncement = mock(Announcement.class);
-        when(announcementRepository.getAnnouncementById(anyString())).thenReturn(mockAnnouncement);
+        when(announcementRepository.getAnnouncementById(anyString())).thenReturn(Optional.of(mockAnnouncement));
         when(announcementRepository.updateAnnouncement(mockAnnouncement)).thenReturn(true);
 
         ResponseEntity<ApiResponder<Empty>> response = adminController.deleteAnnouncement(body, null);

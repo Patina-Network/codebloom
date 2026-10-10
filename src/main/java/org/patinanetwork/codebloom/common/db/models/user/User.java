@@ -3,6 +3,7 @@ package org.patinanetwork.codebloom.common.db.models.user;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -10,8 +11,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.patinanetwork.codebloom.common.db.helper.annotations.JoinColumn;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NullColumn;
 import org.patinanetwork.codebloom.common.db.models.achievements.Achievement;
 import org.patinanetwork.codebloom.common.db.models.usertag.UserTag;
 
@@ -22,38 +21,33 @@ import org.patinanetwork.codebloom.common.db.models.usertag.UserTag;
 @EqualsAndHashCode
 public class User {
 
-    @NotNullColumn
     private String id;
 
     // Even though discord IDs are integers, they are very large so we just use
     // String instead.
-    @NotNullColumn
     private String discordId;
 
-    @NotNullColumn
     private String discordName;
 
-    @NullColumn
-    private String leetcodeUsername;
+    @Builder.Default
+    private Optional<String> leetcodeUsername = Optional.empty();
 
-    @NullColumn
-    private String nickname;
+    @Builder.Default
+    private Optional<String> nickname = Optional.empty();
 
-    @NotNullColumn
     private boolean admin;
 
-    @NullColumn
-    private String profileUrl;
+    @Builder.Default
+    private Optional<String> profileUrl = Optional.empty();
 
-    @NotNullColumn
     private String verifyKey;
 
-    @NullColumn
-    private String schoolEmail;
+    @Builder.Default
+    private Optional<String> schoolEmail = Optional.empty();
 
-    /** can be null if it's an old entry */
-    @NullColumn
-    private OffsetDateTime createdAt;
+    /** can be empty if it's an old entry */
+    @Builder.Default
+    private Optional<OffsetDateTime> createdAt = Optional.empty();
 
     /**
      * If you want to update tags in the database, you have to use the

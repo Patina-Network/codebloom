@@ -60,11 +60,9 @@ public class ClubController {
         final String clubSlug = registerClubBody.getClubSlug();
         final String password = registerClubBody.getPassword();
 
-        Club club = clubRepository.getClubBySlug(clubSlug);
-
-        if (club == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Club does not exist.");
-        }
+        Club club = clubRepository
+                .getClubBySlug(clubSlug)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Club does not exist."));
 
         boolean valid = clubService.isPasswordValid(club, password);
 

@@ -287,10 +287,12 @@ public class LeaderboardController {
         }
 
         // we do not support point of time in this endpoint currently
-        UserWithScore user = userRepository.getUserWithScoreByIdAndLeaderboardId(
-                userId,
-                leaderboardData.get().getId(),
-                UserFilterOptions.builder().build());
+        UserWithScore user = userRepository
+                .getUserWithScoreByIdAndLeaderboardId(
+                        userId,
+                        leaderboardData.get().getId(),
+                        UserFilterOptions.builder().build())
+                .orElse(null);
 
         // if (user == null) {
         // return

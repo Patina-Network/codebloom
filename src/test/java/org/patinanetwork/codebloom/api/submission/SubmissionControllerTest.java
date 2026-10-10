@@ -91,7 +91,7 @@ public class SubmissionControllerTest {
 
         when(auth.getUser()).thenReturn(user);
 
-        when(user.getLeetcodeUsername()).thenReturn(null);
+        when(user.getLeetcodeUsername()).thenReturn(Optional.empty());
         when(user.getVerifyKey()).thenReturn("verify-123");
 
         when(body.getLeetcodeUsername()).thenReturn("leetcodeUser");
@@ -109,8 +109,8 @@ public class SubmissionControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertEquals("Leetcode username has been set!", response.getBody().getMessage());
 
-        verify(user).setLeetcodeUsername("leetcodeUser");
-        verify(user).setProfileUrl("avatar-url");
+        verify(user).setLeetcodeUsername(Optional.of("leetcodeUser"));
+        verify(user).setProfileUrl(Optional.of("avatar-url"));
         verify(userRepository).updateUser(user);
     }
 
@@ -121,7 +121,7 @@ public class SubmissionControllerTest {
         LeetcodeUsernameObject body = mock(LeetcodeUsernameObject.class);
 
         when(auth.getUser()).thenReturn(user);
-        when(user.getLeetcodeUsername()).thenReturn("existing");
+        when(user.getLeetcodeUsername()).thenReturn(Optional.of("existing"));
 
         ResponseStatusException ex =
                 assertThrows(ResponseStatusException.class, () -> submissionController.setLeetcodeUsername(auth, body));
@@ -139,7 +139,7 @@ public class SubmissionControllerTest {
 
         when(auth.getUser()).thenReturn(user);
 
-        when(user.getLeetcodeUsername()).thenReturn("leetcodeUser");
+        when(user.getLeetcodeUsername()).thenReturn(Optional.of("leetcodeUser"));
         when(user.getId()).thenReturn("abcdefg123456");
 
         when(simpleRedis.containsKey("abcdefg123456")).thenReturn(false);
@@ -169,7 +169,7 @@ public class SubmissionControllerTest {
         User user = mock(User.class);
 
         when(auth.getUser()).thenReturn(user);
-        when(user.getLeetcodeUsername()).thenReturn(null);
+        when(user.getLeetcodeUsername()).thenReturn(Optional.empty());
 
         ResponseStatusException ex =
                 assertThrows(ResponseStatusException.class, () -> submissionController.checkLatestSubmissions(auth));

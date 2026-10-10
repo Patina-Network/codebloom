@@ -120,7 +120,7 @@ class LeetcodeQuestionProcessServiceUnitTest {
         assertEquals(Optional.of("existing code"), question.getCode());
         assertEquals(Optional.of("3 ms"), question.getRuntime());
         assertEquals(JobStatus.COMPLETE, job.getStatus());
-        assertNotNull(job.getCompletedAt());
+        assertTrue(job.getCompletedAt().isPresent());
         verify(questions).updateQuestion(question);
     }
 
@@ -133,7 +133,7 @@ class LeetcodeQuestionProcessServiceUnitTest {
         runQueue();
         assertEquals(JobStatus.INCOMPLETE, job.getStatus());
         assertTrue(job.getNextAttemptAt().isAfter(before.plusMinutes(29)));
-        assertNull(job.getCompletedAt());
+        assertTrue(job.getCompletedAt().isEmpty());
         assertEquals(Optional.empty(), question.getDescription());
         verify(questions, never()).updateQuestion(any());
     }
@@ -152,8 +152,8 @@ class LeetcodeQuestionProcessServiceUnitTest {
         when(client.findQuestionBySlug("two-sum")).thenThrow(new RuntimeException("LeetCode unavailable"));
         runQueue();
         assertEquals(JobStatus.INCOMPLETE, job.getStatus());
-        assertNull(job.getProcessedAt());
-        assertNull(job.getCompletedAt());
+        assertTrue(job.getProcessedAt().isEmpty());
+        assertTrue(job.getCompletedAt().isEmpty());
         verify(questions, never()).updateQuestion(any());
     }
 
@@ -208,7 +208,7 @@ class LeetcodeQuestionProcessServiceUnitTest {
         when(questions.updateQuestion(question)).thenThrow(new RuntimeException("Database unavailable"));
         runQueue();
         assertEquals(JobStatus.INCOMPLETE, job.getStatus());
-        assertNull(job.getCompletedAt());
+        assertTrue(job.getCompletedAt().isEmpty());
     }
 
     @Test

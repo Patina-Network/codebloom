@@ -146,7 +146,7 @@ public class LeetcodeQuestionProcessService {
         log.info("Processing job {} for questionId: {}", job.getId(), job.getQuestionId());
         job.setAttempts(job.getAttempts() + 1);
         job.setStatus(JobStatus.PROCESSING);
-        job.setProcessedAt(StandardizedOffsetDateTime.now());
+        job.setProcessedAt(Optional.of(StandardizedOffsetDateTime.now()));
         boolean success = jobRepository.updateJob(job);
         if (!success) {
             throw new RuntimeException("Failed to update job status to PROCESSING");
@@ -251,7 +251,7 @@ public class LeetcodeQuestionProcessService {
                                     .filter(d -> !d.isBlank())
                                     .isPresent())) {
                 job.setStatus(JobStatus.COMPLETE);
-                job.setCompletedAt(StandardizedOffsetDateTime.now());
+                job.setCompletedAt(Optional.of(StandardizedOffsetDateTime.now()));
 
                 log.info(
                         "Successfully completed job {} for question: {} (ID: {})",
@@ -275,7 +275,7 @@ public class LeetcodeQuestionProcessService {
             }
         } catch (Exception e) {
             job.setStatus(JobStatus.INCOMPLETE);
-            job.setProcessedAt(null);
+            job.setProcessedAt(Optional.empty());
             jobRepository.updateJob(job);
 
             log.error("Failed to process job {} for questionId: {}", job.getId(), job.getQuestionId(), e);
