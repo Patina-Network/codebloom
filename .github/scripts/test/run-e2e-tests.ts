@@ -1,10 +1,11 @@
 import { $ } from "bun";
-import { getEnvVariablesByPrefix } from "load-secrets/env/load";
-import { sendDiscordMessage } from "utils/discord/send-message";
-import { backend } from "utils/run-backend-instance";
-import { db } from "utils/run-local-db";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { sendDiscordMessage } from "@/utils/discord/send-message";
+import { getEnvVariablesByPrefix } from "@/utils/env";
+import { backend } from "@/utils/run-backend-instance";
+import { db } from "@/utils/run-local-db";
 
 const { actionUrl, skipDiscordMessage } = await yargs(hideBin(process.argv))
   .option("actionUrl", {

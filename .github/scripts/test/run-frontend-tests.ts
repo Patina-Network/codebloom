@@ -1,10 +1,11 @@
 import { $ } from "bun";
-import { getEnvVariablesByPrefix } from "load-secrets/env/load";
-import { backend } from "utils/run-backend-instance";
-import { db } from "utils/run-local-db";
-import { uploadFrontendTests } from "utils/upload";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { getEnvVariablesByPrefix } from "@/utils/env";
+import { backend } from "@/utils/run-backend-instance";
+import { db } from "@/utils/run-local-db";
+import { uploadFrontendTests } from "@/utils/upload";
 
 const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
   .option("shouldUploadCoverage", {

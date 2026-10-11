@@ -38,7 +38,7 @@ export async function updatePrDescriptionWithTicket(
       body = pr.data.body;
     } catch (e) {
       const s = JSON.stringify(e);
-      throw new Error(`GitHub API Error\n\n${s}`);
+      throw new Error(`GitHub API Error\n\n${s}`, { cause: e });
     }
 
     const newBody = (() => {
@@ -66,7 +66,7 @@ export async function updatePrDescriptionWithTicket(
       });
     } catch (e) {
       const s = JSON.stringify(e);
-      throw new Error(`GitHub API Error\n\n${s}`);
+      throw new Error(`GitHub API Error\n\n${s}`, { cause: e });
     }
   } catch (e) {
     console.error("failed to update pr description with ticket", e);

@@ -1,6 +1,6 @@
 import { $ } from "bun";
 
-import { cyan } from "@/../utils/colors";
+import { cyan } from "@/utils/colors";
 
 let be: Bun.Subprocess<"ignore", Bun.BunFile, "inherit"> | undefined;
 
@@ -13,19 +13,10 @@ async function start(env: Record<string, string>) {
     console.log(`JAVA_HOME=${process.env.JAVA_HOME}`);
 
     const logFile = Bun.file("backend.log");
-    be = Bun.spawn(
-      [
-        "./mvnw",
-        "-B",
-        "-ntp",
-        "-Dspring-boot.run.profiles=ci",
-        "spring-boot:run",
-      ],
-      {
-        env: { ...process.env, ...env },
-        stdout: logFile,
-      },
-    );
+    be = Bun.spawn(["./mvnw", "-B", "-ntp", "-Dspring-boot.run.profiles=ci", "spring-boot:run"], {
+      env: { ...process.env, ...env },
+      stdout: logFile,
+    });
 
     console.log("Waiting for backend to become ready.");
 
@@ -59,7 +50,7 @@ async function start(env: Record<string, string>) {
     console.log("backend ready");
   } catch (e) {
     console.error(e);
-    end();
+    await end();
   }
 }
 
@@ -74,9 +65,7 @@ async function end() {
       ]);
 
       if (!exitedInTime) {
-        console.warn(
-          "Backend did not exit after SIGTERM within 5s, sending SIGKILL...",
-        );
+        console.warn("Backend did not exit after SIGTERM within 5s, sending SIGKILL...");
         be.kill("SIGKILL");
         await be.exited;
       }

@@ -1,7 +1,8 @@
 import { Octokit } from "@octokit/rest";
-import { sendMessage } from "utils/send-message";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+
+import { sendMessage } from "@/utils/send-message";
 
 const { prId } = await yargs(hideBin(process.argv))
   .option("prId", {
@@ -28,9 +29,7 @@ async function main() {
   const { body } = data;
 
   const descriptionContent = (() => {
-    const match = (body ?? "").match(
-      /## Description of changes([\s\S]*?)(?=\n##|$)/,
-    );
+    const match = (body ?? "").match(/## Description of changes([\s\S]*?)(?=\n##|$)/);
     return (match?.[1] ?? "").trim();
   })();
 

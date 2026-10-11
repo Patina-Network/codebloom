@@ -1,5 +1,6 @@
 import { $ } from "bun";
-import { pink } from "utils/colors";
+
+import { pink } from "@/utils/colors";
 
 let fe: Bun.Subprocess<"ignore", Bun.BunFile, "inherit"> | undefined;
 
@@ -47,7 +48,7 @@ async function start(env: Record<string, string>) {
     console.log("frontend ready");
   } catch (e) {
     console.error(e);
-    end();
+    await end();
   }
 }
 

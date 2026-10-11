@@ -1,24 +1,19 @@
-import type { Environment, Type } from "types";
-
 import { DockerClient, GitHubClient } from "@tahminator/pipeline";
 import { $ } from "bun";
-import { getEnvVariablesByPrefix } from "load-secrets/env/load";
-import { backend } from "utils/run-backend-instance";
-import { db } from "utils/run-local-db";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
+import type { Environment, Type } from "@/types";
+
+import { getEnvVariablesByPrefix } from "@/utils/env";
+import { backend } from "@/utils/run-backend-instance";
+import { db } from "@/utils/run-local-db";
+
 process.env.TZ = "America/New_York";
 
-const {
-  environment,
-  dockerUpload,
-  getGhaOutput,
-  githubOutputFile,
-  type,
-  arch,
-  prId,
-} = await yargs(hideBin(process.argv))
+const { environment, dockerUpload, getGhaOutput, githubOutputFile, type, arch, prId } = await yargs(
+  hideBin(process.argv),
+)
   .option("environment", {
     choices: ["staging", "production"] satisfies Environment[],
     describe: "Deployment environment (staging or production)",
@@ -31,8 +26,7 @@ const {
   })
   .option("getGhaOutput", {
     type: "boolean",
-    describe:
-      "Enable GitHub Actions output to receive latest built tag version",
+    describe: "Enable GitHub Actions output to receive latest built tag version",
     default: false,
   })
   .option("githubOutputFile", {
@@ -63,12 +57,13 @@ const {
 const tagPrefix = environment === "staging" ? "staging-" : "";
 
 const dockerRepository =
-  type === "web" ?
-    arch === "arm64" ?
-      "codebloom-arm"
-    : "codebloom"
-  : arch === "arm64" ? "codebloom-standup-bot-arm"
-  : "codebloom-standup-bot";
+  type === "web"
+    ? arch === "arm64"
+      ? "codebloom-arm"
+      : "codebloom"
+    : arch === "arm64"
+      ? "codebloom-standup-bot-arm"
+      : "codebloom-standup-bot";
 // both types build natively per-arch on their own runner (no QEMU), one
 // repo per arch, matrixed at the workflow level.
 const platforms = [`linux/${arch}`];
@@ -116,33 +111,25 @@ async function main() {
 
   const gitSha = (await $`git rev-parse --short HEAD`.text()).trim();
 
-  await using dockerClient = await DockerClient.create(
-    dockerHubUsername,
-    dockerHubPat,
-  );
+  await using dockerClient = await DockerClient.create(dockerHubUsername, dockerHubPat);
 
-  const tags = [
-    `${tagPrefix}latest`,
-    `${tagPrefix}${timestamp}`,
-    `${tagPrefix}${gitSha}`,
-  ];
+  const tags = [`${tagPrefix}latest`, `${tagPrefix}${timestamp}`, `${tagPrefix}${gitSha}`];
 
   console.log("Building image with following tags:");
   tags.forEach((tag) => console.log(tag));
 
   const buildArgs = {
     ...(type === "web" ? { COMMIT_SHA: gitSha } : {}),
-    ...(environment === "staging" ?
-      {
-        VITE_STAGING: true,
-      }
-    : {}),
+    ...(environment === "staging"
+      ? {
+          VITE_STAGING: true,
+        }
+      : {}),
   };
 
   await dockerClient.buildImage({
     dockerRepository,
-    dockerFileLocation:
-      type === "web" ? "infra/Dockerfile" : "internal/standup-bot/Dockerfile",
+    dockerFileLocation: type === "web" ? "infra/Dockerfile" : "internal/standup-bot/Dockerfile",
     tags,
     shouldUpload: dockerUpload,
     buildArgs,
@@ -228,4 +215,4 @@ function parseCiEnv(ciEnv: Record<string, string | undefined>) {
   };
 }
 
-main();
+await main();
