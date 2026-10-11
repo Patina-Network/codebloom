@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -190,7 +191,7 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
     @Test
     @Order(4)
     void drainQueueValid() {
-        service.drainQueue().join();
+        service.drainQueue().orTimeout(30, TimeUnit.SECONDS).join();
         assertEquals(
                 JobStatus.COMPLETE,
                 jobRepository.findJobById(testJob.getId()).orElseThrow().getStatus());

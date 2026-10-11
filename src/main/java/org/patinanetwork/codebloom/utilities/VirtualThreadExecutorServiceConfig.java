@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class VirtualThreadExecutorServiceConfig {
 
-    @Bean
+    @Bean(destroyMethod = "shutdownNow")
     public ExecutorService virtualThreadExecutorService() {
         return Executors.newVirtualThreadPerTaskExecutor();
     }

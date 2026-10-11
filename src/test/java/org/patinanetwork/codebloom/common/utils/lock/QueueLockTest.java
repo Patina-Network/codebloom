@@ -14,6 +14,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.patinanetwork.codebloom.utilities.VirtualThreadExecutorServiceConfig;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 public class QueueLockTest {
     private final BlockingBucket bucket = mock(BlockingBucket.class);
@@ -29,6 +31,20 @@ public class QueueLockTest {
     @AfterEach
     void tearDown() {
         executor.shutdownNow();
+    }
+
+    @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
+    void contextShutdownShouldStopWaitingTicker() throws InterruptedException {
+        ExecutorService managedExecutor;
+
+        try (var context = new AnnotationConfigApplicationContext(VirtualThreadExecutorServiceConfig.class)) {
+            managedExecutor = context.getBean(ExecutorService.class);
+            new QueueLock(bucket, managedExecutor);
+        }
+
+        assertTrue(managedExecutor.isShutdown());
+        assertTrue(managedExecutor.awaitTermination(2, TimeUnit.SECONDS));
     }
 
     @Test
