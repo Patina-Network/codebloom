@@ -472,4 +472,18 @@ public class LeaderboardControllerTest {
         verify(leaderboardRepository).getAllLeaderboardsShallow(captor.capture());
         assertEquals(20, captor.getValue().getPageSize());
     }
+
+    @Test
+    void throws404WhenUserIsMissingFromLeaderboard() {
+        Leaderboard leaderboard = Leaderboard.builder().id(LEADERBOARD_ID).build();
+        when(leaderboardRepository.getRecentLeaderboardMetadata()).thenReturn(Optional.of(leaderboard));
+        when(userRepository.getUserWithScoreByIdAndLeaderboardId(eq("missing-user"), eq(LEADERBOARD_ID), any()))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> leaderboardController.getUserCurrentLeaderboardFull(null, "missing-user"));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
 }

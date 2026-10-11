@@ -292,13 +292,8 @@ public class LeaderboardController {
                         userId,
                         leaderboardData.get().getId(),
                         UserFilterOptions.builder().build())
-                .orElse(null);
-
-        // if (user == null) {
-        // return
-        // ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponder.failure("This
-        // user does not exist on this leaderboard."));
-        // }
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist on this leaderboard."));
 
         return ResponseEntity.ok().body(ApiResponder.success("User found!", UserWithScoreDto.fromUserWithScore(user)));
     }

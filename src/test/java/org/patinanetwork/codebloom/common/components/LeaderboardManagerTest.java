@@ -921,4 +921,60 @@ public class LeaderboardManagerTest {
         verify(leaderboardRepository, never()).getGlobalRankedIndexedLeaderboardUsersById(eq(leaderboardId), eq(opts));
         verify(leaderboardRepository, times(1)).getRankedIndexedLeaderboardUsersById(eq(leaderboardId), eq(opts));
     }
+
+    @Test
+    void refreshSubmissionsRejectsMissingUser() {
+        when(userRepository.getUserByDiscordId("discord-id")).thenReturn(Optional.empty());
+
+        LeaderboardException exception =
+                assertThrows(LeaderboardException.class, () -> leaderboardManager.refreshUserSubmissions("discord-id"));
+
+        assertEquals("Cannot refresh submissions", exception.getTitle());
+        verifyNoInteractions(leetcodeClient, submissionsHandler);
+    }
+
+    @Test
+    void refreshSubmissionsRejectsMissingLeetcodeUsername() {
+        var user = UserWithScore.builder().id("user-id").build();
+        when(userRepository.getUserByDiscordId("discord-id")).thenReturn(Optional.of(user));
+
+        LeaderboardException exception =
+                assertThrows(LeaderboardException.class, () -> leaderboardManager.refreshUserSubmissions("discord-id"));
+
+        assertEquals("Your Discord Account is not linked to a LeetCode username.", exception.getDescription());
+        verifyNoInteractions(leetcodeClient, submissionsHandler);
+    }
+
+    @Test
+    void refreshSubmissionsProcessesLinkedUsers() throws LeaderboardException {
+        var user = UserWithScore.builder()
+                .id("user-id")
+                .leetcodeUsername(Optional.of("leetcode-user"))
+                .build();
+        when(userRepository.getUserByDiscordId("discord-id")).thenReturn(Optional.of(user));
+        when(leetcodeClient.findSubmissionsByUsername("leetcode-user", 20)).thenReturn(List.of());
+
+        assertSame(user, leaderboardManager.refreshUserSubmissions("discord-id"));
+
+        verify(submissionsHandler).handleSubmissions(List.of(), user, true);
+    }
+
+    @Test
+    void refreshSubmissionsReportsLeetcodeFailures() {
+        var user = UserWithScore.builder()
+                .id("user-id")
+                .leetcodeUsername(Optional.of("leetcode-user"))
+                .build();
+        when(userRepository.getUserByDiscordId("discord-id")).thenReturn(Optional.of(user));
+        when(leetcodeClient.findSubmissionsByUsername("leetcode-user", 20))
+                .thenThrow(new RuntimeException("API unavailable"));
+
+        LeaderboardException exception =
+                assertThrows(LeaderboardException.class, () -> leaderboardManager.refreshUserSubmissions("discord-id"));
+
+        assertEquals(
+                "Failed to fetch or process submissions from LeetCode. Please try again later.",
+                exception.getDescription());
+        verifyNoInteractions(submissionsHandler);
+    }
 }
