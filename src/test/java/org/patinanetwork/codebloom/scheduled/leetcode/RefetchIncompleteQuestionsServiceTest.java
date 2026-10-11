@@ -2,6 +2,8 @@ package org.patinanetwork.codebloom.scheduled.leetcode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
@@ -164,5 +166,28 @@ public class RefetchIncompleteQuestionsServiceTest extends NoJdaRequired {
         jobRepository.deleteJobById(firstJob.getId());
         jobRepository.deleteJobById(secondJob.getId());
         questionRepository.deleteQuestionById(collisionQuestion.getId());
+    }
+
+    @Test
+    void unstickStuckQuestionJobsResetsStuckJob() {
+        Job stuckJob = Job.builder()
+                .questionId(testQuestion.getId())
+                .status(JobStatus.PROCESSING)
+                .build();
+        jobRepository.createJob(stuckJob);
+
+        try {
+            stuckJob.setProcessedAt(StandardizedOffsetDateTime.now().minusHours(2));
+            assertTrue(jobRepository.updateJob(stuckJob));
+
+            service.unstickStuckQuestionJobs();
+
+            Job unstuck = jobRepository.findJobById(stuckJob.getId());
+            assertNotNull(unstuck);
+            assertEquals(JobStatus.INCOMPLETE, unstuck.getStatus());
+            assertNull(unstuck.getProcessedAt());
+        } finally {
+            jobRepository.deleteJobById(stuckJob.getId());
+        }
     }
 }

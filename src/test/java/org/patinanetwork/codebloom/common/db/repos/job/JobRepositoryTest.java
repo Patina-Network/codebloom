@@ -3,6 +3,7 @@ package org.patinanetwork.codebloom.common.db.repos.job;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -111,5 +112,59 @@ public class JobRepositoryTest extends BaseRepositoryTest {
 
         boolean allMatchId = jobs.stream().allMatch(j -> j.getQuestionId().equals(mockQuestionId));
         assertTrue(allMatchId, "All returned jobs must match the requested question ID");
+    }
+
+    @Test
+    @Order(5)
+    void testUnstickStuckJobs() {
+        Job stuckJob = Job.builder()
+                .questionId(mockQuestionId)
+                .status(JobStatus.PROCESSING)
+                .build();
+        Job recentlyProcessingJob = Job.builder()
+                .questionId(mockQuestionId)
+                .status(JobStatus.PROCESSING)
+                .build();
+        Job oldCompletedJob = Job.builder()
+                .questionId(mockQuestionId)
+                .status(JobStatus.COMPLETE)
+                .build();
+        jobRepository.createJob(stuckJob);
+        jobRepository.createJob(recentlyProcessingJob);
+        jobRepository.createJob(oldCompletedJob);
+
+        try {
+            var now = StandardizedOffsetDateTime.now();
+
+            stuckJob.setProcessedAt(now.minusHours(2));
+            stuckJob.setNextAttemptAt(now.plusDays(1));
+            recentlyProcessingJob.setProcessedAt(now.minusMinutes(30));
+            oldCompletedJob.setProcessedAt(now.minusHours(2));
+            assertTrue(jobRepository.updateJob(stuckJob));
+            assertTrue(jobRepository.updateJob(recentlyProcessingJob));
+            assertTrue(jobRepository.updateJob(oldCompletedJob));
+
+            int unstuckCount = jobRepository.unstickStuckJobs();
+            assertTrue(unstuckCount >= 1, "At least the stuck test job should have been unstuck");
+
+            Job unstuck = jobRepository.findJobById(stuckJob.getId());
+            assertEquals(JobStatus.INCOMPLETE, unstuck.getStatus());
+            assertNull(unstuck.getProcessedAt());
+            assertTrue(
+                    unstuck.getNextAttemptAt().isBefore(now.plusMinutes(1)),
+                    "nextAttemptAt should be reset to now so the job is picked up again");
+
+            Job stillProcessing = jobRepository.findJobById(recentlyProcessingJob.getId());
+            assertEquals(JobStatus.PROCESSING, stillProcessing.getStatus());
+            assertEquals(recentlyProcessingJob.getProcessedAt(), stillProcessing.getProcessedAt());
+
+            Job stillCompleted = jobRepository.findJobById(oldCompletedJob.getId());
+            assertEquals(JobStatus.COMPLETE, stillCompleted.getStatus());
+            assertEquals(oldCompletedJob.getProcessedAt(), stillCompleted.getProcessedAt());
+        } finally {
+            jobRepository.deleteJobById(stuckJob.getId());
+            jobRepository.deleteJobById(recentlyProcessingJob.getId());
+            jobRepository.deleteJobById(oldCompletedJob.getId());
+        }
     }
 }
