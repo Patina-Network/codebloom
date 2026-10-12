@@ -17,18 +17,23 @@ import org.patinanetwork.codebloom.common.db.models.question.Question;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionDifficulty;
 import org.patinanetwork.codebloom.common.db.repos.job.JobRepository;
 import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
+import org.patinanetwork.codebloom.common.leetcode.throttled.ThrottledLeetcodeClient;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.patinanetwork.codebloom.config.NoJdaRequired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest
+@SpringBootTest(properties = {"codebloom.scheduling.enabled=false", "codebloom.notify.enabled=false"})
 @ActiveProfiles({"ci", "thread"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
+
+    @MockitoBean
+    private ThrottledLeetcodeClient leetcodeClient;
 
     private final JobRepository jobRepository;
     private final LeetcodeQuestionProcessService service;
@@ -177,7 +182,9 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
 
     @Test
     void drainQueueValid() {
-        service.drainQueue();
+        service.drainQueue().join();
+        assertEquals(
+                JobStatus.COMPLETE, jobRepository.findJobById(testJob.getId()).getStatus());
     }
 
     // TODO: (TAN-32) re-enable
