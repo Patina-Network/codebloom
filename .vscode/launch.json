@@ -10,7 +10,19 @@
             "request": "attach",
             "name": "Debug (Attach) - Remote (VSCode)",
             "hostName": "127.0.0.1",
-            "port": 5005,
+            "port": 5005
         },
+        {
+            "name": "Debug leetcode-auth-stealer-service (will launch 4 u)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/internal/leetcode-auth-stealer-service/src/server.py",
+            "cwd": "${workspaceFolder}/internal/leetcode-auth-stealer-service",
+            "console": "integratedTerminal",
+            "env": {
+                "GRPC_REFLECTION": "true",
+                "GRPC_VERBOSITY": "ERROR"
+            }
+        }
     ]
 }

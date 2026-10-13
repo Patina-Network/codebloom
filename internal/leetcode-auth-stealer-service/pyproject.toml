@@ -1,0 +1,30 @@
+[project]
+name = "leetcode-auth-stealer-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Tahmid Ahmed", email = "tahmid@tahmid.io" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "aiohttp>=3.14.5",
+    "camoufox[geoip]>=0.4.11",
+    "grpcio>=1.84.0",
+    "grpcio-reflection>=1.84.0",
+    "grpcio-tools>=1.84.0",
+    "invisible-playwright>=0.34.0",
+    "playwright>=1.63.0",
+    "prometheus-client>=0.26.0",
+    "pydantic>=2,<3",
+    "structlog>=26.1.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+package = false
+[tool.ruff]
+exclude = ["src/generated"]
