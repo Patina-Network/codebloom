@@ -37,7 +37,7 @@ describe("RequeueIncompleteQuestionsModal", () => {
     );
 
     expect(
-      await screen.findByText(/refresh the LeetCode token first/),
+      await screen.findByRole("button", { name: "Requeue" }),
     ).toBeInTheDocument();
     expect(requestCount).toBe(0);
   });

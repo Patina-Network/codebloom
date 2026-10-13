@@ -26,7 +26,7 @@ async function fetchIncompleteQuestions({
 }
 
 /**
- * Queue a new job for every incomplete question without an active job.
+ * Restart jobs stuck processing for at least one hour and queue incomplete questions without an active job.
  */
 export const useRequeueIncompleteQuestionsMutation = () => {
   const queryClient = useQueryClient();

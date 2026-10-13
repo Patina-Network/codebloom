@@ -148,6 +148,24 @@ public class JobSqlRepository implements JobRepository {
     }
 
     @Override
+    public int requeueStaleProcessingJobs(final OffsetDateTime cutoff) {
+        String sql = """
+            UPDATE "Job"
+            SET
+                status = 'INCOMPLETE',
+                attempts = 0,
+                "processedAt" = NULL,
+                "completedAt" = NULL,
+                "nextAttemptAt" = NOW()
+            WHERE
+                status = 'PROCESSING'
+                AND "processedAt" <= :cutoff
+            """;
+
+        return jdbcClient.sql(sql).param("cutoff", cutoff).update();
+    }
+
+    @Override
     public boolean updateJob(final Job job) {
         String sql = """
             UPDATE "Job"
