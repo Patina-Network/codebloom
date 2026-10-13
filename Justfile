@@ -26,11 +26,11 @@ backend-dev *args:
 
 # Run the leetcode auth stealer service
 auth-dev *args:
-  cd ./internal/leetcode-auth-stealer-service && GRPC_REFLECTION=true GRPC_VERBOSITY=ERROR uv run src/server.py
+  cd ./internal/leetcode-auth-stealer-service && uv sync && GRPC_REFLECTION=true GRPC_VERBOSITY=ERROR uv run src/server.py
 
 # Generate the leetcode auth stealer gRPC stubs for the main codebloom service
 auth-gen *args:
-  cd ./internal/leetcode-auth-stealer-service && uv run src/generate.py
+  cd ./internal/leetcode-auth-stealer-service && uv sync && uv run src/generate.py
 
 # Run the backend Spring server with an exposed debugger at :5005
 backend-dev-debug *args:
