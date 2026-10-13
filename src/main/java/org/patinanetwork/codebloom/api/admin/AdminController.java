@@ -14,6 +14,7 @@ import java.util.Optional;
 import org.patinanetwork.codebloom.api.admin.body.*;
 import org.patinanetwork.codebloom.api.admin.body.jda.DeleteMessageBody;
 import org.patinanetwork.codebloom.common.components.DiscordClubManager;
+import org.patinanetwork.codebloom.common.components.IncompleteQuestionRequeuer;
 import org.patinanetwork.codebloom.common.components.LeaderboardManager;
 import org.patinanetwork.codebloom.common.db.models.announcement.Announcement;
 import org.patinanetwork.codebloom.common.db.models.discord.DiscordClub;
@@ -33,6 +34,7 @@ import org.patinanetwork.codebloom.common.dto.user.UserDto;
 import org.patinanetwork.codebloom.common.security.AuthenticationObject;
 import org.patinanetwork.codebloom.common.security.annotation.Protected;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
+import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +53,8 @@ public class AdminController {
     private final DiscordClubManager discordClubManager;
     private final LeaderboardManager leaderboardManager;
     private final DiscordClubRepository discordClubRepository;
+    private final LeetcodeAuthStealer leetcodeAuthStealer;
+    private final IncompleteQuestionRequeuer incompleteQuestionRequeuer;
 
     public AdminController(
             final LeaderboardRepository leaderboardRepository,
@@ -59,7 +63,9 @@ public class AdminController {
             final QuestionRepository questionRepository,
             final DiscordClubManager discordClubManager,
             final LeaderboardManager leaderboardManager,
-            final DiscordClubRepository discordClubRepository) {
+            final DiscordClubRepository discordClubRepository,
+            final LeetcodeAuthStealer leetcodeAuthStealer,
+            final IncompleteQuestionRequeuer incompleteQuestionRequeuer) {
         this.leaderboardRepository = leaderboardRepository;
         this.userRepository = userRepository;
         this.announcementRepository = announcementRepository;
@@ -67,6 +73,8 @@ public class AdminController {
         this.discordClubManager = discordClubManager;
         this.leaderboardManager = leaderboardManager;
         this.discordClubRepository = discordClubRepository;
+        this.leetcodeAuthStealer = leetcodeAuthStealer;
+        this.incompleteQuestionRequeuer = incompleteQuestionRequeuer;
     }
 
     @Operation(summary = "Drops current leaderboard and add new one", description = """
@@ -254,6 +262,17 @@ public class AdminController {
                 "Retrieved " + incompleteQuestionsDto.size() + " incomplete questions.", incompleteQuestionsDto));
     }
 
+    @Operation(summary = "Requeue incomplete questions", description = """
+        Creates a new processing job for every incomplete question that does not already have an active job. Questions \
+        that already have an INCOMPLETE or PROCESSING job are skipped. Only accessible to admins.
+        """)
+    @PostMapping("/questions/incomplete/requeue")
+    public ResponseEntity<ApiResponder<Empty>> requeueIncompleteQuestions(
+            @Protected(admin = true) final AuthenticationObject authenticationObject) {
+        int queued = incompleteQuestionRequeuer.requeueIncompleteQuestions();
+        return ResponseEntity.ok(ApiResponder.success("Queued " + queued + " incomplete question(s).", Empty.of()));
+    }
+
     @Operation(
             summary = "Send a message to a club's discord",
             description = """
@@ -300,6 +319,17 @@ public class AdminController {
         }
 
         return ResponseEntity.ok(ApiResponder.success("Discord Message successfully deleted", Empty.of()));
+    }
+
+    @Operation(
+            summary = "Refresh LeetCode auth token",
+            description =
+                    "Triggers an asynchronous re-steal of the LeetCode auth cookie. Admin only. **DO NOT TRIGGER THIS UNLESS YOU KNOW WHAT YOU'RE DOING.** Too many refreshes can cause rate limiting.")
+    @PostMapping("/leetcode/token")
+    public ResponseEntity<ApiResponder<Empty>> refreshLeetcodeToken(
+            @Protected(admin = true) final AuthenticationObject authenticationObject) {
+        leetcodeAuthStealer.reloadCookie();
+        return ResponseEntity.ok(ApiResponder.success("LeetCode token refresh triggered.", Empty.of()));
     }
 
     @Operation(summary = "Edit current leaderboard")

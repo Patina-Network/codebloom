@@ -6,9 +6,11 @@ import org.patinanetwork.codebloom.common.db.models.job.Job;
 
 public interface JobRepository {
     /**
-     * Creates a new job in the database.
+     * Creates a new job in the database, unless the question already has an active ({@code INCOMPLETE} or
+     * {@code PROCESSING}) job.
      *
-     * @note - The provided object's methods will be overridden with any returned data from the database.
+     * @note - On success, the provided object's methods will be overridden with any returned data from the database. On
+     *     conflict, the object is left untouched (its id stays unset).
      * @param job - required fields:
      *     <ul>
      *       <li>questionId
@@ -18,8 +20,10 @@ public interface JobRepository {
      *     <li>nextAttemptAt
      *         <ul>
      *     </ul>
+     *
+     * @return {@code true} if the job was inserted, {@code false} if an active job already exists for the question.
      */
-    void createJob(Job job);
+    boolean createJob(Job job);
 
     /**
      * Finds a job by its ID.

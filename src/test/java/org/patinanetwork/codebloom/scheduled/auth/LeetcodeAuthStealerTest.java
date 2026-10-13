@@ -24,10 +24,10 @@ import org.patinanetwork.codebloom.common.db.models.auth.Auth;
 import org.patinanetwork.codebloom.common.db.repos.auth.AuthRepository;
 import org.patinanetwork.codebloom.common.env.Env;
 import org.patinanetwork.codebloom.common.lag.FakeLag;
+import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationClient;
 import org.patinanetwork.codebloom.common.redis.RedisClient;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
-import org.patinanetwork.codebloom.playwright.PlaywrightClient;
 import org.slf4j.LoggerFactory;
 
 public class LeetcodeAuthStealerTest {
@@ -37,7 +37,7 @@ public class LeetcodeAuthStealerTest {
     private AuthRepository authRepository;
     private Reporter reporter;
     private Env env;
-    private PlaywrightClient playwrightClient;
+    private LeetcodeAuthenticationClient leetcodeAuthenticationClient;
 
     private ListAppender<ILoggingEvent> logWatcher;
 
@@ -46,13 +46,13 @@ public class LeetcodeAuthStealerTest {
         authRepository = mock(AuthRepository.class);
         reporter = mock(Reporter.class);
         env = mock(Env.class);
-        playwrightClient = mock(PlaywrightClient.class);
+        leetcodeAuthenticationClient = mock(LeetcodeAuthenticationClient.class);
     }
 
     @BeforeEach
     void setup() {
         leetcodeAuthStealer =
-                spy(new LeetcodeAuthStealer(redisClient, authRepository, reporter, env, playwrightClient));
+                spy(new LeetcodeAuthStealer(redisClient, authRepository, reporter, env, leetcodeAuthenticationClient));
 
         logWatcher = new ListAppender<>();
         logWatcher.start();
@@ -68,7 +68,7 @@ public class LeetcodeAuthStealerTest {
     }
 
     private void playwrightClientResolvesSlowly(Auth authToReturn) {
-        when(playwrightClient.getLeetcodeCookie(any(), any())).thenAnswer(invocation -> {
+        when(leetcodeAuthenticationClient.getLeetcodeCookie()).thenAnswer(invocation -> {
             FakeLag.sleep(1000);
             return Optional.ofNullable(authToReturn);
         });

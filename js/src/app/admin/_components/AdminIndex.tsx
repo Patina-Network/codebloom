@@ -1,7 +1,9 @@
 import DeleteAnnouncementButton from "@/app/admin/_components/announcements/DeleteAnnouncementButton";
 import NewAnnouncementModal from "@/app/admin/_components/announcements/NewAnnouncementModal";
 import IncompleteQuestionList from "@/app/admin/_components/incomplete/IncompleteQuestionList";
+import RequeueIncompleteQuestionsModal from "@/app/admin/_components/incomplete/RequeueIncompleteQuestionsModal";
 import AllLeaderboardAdmin from "@/app/admin/_components/leaderboards/pagination/AllLeaderboardAdmin";
+import RefreshLeetcodeTokenModal from "@/app/admin/_components/leetcode/RefreshLeetcodeTokenModal";
 import UserAdminList from "@/app/admin/_components/users/UserAdminList";
 import { Flex, Title } from "@mantine/core";
 
@@ -16,6 +18,9 @@ export default function AdminIndex() {
       </Flex>
       <Flex w={"100%"} direction={"row"} justify={"center"}>
         <DeleteAnnouncementButton />
+      </Flex>
+      <Flex w={"100%"} direction={"row"} justify={"center"}>
+        <RefreshLeetcodeTokenModal />
       </Flex>
       <Flex w={"100%"} direction={{ base: "column", sm: "row" }}>
         <Flex
@@ -34,6 +39,7 @@ export default function AdminIndex() {
           m={"sm"}
         >
           <Title order={4}>Incomplete Questions</Title>
+          <RequeueIncompleteQuestionsModal />
           <IncompleteQuestionList />
         </Flex>
         <Flex

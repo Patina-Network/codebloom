@@ -3,6 +3,8 @@ package org.patinanetwork.codebloom.common.db.repos.job;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -23,6 +25,7 @@ import org.patinanetwork.codebloom.common.db.repos.BaseRepositoryTest;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DuplicateKeyException;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -113,5 +116,48 @@ public class JobRepositoryTest extends BaseRepositoryTest {
 
         boolean allMatchId = jobs.stream().allMatch(j -> j.getQuestionId().equals(mockQuestionId));
         assertTrue(allMatchId, "All returned jobs must match the requested question ID");
+    }
+
+    @Test
+    @Order(5)
+    void testOnlyOneActiveJobPerQuestion() {
+        // testJob is COMPLETE after Order(3), so it must not block a new active job.
+        Job active = Job.builder()
+                .questionId(mockQuestionId)
+                .status(JobStatus.INCOMPLETE)
+                .build();
+        Job duplicate = Job.builder()
+                .questionId(mockQuestionId)
+                .status(JobStatus.INCOMPLETE)
+                .build();
+        Job completed = Job.builder()
+                .questionId(mockQuestionId)
+                .status(JobStatus.COMPLETE)
+                .build();
+
+        try {
+            assertTrue(jobRepository.createJob(active), "COMPLETE jobs must not block a new active job");
+
+            assertFalse(jobRepository.createJob(duplicate), "Second active job must be rejected");
+            assertNull(duplicate.getId());
+
+            assertTrue(jobRepository.createJob(completed), "COMPLETE jobs are outside the unique index");
+
+            completed.setStatus(JobStatus.PROCESSING);
+            assertThrows(
+                    DuplicateKeyException.class,
+                    () -> jobRepository.updateJob(completed),
+                    "Reactivating a job while another is active must violate the index");
+
+            active.setStatus(JobStatus.COMPLETE);
+            assertTrue(jobRepository.updateJob(active));
+            assertTrue(jobRepository.createJob(duplicate), "A new active job is allowed once the old one completes");
+        } finally {
+            for (Job j : List.of(active, duplicate, completed)) {
+                if (j.getId() != null) {
+                    jobRepository.deleteJobById(j.getId());
+                }
+            }
+        }
     }
 }
