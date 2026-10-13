@@ -35,7 +35,7 @@ const { environment, dockerUpload, getGhaOutput, githubOutputFile, type, arch, p
     default: process.env.GITHUB_OUTPUT,
   })
   .option("type", {
-    choices: ["standup-bot", "web"] satisfies Type[],
+    choices: ["standup-bot", "web", "leetcode-auth-stealer-service"] satisfies Type[],
     describe: "Type to build",
     demandOption: true,
     default: "web" as Type,
@@ -56,16 +56,8 @@ const { environment, dockerUpload, getGhaOutput, githubOutputFile, type, arch, p
 
 const tagPrefix = environment === "staging" ? "staging-" : "";
 
-const dockerRepository =
-  type === "web"
-    ? arch === "arm64"
-      ? "codebloom-arm"
-      : "codebloom"
-    : arch === "arm64"
-      ? "codebloom-standup-bot-arm"
-      : "codebloom-standup-bot";
-// both types build natively per-arch on their own runner (no QEMU), one
-// repo per arch, matrixed at the workflow level.
+const baseRepository = type === "web" ? "codebloom" : `codebloom-${type}`;
+const dockerRepository = `${baseRepository}${arch === "arm64" ? "-arm" : ""}`;
 const platforms = [`linux/${arch}`];
 
 async function main() {
@@ -109,7 +101,7 @@ async function main() {
     })
     .replace(/(\d+)\/(\d+)\/(\d+),\s(\d+):(\d+):(\d+)/, "$3.$1.$2-$4.$5.$6");
 
-  const gitSha = (await $`git rev-parse --short HEAD`.text()).trim();
+  const gitSha = (await $`git rev-parse HEAD`.text()).trim().slice(0, 7);
 
   await using dockerClient = await DockerClient.create(dockerHubUsername, dockerHubPat);
 
@@ -120,21 +112,34 @@ async function main() {
 
   const buildArgs = {
     ...(type === "web" ? { COMMIT_SHA: gitSha } : {}),
-    ...(environment === "staging"
+    ...(environment === "staging" && type !== "leetcode-auth-stealer-service"
       ? {
           VITE_STAGING: true,
         }
       : {}),
   };
 
-  await dockerClient.buildImage({
-    dockerRepository,
-    dockerFileLocation: type === "web" ? "infra/Dockerfile" : "internal/standup-bot/Dockerfile",
-    tags,
-    shouldUpload: dockerUpload,
-    buildArgs,
-    platforms,
-  });
+  const originalCwd = process.cwd();
+  try {
+    if (type === "leetcode-auth-stealer-service") {
+      process.chdir("internal/leetcode-auth-stealer-service");
+    }
+    await dockerClient.buildImage({
+      dockerRepository,
+      dockerFileLocation:
+        type === "web"
+          ? "infra/Dockerfile"
+          : type === "standup-bot"
+            ? "internal/standup-bot/Dockerfile"
+            : "Dockerfile",
+      tags,
+      shouldUpload: dockerUpload,
+      buildArgs,
+      platforms,
+    });
+  } finally {
+    process.chdir(originalCwd);
+  }
 
   console.log("Image pushed successfully.");
 

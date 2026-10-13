@@ -1,0 +1,45 @@
+name: "Build & Upload Docker Image for codebloom-leetcode-auth-stealer-service"
+description: "Build & (optionally) upload Docker Image to Docker Registry"
+
+inputs:
+  ENVIRONMENT:
+    description: "Deployment environment (staging or production)."
+    required: false
+    default: production
+  SECRETS:
+    description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
+    required: false
+  DOCKER_UPLOAD:
+    description: "Boolean indicating whether the image should be uploaded to Docker registry or not."
+    required: false
+    default: true
+  ARCH:
+    description: "Target architecture to build natively (amd64 or arm64). Each arch pushes to its own Docker repository (codebloom-leetcode-auth-stealer-service / codebloom-leetcode-auth-stealer-service-arm)."
+    required: false
+    default: amd64
+
+outputs:
+  tag:
+    description: "Built Docker image tag (git SHA)"
+    value: ${{ steps.build-image.outputs.tag }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup CI
+      uses: tahminator/pipeline/actions/setup@a424f92d486342e1255fcdf377a7569eb230aabe
+      with:
+        LINT_CI: true
+        SECRETS: ${{ inputs.SECRETS }}
+
+    - name: Run script
+      id: build-image
+      shell: bash
+      run: |
+        bun run .github/scripts/build-image \
+            --docker-upload="${{ inputs.DOCKER_UPLOAD }}" \
+            --getGhaOutput=true \
+            --type="leetcode-auth-stealer-service" \
+            --arch="${{ inputs.ARCH }}" \
+            --environment="${{ inputs.ENVIRONMENT }}" \
+            --prId="${{ github.event.pull_request.number }}"

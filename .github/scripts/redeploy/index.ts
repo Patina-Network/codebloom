@@ -18,7 +18,7 @@ const { environment, sha, type } = await yargs(hideBin(process.argv))
     default: "",
   })
   .option("type", {
-    choices: ["standup-bot", "web"] satisfies Type[],
+    choices: ["standup-bot", "web", "leetcode-auth-stealer-service"] satisfies Type[],
     describe: "Type to build",
     demandOption: true,
     default: "web" as Type,
@@ -44,11 +44,13 @@ async function main() {
     });
   }
 
+  const dockerRepository = type === "web" ? "codebloom" : `codebloom-${type}`;
+
   await ghClient.updateK8sTagWithPR({
     originRepo: ["Patina-Network", "codebloom"],
     manifestRepo: ["Patina-Network", "k8s-manifests"],
-    kustomizationFilePath: `base/${environment}/${type === "web" ? "codebloom" : "codebloom-standup-bot"}/kustomization.yaml`,
-    imageName: `patinanetwork/${type === "web" ? "codebloom-arm" : "codebloom-standup-bot-arm"}`,
+    kustomizationFilePath: `base/${environment}/${dockerRepository}/kustomization.yaml`,
+    imageName: `patinanetwork/${dockerRepository}-arm`,
     environment: `${environment}`,
     newTag: environment === "staging" ? `staging-${resolvedSha}` : resolvedSha,
   });

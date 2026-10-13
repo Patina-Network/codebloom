@@ -1,0 +1,31 @@
+name: "Re-Deploy codebloom-leetcode-auth-stealer-service to K8s"
+description: "Deploy the auth service to K8s by opening and merging a GitOps image-tag PR."
+
+inputs:
+  SECRETS:
+    description: "Pass toJSON(secrets) from the calling workflow to expose all secrets as env vars."
+    required: false
+  ENVIRONMENT:
+    description: '"staging" or "production"'
+    required: false
+    default: production
+  SHA:
+    description: "Commit SHA of the built image. Defaults to GITHUB_SHA when omitted."
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup CI
+      uses: tahminator/pipeline/actions/setup@a424f92d486342e1255fcdf377a7569eb230aabe
+      with:
+        LINT_CI: true
+        SECRETS: ${{ inputs.SECRETS }}
+
+    - name: Run script
+      shell: bash
+      run: |
+        bun run .github/scripts/redeploy \
+            --environment="${{ inputs.ENVIRONMENT }}" \
+            --sha="${{ inputs.SHA }}" \
+            --type="leetcode-auth-stealer-service"
