@@ -7,10 +7,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
 import org.patinanetwork.codebloom.common.db.models.question.Question;
@@ -29,6 +33,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @SpringBootTest(properties = {"codebloom.scheduling.enabled=false", "codebloom.notify.enabled=false"})
 @ActiveProfiles({"ci", "thread"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(OrderAnnotation.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
 
@@ -99,11 +104,13 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
     }
 
     @Test
+    @Order(1)
     void serviceValid() {
         assertNotNull(service);
     }
 
     @Test
+    @Order(2)
     void findIncompleteJobsValid() {
         Question tempQuestion = Question.builder()
                 .userId(mockUserId)
@@ -139,6 +146,7 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
     }
 
     @Test
+    @Order(3)
     void jobStatusTransitionValid() {
         Question tempQuestion = Question.builder()
                 .userId(mockUserId)
@@ -172,7 +180,7 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
         boolean updateSuccess = jobRepository.updateJob(processingJob);
         assertTrue(updateSuccess);
 
-        Job updatedJob = jobRepository.findJobById(processingJob.getId());
+        Job updatedJob = jobRepository.findJobById(processingJob.getId()).orElse(null);
         assertTrue(updatedJob != null);
         assertEquals(JobStatus.PROCESSING, updatedJob.getStatus());
 
@@ -181,10 +189,12 @@ public class LeetcodeQuestionProcessServiceTest extends NoJdaRequired {
     }
 
     @Test
+    @Order(4)
     void drainQueueValid() {
-        service.drainQueue().join();
+        service.drainQueue().orTimeout(30, TimeUnit.SECONDS).join();
         assertEquals(
-                JobStatus.COMPLETE, jobRepository.findJobById(testJob.getId()).getStatus());
+                JobStatus.COMPLETE,
+                jobRepository.findJobById(testJob.getId()).orElseThrow().getStatus());
     }
 
     // TODO: (TAN-32) re-enable

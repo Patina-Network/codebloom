@@ -6,7 +6,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
 
 @Getter
 @Setter
@@ -15,18 +14,13 @@ import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
 @ToString
 public class POTD {
 
-    @NotNullColumn
     private String id;
 
-    @NotNullColumn
     private String title;
 
-    @NotNullColumn
     private String slug;
 
-    @NotNullColumn
     private float multiplier;
 
-    @NotNullColumn
     private LocalDateTime createdAt;
 }

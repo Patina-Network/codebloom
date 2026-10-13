@@ -3,6 +3,7 @@ package org.patinanetwork.codebloom.common.db.repos.announcement;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,7 +39,7 @@ public class AnnouncementRepositoryTest extends BaseRepositoryTest {
                 .id(null)
                 .expiresAt(StandardizedOffsetDateTime.normalize(
                         StandardizedOffsetDateTime.now().plusMinutes(5L)))
-                .showTimer(true)
+                .showTimer(Optional.of(true))
                 .message("Hi this is a test announcement!")
                 .build();
         boolean isSuccessful = announcementRepository.createAnnouncement(testAnnouncement);
@@ -46,7 +47,7 @@ public class AnnouncementRepositoryTest extends BaseRepositoryTest {
         if (!isSuccessful) {
             fail("Failed to create test announcement");
         }
-        testAnnouncement = announcementRepository.getRecentAnnouncement();
+        testAnnouncement = announcementRepository.getRecentAnnouncement().orElse(null);
         if (testAnnouncement == null) {
             fail("Failed to fetch the created test announcement");
         }
@@ -70,7 +71,8 @@ public class AnnouncementRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void findMostRecentAnnouncement() {
-        Announcement possibleTestAnnouncement = announcementRepository.getRecentAnnouncement();
+        Announcement possibleTestAnnouncement =
+                announcementRepository.getRecentAnnouncement().orElse(null);
 
         if (possibleTestAnnouncement == null) {
             fail("most recent announcement doesn't exist, even though we created a test announcement");
@@ -88,7 +90,9 @@ public class AnnouncementRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(2)
     void findAnnouncementById() {
-        Announcement possibleTestAnnouncement = announcementRepository.getAnnouncementById(testAnnouncement.getId());
+        Announcement possibleTestAnnouncement = announcementRepository
+                .getAnnouncementById(testAnnouncement.getId())
+                .orElse(null);
 
         if (possibleTestAnnouncement == null) {
             fail("failed to find announcement by id");
@@ -108,18 +112,20 @@ public class AnnouncementRepositoryTest extends BaseRepositoryTest {
         Announcement updatedAnnouncement = Announcement.builder()
                 .id(testAnnouncement.getId())
                 .expiresAt(testAnnouncement.getExpiresAt())
-                .showTimer(true)
+                .showTimer(Optional.of(true))
                 .message("Hi this is an update announcement!")
                 .build();
         boolean result = announcementRepository.updateAnnouncement(updatedAnnouncement);
         if (!result) {
             fail("failure to update announcement");
         }
-        Announcement resultAnnouncement = announcementRepository.getAnnouncementById(updatedAnnouncement.getId());
+        Announcement resultAnnouncement = announcementRepository
+                .getAnnouncementById(updatedAnnouncement.getId())
+                .orElse(null);
         assertNotNull(resultAnnouncement);
         assertEquals(resultAnnouncement.getMessage(), "Hi this is an update announcement!");
         assertEquals(resultAnnouncement.getId(), testAnnouncement.getId());
-        assertTrue(resultAnnouncement.isShowTimer());
+        assertTrue(resultAnnouncement.getShowTimer().orElse(false));
     }
 
     @Test

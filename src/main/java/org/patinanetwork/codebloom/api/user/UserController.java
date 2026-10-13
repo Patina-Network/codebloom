@@ -85,11 +85,9 @@ public class UserController {
     public ResponseEntity<ApiResponder<UserDto>> getUserProfileByUserId(
             final HttpServletRequest request, @PathVariable final String userId) {
 
-        User user = userRepository.getUserById(userId);
-
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find user profile.");
-        }
+        User user = userRepository
+                .getUserById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to find user profile."));
 
         return ResponseEntity.ok().body(ApiResponder.success("User profile found!", UserDto.fromUser(user)));
     }

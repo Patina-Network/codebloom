@@ -238,10 +238,12 @@ public class LeaderboardRepositoryTest extends BaseRepositoryTest {
         assertTrue(isUserUpdatePointsSuccessful, "failed to update points of super user on mock leaderboard");
 
         // TODO - Write tests for pointOfTime
-        UserWithScore superUser = userRepository.getUserWithScoreByIdAndLeaderboardId(
-                superUserId,
-                mockLeaderboard.getId(),
-                UserFilterOptions.builder().build());
+        UserWithScore superUser = userRepository
+                .getUserWithScoreByIdAndLeaderboardId(
+                        superUserId,
+                        mockLeaderboard.getId(),
+                        UserFilterOptions.builder().build())
+                .orElse(null);
 
         assertTrue(superUser != null);
         assertEquals(newPoints, superUser.getTotalScore());

@@ -77,16 +77,14 @@ public class LeetcodeAuthStealer {
         }
 
         try {
-            Auth mostRecentAuth = authRepository.getMostRecentAuth();
+            var mostRecentAuth = authRepository.getMostRecentAuth().filter(auth -> auth.getCreatedAt()
+                    .isAfter(StandardizedOffsetDateTime.now().minus(4, ChronoUnit.HOURS)));
 
             // The auth token should be refreshed every 4 hours.
-            if (mostRecentAuth != null
-                    && mostRecentAuth
-                            .getCreatedAt()
-                            .isAfter(StandardizedOffsetDateTime.now().minus(4, ChronoUnit.HOURS))) {
+            if (mostRecentAuth.isPresent()) {
                 log.info("Auth token already exists, using token from database.");
-                cookie = mostRecentAuth.getToken();
-                csrf = mostRecentAuth.getCsrf();
+                cookie = mostRecentAuth.get().getToken();
+                csrf = mostRecentAuth.get().getCsrf().orElse(null);
                 return;
             }
 
@@ -166,7 +164,7 @@ public class LeetcodeAuthStealer {
         Optional<Auth> auth = playwrightClient.getLeetcodeCookie(githubUsername, githubPassword);
         if (auth.isPresent()) {
             var a = auth.get();
-            this.csrf = a.getCsrf();
+            this.csrf = a.getCsrf().orElse(null);
             this.cookie = a.getToken();
             redisClient.setAuth(a.getToken(), 4, ChronoUnit.HOURS);
             log.info("auth token stored in redis");

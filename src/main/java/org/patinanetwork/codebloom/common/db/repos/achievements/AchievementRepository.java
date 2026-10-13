@@ -1,6 +1,7 @@
 package org.patinanetwork.codebloom.common.db.repos.achievements;
 
 import java.util.List;
+import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.achievements.Achievement;
 
 public interface AchievementRepository {
@@ -33,13 +34,13 @@ public interface AchievementRepository {
      *       <li>leaderboardId
      *     </ul>
      *
-     * @return updated achievement if successful
+     * @return the updated achievement if found, or an empty Optional if no matching row exists
      */
-    Achievement updateAchievement(Achievement achievement);
+    Optional<Achievement> updateAchievement(Achievement achievement);
 
     boolean deleteAchievementById(String id);
 
-    Achievement getAchievementById(String id);
+    Optional<Achievement> getAchievementById(String id);
 
     List<Achievement> getAchievementsByUserId(String userId);
 }

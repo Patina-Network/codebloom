@@ -20,7 +20,8 @@ public class SessionSqlRepository implements SessionRepository {
             .id(Optional.of(rs.getString("id")))
             .userId(rs.getString("userId"))
             .expiresAt(rs.getTimestamp("expiresAt").toLocalDateTime())
-            .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
+            .createdAt(Optional.ofNullable(
+                    StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class))))
             .build();
 
     private JdbcClient jdbcClient;
@@ -50,7 +51,7 @@ public class SessionSqlRepository implements SessionRepository {
                 .optional()
                 .ifPresent(entry -> {
                     session.setId(Optional.of(entry.getKey()));
-                    session.setCreatedAt(StandardizedOffsetDateTime.normalize(entry.getValue()));
+                    session.setCreatedAt(Optional.ofNullable(StandardizedOffsetDateTime.normalize(entry.getValue())));
                 });
     }
 

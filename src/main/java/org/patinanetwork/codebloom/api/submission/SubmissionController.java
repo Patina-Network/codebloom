@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.patinanetwork.codebloom.api.submission.body.LeetcodeUsernameObject;
 import org.patinanetwork.codebloom.common.db.models.potd.POTD;
 import org.patinanetwork.codebloom.common.db.models.user.User;
@@ -145,7 +146,7 @@ public class SubmissionController {
 
         User user = authenticationObject.getUser();
 
-        if (user.getLeetcodeUsername() != null) {
+        if (user.getLeetcodeUsername().isPresent()) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "User has already set a username previously. You cannot change your name anymore. Please contact support if there are any issues.");
@@ -167,8 +168,8 @@ public class SubmissionController {
                     "This username has already been taken. If this is a mistake, please get in touch with us so we can attempt to rectify it.");
         }
 
-        user.setLeetcodeUsername(leetcodeUsernameObject.getLeetcodeUsername());
-        user.setProfileUrl(leetcodeUserProfile.getUserAvatar());
+        user.setLeetcodeUsername(Optional.ofNullable(leetcodeUsernameObject.getLeetcodeUsername()));
+        user.setProfileUrl(Optional.ofNullable(leetcodeUserProfile.getUserAvatar()));
         userRepository.updateUser(user);
 
         return ResponseEntity.ok().body(ApiResponder.success("Leetcode username has been set!", Empty.of()));
@@ -206,7 +207,7 @@ public class SubmissionController {
             @Protected final AuthenticationObject authenticationObject) {
         User user = authenticationObject.getUser();
 
-        if (user.getLeetcodeUsername() == null) {
+        if (user.getLeetcodeUsername().isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.PRECONDITION_FAILED,
                     "You cannot access this resource without setting a Leetcode username first.");
@@ -225,8 +226,8 @@ public class SubmissionController {
 
         simpleRedis.put(user.getId(), System.currentTimeMillis());
 
-        List<LeetcodeSubmission> leetcodeSubmissions =
-                leetcodeClient.findSubmissionsByUsernameFast(user.getLeetcodeUsername(), 20);
+        List<LeetcodeSubmission> leetcodeSubmissions = leetcodeClient.findSubmissionsByUsernameFast(
+                user.getLeetcodeUsername().orElse(null), 20);
 
         return ResponseEntity.ok()
                 .body(ApiResponder.success(

@@ -4,6 +4,7 @@ import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.user.User;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
@@ -18,6 +19,12 @@ import org.springframework.stereotype.Component;
 @Component
 @Timed(value = "repository.execution")
 public class UserSqlRepository implements UserRepository {
+
+    private static final String LEETCODE_USERNAME = "leetcodeUsername";
+    private static final String NICKNAME = "nickname";
+    private static final String SCHOOL_EMAIL = "schoolEmail";
+    private static final String PROFILE_URL = "profileUrl";
+    private static final String CREATED_AT = "createdAt";
 
     private final JdbcClient jdbcClient;
     private final UserTagRepository userTagRepository;
@@ -40,13 +47,14 @@ public class UserSqlRepository implements UserRepository {
                     .id(id)
                     .discordId(rs.getString("discordId"))
                     .discordName(rs.getString("discordName"))
-                    .leetcodeUsername(rs.getString("leetcodeUsername"))
-                    .nickname(rs.getString("nickname"))
+                    .leetcodeUsername(Optional.ofNullable(rs.getString(LEETCODE_USERNAME)))
+                    .nickname(Optional.ofNullable(rs.getString(NICKNAME)))
                     .verifyKey(rs.getString("verifyKey"))
                     .admin(rs.getBoolean("admin"))
-                    .schoolEmail(rs.getString("schoolEmail"))
-                    .profileUrl(rs.getString("profileUrl"))
-                    .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
+                    .schoolEmail(Optional.ofNullable(rs.getString(SCHOOL_EMAIL)))
+                    .profileUrl(Optional.ofNullable(rs.getString(PROFILE_URL)))
+                    .createdAt(Optional.ofNullable(
+                            StandardizedOffsetDateTime.normalize(rs.getObject(CREATED_AT, OffsetDateTime.class))))
                     .tags(this.userTagRepository.findTagsByUserId(id))
                     .achievements(this.achievementRepository.getAchievementsByUserId(id))
                     .build();
@@ -58,13 +66,14 @@ public class UserSqlRepository implements UserRepository {
                     .id(id)
                     .discordId(rs.getString("discordId"))
                     .discordName(rs.getString("discordName"))
-                    .leetcodeUsername(rs.getString("leetcodeUsername"))
-                    .nickname(rs.getString("nickname"))
+                    .leetcodeUsername(Optional.ofNullable(rs.getString(LEETCODE_USERNAME)))
+                    .nickname(Optional.ofNullable(rs.getString(NICKNAME)))
                     .verifyKey(rs.getString("verifyKey"))
                     .admin(rs.getBoolean("admin"))
-                    .schoolEmail(rs.getString("schoolEmail"))
-                    .profileUrl(rs.getString("profileUrl"))
-                    .createdAt(StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
+                    .schoolEmail(Optional.ofNullable(rs.getString(SCHOOL_EMAIL)))
+                    .profileUrl(Optional.ofNullable(rs.getString(PROFILE_URL)))
+                    .createdAt(Optional.ofNullable(
+                            StandardizedOffsetDateTime.normalize(rs.getObject(CREATED_AT, OffsetDateTime.class))))
                     .tags(this.userTagRepository.findTagsByUserId(id))
                     .achievements(this.achievementRepository.getAchievementsByUserId(id))
                     .totalScore(rs.getInt("totalScore"))
@@ -93,22 +102,22 @@ public class UserSqlRepository implements UserRepository {
                 .param("id", UUID.fromString(user.getId()))
                 .param("discordName", user.getDiscordName())
                 .param("discordId", user.getDiscordId())
-                .param("leetcodeUsername", user.getLeetcodeUsername())
-                .param("nickname", user.getNickname())
-                .param("schoolEmail", user.getSchoolEmail())
+                .param(LEETCODE_USERNAME, user.getLeetcodeUsername().orElse(null))
+                .param(NICKNAME, user.getNickname().orElse(null))
+                .param(SCHOOL_EMAIL, user.getSchoolEmail().orElse(null))
                 .param("admin", user.isAdmin())
-                .param("profileUrl", user.getProfileUrl())
+                .param(PROFILE_URL, user.getProfileUrl().orElse(null))
                 .query((rs, rowNum) ->
-                        Map.entry(rs.getString("verifyKey"), rs.getObject("createdAt", OffsetDateTime.class)))
+                        Map.entry(rs.getString("verifyKey"), rs.getObject(CREATED_AT, OffsetDateTime.class)))
                 .optional()
                 .ifPresent(entry -> {
                     user.setVerifyKey(entry.getKey());
-                    user.setCreatedAt(StandardizedOffsetDateTime.normalize(entry.getValue()));
+                    user.setCreatedAt(Optional.ofNullable(StandardizedOffsetDateTime.normalize(entry.getValue())));
                 });
     }
 
     @Override
-    public User getUserById(final String inputId) {
+    public Optional<User> getUserById(final String inputId) {
         String sql = """
             SELECT
                 id,
@@ -130,12 +139,11 @@ public class UserSqlRepository implements UserRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(inputId))
                 .query(userRowMapper)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
-    public User getUserByLeetcodeUsername(final String inputLeetcodeUsername) {
+    public Optional<User> getUserByLeetcodeUsername(final String inputLeetcodeUsername) {
         String sql = """
                 SELECT
                     id,
@@ -154,14 +162,13 @@ public class UserSqlRepository implements UserRepository {
 
         return jdbcClient
                 .sql(sql)
-                .param("leetcodeUsername", inputLeetcodeUsername)
+                .param(LEETCODE_USERNAME, inputLeetcodeUsername)
                 .query(userRowMapper)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
-    public User getUserByDiscordId(final String inputDiscordId) {
+    public Optional<User> getUserByDiscordId(final String inputDiscordId) {
         String sql = """
             SELECT
                 id,
@@ -183,8 +190,7 @@ public class UserSqlRepository implements UserRepository {
                 .sql(sql)
                 .param("discordId", inputDiscordId)
                 .query(userRowMapper)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
@@ -218,11 +224,11 @@ public class UserSqlRepository implements UserRepository {
                 .param("id", UUID.fromString(inputUser.getId()))
                 .param("discordName", inputUser.getDiscordName())
                 .param("discordId", inputUser.getDiscordId())
-                .param("leetcodeUsername", inputUser.getLeetcodeUsername())
-                .param("nickname", inputUser.getNickname())
+                .param(LEETCODE_USERNAME, inputUser.getLeetcodeUsername().orElse(null))
+                .param(NICKNAME, inputUser.getNickname().orElse(null))
                 .param("admin", inputUser.isAdmin())
-                .param("profileUrl", inputUser.getProfileUrl())
-                .param("schoolEmail", inputUser.getSchoolEmail())
+                .param(PROFILE_URL, inputUser.getProfileUrl().orElse(null))
+                .param(SCHOOL_EMAIL, inputUser.getSchoolEmail().orElse(null))
                 .update();
 
         return rowsAffected > 0;
@@ -299,7 +305,7 @@ public class UserSqlRepository implements UserRepository {
     }
 
     @Override
-    public UserWithScore getUserWithScoreByIdAndLeaderboardId(
+    public Optional<UserWithScore> getUserWithScoreByIdAndLeaderboardId(
             final String userId, final String leaderboardId, final UserFilterOptions options) {
         String sql = """
                 SELECT
@@ -328,12 +334,11 @@ public class UserSqlRepository implements UserRepository {
                 .param("id", UUID.fromString(userId))
                 .param("leaderboardId", UUID.fromString(leaderboardId))
                 .query(userWithScoreRowMapper)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
-    public UserWithScore getUserWithScoreByLeetcodeUsernameAndLeaderboardId(
+    public Optional<UserWithScore> getUserWithScoreByLeetcodeUsernameAndLeaderboardId(
             final String userLeetcodeUsername, final String leaderboardId) {
         String sql = """
                 SELECT
@@ -358,11 +363,10 @@ public class UserSqlRepository implements UserRepository {
 
         return jdbcClient
                 .sql(sql)
-                .param("leetcodeUsername", userLeetcodeUsername)
+                .param(LEETCODE_USERNAME, userLeetcodeUsername)
                 .param("leaderboardId", UUID.fromString(leaderboardId))
                 .query(userWithScoreRowMapper)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override

@@ -33,7 +33,7 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
     }
 
     @Override
-    public ApiKey getApiKeyById(final String id) {
+    public Optional<ApiKey> getApiKeyById(final String id) {
         String sql = """
             SELECT
                 id,
@@ -52,12 +52,11 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(id))
                 .query(API_KEY_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
-    public ApiKey getApiKeyByHash(final String hash) {
+    public Optional<ApiKey> getApiKeyByHash(final String hash) {
         String sql = """
             SELECT
                 id,
@@ -72,12 +71,7 @@ public class ApiKeySqlRepository implements ApiKeyRepository {
                 "apiKeyHash" = :hash
             """;
 
-        return jdbcClient
-                .sql(sql)
-                .param("hash", hash)
-                .query(API_KEY_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+        return jdbcClient.sql(sql).param("hash", hash).query(API_KEY_ROW_MAPPER).optional();
     }
 
     @Override

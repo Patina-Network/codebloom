@@ -91,7 +91,7 @@ public class LeaderboardManager {
                         .userId(user.getId())
                         .leaderboardId(currentLeaderboard.get().getId())
                         .place(AchievementPlaceEnum.fromInteger(place))
-                        .leaderboard(pair.getRight())
+                        .leaderboard(Optional.of(pair.getRight()))
                         .title(String.format(
                                 "%s - %s - %s Place",
                                 currentLeaderboard.get().getName(),
@@ -121,7 +121,6 @@ public class LeaderboardManager {
                     .userId(user.getId())
                     .leaderboardId(currentLeaderboard.get().getId())
                     .place(AchievementPlaceEnum.fromInteger(place))
-                    .leaderboard(null)
                     .title(String.format(
                             "%s - %s Place", currentLeaderboard.get().getName(), placeString))
                     .build();
@@ -177,26 +176,30 @@ public class LeaderboardManager {
     }
 
     public User refreshUserSubmissions(final String discordId) throws LeaderboardException {
-        User user = userRepository.getUserByDiscordId(discordId);
+        User user = userRepository
+                .getUserByDiscordId(discordId)
+                .orElseThrow(
+                        () -> new LeaderboardException(
+                                "Cannot refresh submissions",
+                                "Please link your account by [logging in to Codebloom](https://codebloom.patinanetwork.org/login) and completing onboarding."));
 
-        if (user == null) {
-            throw new LeaderboardException(
-                    "Cannot refresh submissions",
-                    "Please link your account by [logging in to Codebloom](https://codebloom.patinanetwork.org/login) and completing onboarding.");
-        }
-
-        if (user.getLeetcodeUsername() == null) {
+        if (user.getLeetcodeUsername().isEmpty()) {
             throw new LeaderboardException(
                     "Cannot refresh submissions", "Your Discord Account is not linked to a LeetCode username.");
         }
         try {
-            log.info("Fetching recent LeetCode submissions for user: {}", user.getLeetcodeUsername());
-            List<LeetcodeSubmission> leetcodeSubmissions =
-                    leetcodeClient.findSubmissionsByUsername(user.getLeetcodeUsername(), 20);
+            log.info(
+                    "Fetching recent LeetCode submissions for user: {}",
+                    user.getLeetcodeUsername().orElse(null));
+            List<LeetcodeSubmission> leetcodeSubmissions = leetcodeClient.findSubmissionsByUsername(
+                    user.getLeetcodeUsername().orElse(null), 20);
 
             submissionsHandler.handleSubmissions(leetcodeSubmissions, user, true);
         } catch (Exception e) {
-            log.error("Failed to fetch or process submissions for user {}", user.getLeetcodeUsername(), e);
+            log.error(
+                    "Failed to fetch or process submissions for user {}",
+                    user.getLeetcodeUsername().orElse(null),
+                    e);
             throw new LeaderboardException(
                     "Cannot refresh submissions",
                     "Failed to fetch or process submissions from LeetCode. Please try again later.");

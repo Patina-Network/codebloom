@@ -2,7 +2,6 @@ package org.patinanetwork.codebloom.common.db.repos.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -51,7 +50,7 @@ public class ApiKeyRepositoryTest extends BaseRepositoryTest {
 
         apiKeyRepository.createApiKey(tempApiKey);
 
-        testApiKey = apiKeyRepository.getApiKeyById(tempApiKey.getId());
+        testApiKey = apiKeyRepository.getApiKeyById(tempApiKey.getId()).orElse(null);
 
         if (testApiKey == null) {
             fail("Failed to create and retrieve test ApiKey");
@@ -76,7 +75,8 @@ public class ApiKeyRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(1)
     void findApiKeyById() {
-        ApiKey possibleTestApiKey = apiKeyRepository.getApiKeyById(testApiKey.getId());
+        ApiKey possibleTestApiKey =
+                apiKeyRepository.getApiKeyById(testApiKey.getId()).orElse(null);
 
         if (possibleTestApiKey == null) {
             fail("most recent apiKey doesn't exist, even though we created a test apiKey");
@@ -91,7 +91,8 @@ public class ApiKeyRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(2)
     void findApiKeyByHash() {
-        ApiKey possibleTestApiKey = apiKeyRepository.getApiKeyByHash(testApiKey.getApiKey());
+        ApiKey possibleTestApiKey =
+                apiKeyRepository.getApiKeyByHash(testApiKey.getApiKey()).orElse(null);
 
         if (possibleTestApiKey == null) {
             fail("most recent apiKey doesn't exist, even though we created a test apiKey");
@@ -136,7 +137,7 @@ public class ApiKeyRepositoryTest extends BaseRepositoryTest {
             fail("failure to update apiKeyById");
         }
 
-        ApiKey resultApiKey = apiKeyRepository.getApiKeyById(testApiKey.getId());
+        ApiKey resultApiKey = apiKeyRepository.getApiKeyById(testApiKey.getId()).orElse(null);
 
         assertNotNull(resultApiKey);
         assertEquals(resultApiKey.getId(), testApiKey.getId());
@@ -156,14 +157,14 @@ public class ApiKeyRepositoryTest extends BaseRepositoryTest {
 
         apiKeyRepository.createApiKey(deletableApiKey);
 
-        ApiKey found = apiKeyRepository.getApiKeyByHash(deletableApiKey.getApiKey());
+        ApiKey found =
+                apiKeyRepository.getApiKeyByHash(deletableApiKey.getApiKey()).orElse(null);
         assertNotNull(found);
         assertEquals(deletableApiKey.getId(), found.getId());
 
         boolean deleted = apiKeyRepository.deleteApiKeyByHash(deletableApiKey.getApiKey());
         assertTrue(deleted);
 
-        ApiKey deletedFetched = apiKeyRepository.getApiKeyByHash(deletableApiKey.getApiKey());
-        assertNull(deletedFetched);
+        assertTrue(apiKeyRepository.getApiKeyByHash(deletableApiKey.getApiKey()).isEmpty());
     }
 }

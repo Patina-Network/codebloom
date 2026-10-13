@@ -24,7 +24,7 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
     }
 
     @Override
-    public WeeklyMessage getLatestWeeklyMessage() {
+    public Optional<WeeklyMessage> getLatestWeeklyMessage() {
         String sql = """
             SELECT
                 id,
@@ -36,11 +36,11 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
             LIMIT 1
                                 """;
 
-        return jdbcClient.sql(sql).query(WEEKLY_MESSAGE_ROW_MAPPER).optional().orElse(null);
+        return jdbcClient.sql(sql).query(WEEKLY_MESSAGE_ROW_MAPPER).optional();
     }
 
     @Override
-    public WeeklyMessage getWeeklyMessageById(final String id) {
+    public Optional<WeeklyMessage> getWeeklyMessageById(final String id) {
         String sql = """
             SELECT
                 id,
@@ -56,8 +56,7 @@ public class WeeklyMessageSqlRepository implements WeeklyMessageRepository {
                 .sql(sql)
                 .param(1, UUID.fromString(id))
                 .query(WEEKLY_MESSAGE_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override

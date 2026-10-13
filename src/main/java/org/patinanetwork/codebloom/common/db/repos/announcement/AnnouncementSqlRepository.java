@@ -3,6 +3,7 @@ package org.patinanetwork.codebloom.common.db.repos.announcement;
 import io.micrometer.core.annotation.Timed;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.announcement.Announcement;
 import org.springframework.jdbc.core.RowMapper;
@@ -17,7 +18,7 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
             .id(rs.getString("id"))
             .createdAt(rs.getObject("createdAt", OffsetDateTime.class))
             .expiresAt(rs.getObject("expiresAt", OffsetDateTime.class))
-            .showTimer(rs.getBoolean("showTimer"))
+            .showTimer(Optional.ofNullable(rs.getObject("showTimer", Boolean.class)))
             .message(rs.getString("message"))
             .build();
 
@@ -46,7 +47,7 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
     }
 
     @Override
-    public Announcement getAnnouncementById(final String id) {
+    public Optional<Announcement> getAnnouncementById(final String id) {
         String sql = """
                                 SELECT
                                     id,
@@ -64,12 +65,11 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                 .sql(sql)
                 .param(UUID.fromString(id))
                 .query(ANNOUNCEMENT_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override
-    public Announcement getRecentAnnouncement() {
+    public Optional<Announcement> getRecentAnnouncement() {
         String sql = """
                                 SELECT
                                     id,
@@ -84,7 +84,7 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                                 LIMIT 1
             """;
 
-        return jdbcClient.sql(sql).query(ANNOUNCEMENT_ROW_MAPPER).optional().orElse(null);
+        return jdbcClient.sql(sql).query(ANNOUNCEMENT_ROW_MAPPER).optional();
     }
 
     @Override
@@ -102,7 +102,7 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
                 .sql(sql)
                 .param(UUID.randomUUID())
                 .param(announcement.getExpiresAt())
-                .param(announcement.isShowTimer())
+                .param(announcement.getShowTimer().orElse(null))
                 .param(announcement.getMessage())
                 .query((rs, rowNum) -> {
                     announcement.setId(rs.getString("id"));
@@ -143,7 +143,7 @@ public class AnnouncementSqlRepository implements AnnouncementRepository {
         int rowsAffected = jdbcClient
                 .sql(sql)
                 .param("expiresAt", announcement.getExpiresAt())
-                .param("showTimer", announcement.isShowTimer())
+                .param("showTimer", announcement.getShowTimer().orElse(null))
                 .param("message", announcement.getMessage())
                 .param("id", UUID.fromString(announcement.getId()))
                 .update();

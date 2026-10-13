@@ -1,13 +1,12 @@
 package org.patinanetwork.codebloom.common.db.models.achievements;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NotNullColumn;
-import org.patinanetwork.codebloom.common.db.helper.annotations.NullColumn;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
 
 @Builder
@@ -17,35 +16,28 @@ import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
 @EqualsAndHashCode
 public class Achievement {
 
-    @NotNullColumn
     private String id;
 
-    @NotNullColumn
     private String userId;
 
-    @NotNullColumn
     private String leaderboardId;
 
-    @NotNullColumn
     private AchievementPlaceEnum place;
 
-    /** `null` indicates global leaderboard. */
-    @NullColumn
-    private Tag leaderboard;
+    /** An empty value indicates the global leaderboard. */
+    @Builder.Default
+    private Optional<Tag> leaderboard = Optional.empty();
 
-    @NotNullColumn
     private String title;
 
-    @NullColumn
-    private String description;
+    @Builder.Default
+    private Optional<String> description = Optional.empty();
 
     @Builder.Default
-    @NotNullColumn
     private boolean isActive = true;
 
-    @NotNullColumn
     private OffsetDateTime createdAt;
 
-    @NullColumn
-    private OffsetDateTime deletedAt;
+    @Builder.Default
+    private Optional<OffsetDateTime> deletedAt = Optional.empty();
 }

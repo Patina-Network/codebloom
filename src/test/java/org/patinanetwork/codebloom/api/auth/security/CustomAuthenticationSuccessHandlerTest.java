@@ -82,7 +82,7 @@ class CustomAuthenticationSuccessHandlerTest {
                 .discordName("old-name")
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         doAnswer(inv -> {
                     Session s = inv.getArgument(0);
                     s.setId(Optional.of("session-abc"));
@@ -113,10 +113,10 @@ class CustomAuthenticationSuccessHandlerTest {
                 .id("user-1")
                 .discordId(DISCORD_ID)
                 .discordName("old-name")
-                .leetcodeUsername("leet_user")
+                .leetcodeUsername(Optional.of("leet_user"))
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         UserProfile profile = new UserProfile("leet_user", "1000", "https://avatar.url", null, null);
         when(leetcodeClient.getUserProfile("leet_user")).thenReturn(profile);
         doAnswer(inv -> {
@@ -129,7 +129,7 @@ class CustomAuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        assertEquals("https://avatar.url", existingUser.getProfileUrl());
+        assertEquals("https://avatar.url", existingUser.getProfileUrl().orElse(null));
     }
 
     @Test
@@ -139,10 +139,10 @@ class CustomAuthenticationSuccessHandlerTest {
                 .id("user-1")
                 .discordId(DISCORD_ID)
                 .discordName("old-name")
-                .leetcodeUsername("bad_user")
+                .leetcodeUsername(Optional.of("bad_user"))
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         when(leetcodeClient.getUserProfile("bad_user")).thenThrow(new RuntimeException("API down"));
         doAnswer(inv -> {
                     Session s = inv.getArgument(0);
@@ -160,7 +160,7 @@ class CustomAuthenticationSuccessHandlerTest {
     @DisplayName("creates a user, adds them to the leaderboard, and sets session cookie")
     void createsUserAndAddsToLeaderboard() throws Exception {
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(null);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.empty());
         Leaderboard lb = Leaderboard.builder().id("lb-1").build();
         when(leaderboardRepository.getRecentLeaderboardMetadata()).thenReturn(Optional.of(lb));
         doAnswer(inv -> {
@@ -191,7 +191,7 @@ class CustomAuthenticationSuccessHandlerTest {
                 .discordName(DISCORD_NAME)
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         doAnswer(inv -> {
                     Session s = inv.getArgument(0);
                     s.setId(Optional.of("s-club"));
@@ -233,7 +233,7 @@ class CustomAuthenticationSuccessHandlerTest {
                 .discordName(DISCORD_NAME)
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         doAnswer(inv -> {
                     Session s = inv.getArgument(0);
                     s.setId(Optional.of("s-club"));
@@ -274,7 +274,7 @@ class CustomAuthenticationSuccessHandlerTest {
                 .discordName(DISCORD_NAME)
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         doAnswer(inv -> {
                     Session s = inv.getArgument(0);
                     s.setId(Optional.of("s-club"));
@@ -303,7 +303,7 @@ class CustomAuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        assertEquals("Cool Nickname", existingUser.getNickname());
+        assertEquals("Cool Nickname", existingUser.getNickname().orElse(null));
     }
 
     @Test
@@ -315,7 +315,7 @@ class CustomAuthenticationSuccessHandlerTest {
                 .discordName(DISCORD_NAME)
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         doAnswer(inv -> {
                     Session s = inv.getArgument(0);
                     s.setId(Optional.of("s-club"));
@@ -347,7 +347,7 @@ class CustomAuthenticationSuccessHandlerTest {
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        assertEquals("Global Name", existingUser.getNickname());
+        assertEquals("Global Name", existingUser.getNickname().orElse(null));
     }
 
     @Test
@@ -359,7 +359,7 @@ class CustomAuthenticationSuccessHandlerTest {
                 .discordName(DISCORD_NAME)
                 .build();
         when(authentication.getPrincipal()).thenReturn(oAuth2User);
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
         doAnswer(inv -> {
                     Session s = inv.getArgument(0);
                     s.setId(Optional.of("s-club"));
@@ -400,7 +400,7 @@ class CustomAuthenticationSuccessHandlerTest {
                 .discordId(DISCORD_ID)
                 .discordName(DISCORD_NAME)
                 .build();
-        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(existingUser);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
 
         doNothing().when(sessionRepository).createSession(any(Session.class));
 

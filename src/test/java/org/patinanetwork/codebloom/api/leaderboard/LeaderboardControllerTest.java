@@ -283,7 +283,7 @@ public class LeaderboardControllerTest {
                 .totalScore(500)
                 .build();
         when(userRepository.getUserWithScoreByIdAndLeaderboardId(eq("u1"), eq(LEADERBOARD_ID), any()))
-                .thenReturn(uws);
+                .thenReturn(Optional.of(uws));
 
         ResponseEntity<ApiResponder<UserWithScoreDto>> response =
                 leaderboardController.getUserCurrentLeaderboardFull(null, "u1");
@@ -471,5 +471,19 @@ public class LeaderboardControllerTest {
         ArgumentCaptor<LeaderboardFilterOptions> captor = ArgumentCaptor.forClass(LeaderboardFilterOptions.class);
         verify(leaderboardRepository).getAllLeaderboardsShallow(captor.capture());
         assertEquals(20, captor.getValue().getPageSize());
+    }
+
+    @Test
+    void throws404WhenUserIsMissingFromLeaderboard() {
+        Leaderboard leaderboard = Leaderboard.builder().id(LEADERBOARD_ID).build();
+        when(leaderboardRepository.getRecentLeaderboardMetadata()).thenReturn(Optional.of(leaderboard));
+        when(userRepository.getUserWithScoreByIdAndLeaderboardId(eq("missing-user"), eq(LEADERBOARD_ID), any()))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> leaderboardController.getUserCurrentLeaderboardFull(null, "missing-user"));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 }

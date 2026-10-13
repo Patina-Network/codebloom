@@ -24,7 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest
+@SpringBootTest(properties = "codebloom.scheduling.enabled=false")
 @ActiveProfiles({"ci", "thread"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Slf4j

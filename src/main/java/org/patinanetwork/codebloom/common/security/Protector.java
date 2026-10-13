@@ -53,10 +53,9 @@ public class Protector {
                     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
                 }
 
-                User user = userRepository.getUserById(session.getUserId());
-                if (user == null) {
-                    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
-                }
+                User user = userRepository
+                        .getUserById(session.getUserId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
 
                 return new AuthenticationObject(user, session);
             }

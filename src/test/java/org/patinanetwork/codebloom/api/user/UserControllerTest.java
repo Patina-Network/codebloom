@@ -64,7 +64,7 @@ public class UserControllerTest {
                 .id(randomUUID())
                 .discordId(String.valueOf(faker.number().randomNumber(18, true)))
                 .discordName(faker.name().username())
-                .leetcodeUsername(faker.name().username())
+                .leetcodeUsername(Optional.ofNullable(faker.name().username()))
                 .admin(false)
                 .verifyKey(faker.crypto().md5())
                 .build();
@@ -87,7 +87,7 @@ public class UserControllerTest {
     void getUserProfileUserNotFound() {
         String userId = randomUUID();
 
-        when(userRepository.getUserById(eq(userId))).thenReturn(null);
+        when(userRepository.getUserById(eq(userId))).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
             userController.getUserProfileByUserId(request, userId);
@@ -104,7 +104,7 @@ public class UserControllerTest {
     void getUserProfileReturnsUserProfileSuccessfully() {
         User user = createRandomUser();
 
-        when(userRepository.getUserById(eq(user.getId()))).thenReturn(user);
+        when(userRepository.getUserById(eq(user.getId()))).thenReturn(Optional.of(user));
 
         var response = userController.getUserProfileByUserId(request, user.getId());
 
@@ -120,7 +120,7 @@ public class UserControllerTest {
         assertEquals(user.getId(), payload.getId());
         assertEquals(user.getDiscordId(), payload.getDiscordId());
         assertEquals(user.getDiscordName(), payload.getDiscordName());
-        assertEquals(user.getLeetcodeUsername(), payload.getLeetcodeUsername());
+        assertEquals(user.getLeetcodeUsername().orElse(null), payload.getLeetcodeUsername());
 
         verify(userRepository, times(1)).getUserById(eq(user.getId()));
     }

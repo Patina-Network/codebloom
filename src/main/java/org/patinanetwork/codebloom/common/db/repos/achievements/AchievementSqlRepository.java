@@ -36,13 +36,13 @@ public class AchievementSqlRepository implements AchievementRepository {
                 .id(id)
                 .userId(userId)
                 .place(place)
-                .leaderboard(leaderboard)
+                .leaderboard(Optional.ofNullable(leaderboard))
                 .leaderboardId(leaderboardId)
                 .title(title)
-                .description(description)
+                .description(Optional.ofNullable(description))
                 .isActive(isActive)
                 .createdAt(createdAt)
-                .deletedAt(deletedAt)
+                .deletedAt(Optional.ofNullable(deletedAt))
                 .build();
     };
 
@@ -71,15 +71,13 @@ public class AchievementSqlRepository implements AchievementRepository {
                 .param("place", achievement.getPlace().name(), Types.OTHER)
                 .param(
                         "leaderboard",
-                        Optional.ofNullable(achievement.getLeaderboard())
-                                .map(Enum::name)
-                                .orElse(null),
+                        achievement.getLeaderboard().map(Enum::name).orElse(null),
                         Types.OTHER)
                 .param("leaderboardId", UUID.fromString(achievement.getLeaderboardId()))
                 .param("title", achievement.getTitle())
-                .param("description", achievement.getDescription())
+                .param("description", achievement.getDescription().orElse(null))
                 .param("isActive", achievement.isActive())
-                .param("deletedAt", achievement.getDeletedAt())
+                .param("deletedAt", achievement.getDeletedAt().orElse(null))
                 .query((rs, rowNum) ->
                         StandardizedOffsetDateTime.normalize(rs.getObject("createdAt", OffsetDateTime.class)))
                 .optional()
@@ -89,7 +87,7 @@ public class AchievementSqlRepository implements AchievementRepository {
     }
 
     @Override
-    public Achievement updateAchievement(final Achievement achievement) {
+    public Optional<Achievement> updateAchievement(final Achievement achievement) {
         String sql = """
             UPDATE
                 "Achievement"
@@ -110,15 +108,13 @@ public class AchievementSqlRepository implements AchievementRepository {
                 .param("place", achievement.getPlace().name(), Types.OTHER)
                 .param(
                         "leaderboard",
-                        Optional.ofNullable(achievement.getLeaderboard())
-                                .map(Enum::name)
-                                .orElse(null),
+                        achievement.getLeaderboard().map(Enum::name).orElse(null),
                         Types.OTHER)
                 .param("leaderboardId", achievement.getLeaderboardId())
                 .param("title", achievement.getTitle())
-                .param("description", achievement.getDescription())
+                .param("description", achievement.getDescription().orElse(null))
                 .param("isActive", achievement.isActive())
-                .param("deletedAt", achievement.getDeletedAt())
+                .param("deletedAt", achievement.getDeletedAt().orElse(null))
                 .param("leaderboardId", UUID.fromString(achievement.getLeaderboardId()))
                 .param("id", UUID.fromString(achievement.getId()))
                 .update();
@@ -147,7 +143,7 @@ public class AchievementSqlRepository implements AchievementRepository {
     }
 
     @Override
-    public Achievement getAchievementById(final String id) {
+    public Optional<Achievement> getAchievementById(final String id) {
         String sql = """
             SELECT
                 id,
@@ -171,8 +167,7 @@ public class AchievementSqlRepository implements AchievementRepository {
                 .sql(sql)
                 .param("id", UUID.fromString(id))
                 .query(ACHIEVEMENT_ROW_MAPPER)
-                .optional()
-                .orElse(null);
+                .optional();
     }
 
     @Override

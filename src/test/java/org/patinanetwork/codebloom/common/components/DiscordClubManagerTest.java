@@ -401,7 +401,7 @@ public class DiscordClubManagerTest {
         when(scoredUser.getTotalScore()).thenReturn(42);
         when(userRepository.getUserWithScoreByIdAndLeaderboardId(
                         eq("user-id-1"), eq("leaderboard-id"), eq(UserFilterOptions.DEFAULT)))
-                .thenReturn(scoredUser);
+                .thenReturn(Optional.of(scoredUser));
 
         Indexed<UserWithScore> globalIndex = Indexed.of(scoredUser, 5);
         Indexed<UserWithScore> clubIndex = Indexed.of(scoredUser, 2);
@@ -475,7 +475,7 @@ public class DiscordClubManagerTest {
         when(scoredUser.getTotalScore()).thenReturn(100);
         when(userRepository.getUserWithScoreByIdAndLeaderboardId(
                         eq("user-id-2"), eq("lb-id"), eq(UserFilterOptions.DEFAULT)))
-                .thenReturn(scoredUser);
+                .thenReturn(Optional.of(scoredUser));
 
         Indexed<UserWithScore> globalIndex = Indexed.of(scoredUser, 10);
         Indexed<UserWithScore> clubIndex = Indexed.of(scoredUser, 1);
@@ -512,7 +512,7 @@ public class DiscordClubManagerTest {
         when(scoredUser.getTotalScore()).thenReturn(0);
         when(userRepository.getUserWithScoreByIdAndLeaderboardId(
                         eq("user-id-1"), eq("leaderboard-id"), eq(UserFilterOptions.DEFAULT)))
-                .thenReturn(scoredUser);
+                .thenReturn(Optional.of(scoredUser));
 
         Indexed<UserWithScore> globalIndex = Indexed.of(scoredUser, 50);
         Indexed<UserWithScore> clubIndex = Indexed.of(scoredUser, 20);
