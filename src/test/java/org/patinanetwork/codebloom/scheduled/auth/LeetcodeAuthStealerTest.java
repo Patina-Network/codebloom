@@ -687,7 +687,8 @@ public class LeetcodeAuthStealerTest {
         assertEquals("new-csrf", leetcodeAuthStealer.getCsrf());
         verify(redisClient).setAuth("new-token", 4, ChronoUnit.HOURS);
         verify(authRepository)
-                .createAuth(argThat(a -> "new-token".equals(a.getToken()) && "new-csrf".equals(a.getCsrf())));
+                .createAuth(argThat(a -> "new-token".equals(a.getToken())
+                        && Optional.of("new-csrf").equals(a.getCsrf())));
     }
 
     @Test
