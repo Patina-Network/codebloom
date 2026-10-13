@@ -39,6 +39,7 @@ COPY .mvn/ .mvn/
 RUN ./mvnw -B -ntp dependency:resolve
 
 COPY src ./src
+COPY lib ./lib
 COPY --from=frontend-build /js/dist/ src/main/resources/static/
 RUN mkdir -p src/main/resources/static/email && rm -f src/main/resources/static/email/*.html
 COPY --from=email-build /email/out/*.html src/main/resources/static/email/
