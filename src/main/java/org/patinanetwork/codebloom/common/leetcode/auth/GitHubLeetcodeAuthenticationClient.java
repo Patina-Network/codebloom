@@ -19,6 +19,7 @@ public class GitHubLeetcodeAuthenticationClient implements LeetcodeAuthenticatio
     public Optional<AuthenticationCredentials> getLeetcodeCookie() {
         return playwrightClient
                 .getLeetcodeCookie(properties.username(), properties.password())
-                .map(a -> new AuthenticationCredentials(a.getToken(), a.getCsrf()));
+                .map(a ->
+                        new AuthenticationCredentials(a.getToken(), a.getCsrf().orElse(null)));
     }
 }

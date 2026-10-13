@@ -20,7 +20,7 @@ public class GitHubLeetcodeAuthenticationClientTest {
     void mapsTokenAndCsrfFromPlaywrightAuth() {
         when(playwrightClient.getLeetcodeCookie("gh-user", "gh-pass"))
                 .thenReturn(Optional.of(
-                        Auth.builder().token("session-token").csrf("csrf-token").build()));
+                        Auth.builder().token("session-token").csrf(Optional.of("csrf-token")).build()));
 
         assertEquals(
                 Optional.of(new AuthenticationCredentials("session-token", "csrf-token")), client.getLeetcodeCookie());
