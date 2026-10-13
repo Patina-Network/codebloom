@@ -52,6 +52,9 @@ node_modules
 /.kotlin/
 
 .env*
+**/.venv/
+**/__pycache__/
+**/*.egg-info/
 
 # Ignore the static folder, it will be generated in the build process for production use.
 **/static/*

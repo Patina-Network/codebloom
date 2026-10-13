@@ -61,15 +61,27 @@ springdoc:
     enabled: true
     version: OPENAPI_3_0
 
-github:
-  username: ${GH_USERNAME}
-  password: ${GH_PASSWORD}
-  email:
-    host: ${GH_EMAIL_HOST}
-    port: ${GH_EMAIL_PORT}
-    type: ${GH_EMAIL_TYPE}
-    username: ${GH_EMAIL_USERNAME}
-    password: ${GH_EMAIL_PASSWORD}
+grpc:
+  leetcode-auth-stealer-service:
+    host: ${GRPC_LASS_HOST:localhost:50051}
+    tls: ${GRPC_LASS_TLS:false}
+    timeout: ${GRPC_LASS_TIMEOUT:2m} # extremely long running, give it time to breathe in local
+
+leetcode:
+  auth:
+    strategy: direct # can be "direct" or "github"
+    direct:
+      username: ${LEETCODE_AUTH_USERNAME}
+      password: ${LEETCODE_AUTH_PASSWORD}
+    github:
+      username: ${GH_USERNAME}
+      password: ${GH_PASSWORD}
+      email:
+        host: ${GH_EMAIL_HOST}
+        port: ${GH_EMAIL_PORT}
+        type: ${GH_EMAIL_TYPE}
+        username: ${GH_EMAIL_USERNAME}
+        password: ${GH_EMAIL_PASSWORD}
 
 jda:
   discord:

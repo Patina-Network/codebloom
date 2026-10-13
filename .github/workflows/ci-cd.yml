@@ -131,6 +131,54 @@ jobs:
           DOCKER_UPLOAD: "true"
           ARCH: ${{ matrix.arch }}
 
+  buildStagingLeetcodeAuthServiceImage:
+    name: Build staging image for codebloom-leetcode-auth-stealer-service (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+
+    if: github.event_name == 'pull_request'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/build-image/internal/leetcode-auth-stealer-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: staging
+          DOCKER_UPLOAD: "true"
+          ARCH: ${{ matrix.arch }}
+
+  deployStagingLeetcodeAuthService:
+    name: Deploy staging codebloom-leetcode-auth-stealer-service to K8s
+    runs-on: ubuntu-latest
+    needs: buildStagingLeetcodeAuthServiceImage
+
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/redeploy/internal/leetcode-auth-stealer-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: staging
+          SHA: ${{ github.sha }}
+
   validateDBSchema:
     name: Validate DB Schema on Prod DB
     runs-on: ubuntu-latest
@@ -197,6 +245,54 @@ jobs:
         with:
           SECRETS: ${{ toJSON(secrets) }}
           ARCH: ${{ matrix.arch }}
+
+  buildLeetcodeAuthServiceImage:
+    name: Build codebloom-leetcode-auth-stealer-service Docker Image & Upload to Registry (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/build-image/internal/leetcode-auth-stealer-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: production
+          DOCKER_UPLOAD: "true"
+          ARCH: ${{ matrix.arch }}
+
+  deployLeetcodeAuthService:
+    name: Deploy codebloom-leetcode-auth-stealer-service to K8s
+    runs-on: ubuntu-latest
+    needs: buildLeetcodeAuthServiceImage
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/redeploy/internal/leetcode-auth-stealer-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: production
+          SHA: ${{ github.sha }}
 
   deploy:
     name: deploy codebloom to K8S

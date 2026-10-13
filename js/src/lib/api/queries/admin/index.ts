@@ -255,6 +255,26 @@ async function deleteAnnouncement({ id }: { id: string }) {
 }
 
 /**
+ * Trigger a refresh of the LeetCode auth token.
+ */
+export const useRefreshLeetcodeTokenMutation = () => {
+  return useMutation({
+    mutationFn: refreshLeetcodeToken,
+  });
+};
+
+async function refreshLeetcodeToken() {
+  const { url, method, res } = ApiURL.create("/api/admin/leetcode/token", {
+    method: "POST",
+  });
+  const response = await fetch(url, {
+    method,
+  });
+
+  return res(await response.json());
+}
+
+/**
  * Edit current leaderboard
  */
 

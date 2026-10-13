@@ -15,6 +15,7 @@ import org.patinanetwork.codebloom.api.admin.body.EditLeaderboardBody;
 import org.patinanetwork.codebloom.api.admin.body.NewLeaderboardBody;
 import org.patinanetwork.codebloom.api.admin.body.jda.DeleteMessageBody;
 import org.patinanetwork.codebloom.common.components.DiscordClubManager;
+import org.patinanetwork.codebloom.common.components.IncompleteQuestionRequeuer;
 import org.patinanetwork.codebloom.common.components.LeaderboardManager;
 import org.patinanetwork.codebloom.common.db.models.announcement.Announcement;
 import org.patinanetwork.codebloom.common.db.models.discord.DiscordClub;
@@ -29,6 +30,7 @@ import org.patinanetwork.codebloom.common.dto.ApiResponder;
 import org.patinanetwork.codebloom.common.dto.Empty;
 import org.patinanetwork.codebloom.common.dto.question.QuestionWithUserDto;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
+import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
 import org.patinanetwork.codebloom.utilities.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +45,8 @@ public class AdminControllerTest {
     private final DiscordClubManager discordClubManager = mock(DiscordClubManager.class);
     private final LeaderboardManager leaderboardManager = mock(LeaderboardManager.class);
     private final DiscordClubRepository discordClubRepository = mock(DiscordClubRepository.class);
+    private final LeetcodeAuthStealer leetcodeAuthStealer = mock(LeetcodeAuthStealer.class);
+    private final IncompleteQuestionRequeuer incompleteQuestionRequeuer = mock(IncompleteQuestionRequeuer.class);
 
     private final AdminController adminController;
 
@@ -54,7 +58,9 @@ public class AdminControllerTest {
                 questionRepository,
                 discordClubManager,
                 leaderboardManager,
-                discordClubRepository));
+                discordClubRepository,
+                leetcodeAuthStealer,
+                incompleteQuestionRequeuer));
     }
 
     @BeforeEach
@@ -65,7 +71,9 @@ public class AdminControllerTest {
                 announcementRepository,
                 questionRepository,
                 discordClubManager,
-                leaderboardManager);
+                leaderboardManager,
+                leetcodeAuthStealer,
+                incompleteQuestionRequeuer);
     }
 
     @Test
@@ -450,6 +458,29 @@ public class AdminControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("Message successfully sent!", response.getBody().getMessage());
+    }
+
+    @Test
+    void testRefreshLeetcodeTokenTriggersReload() {
+        ResponseEntity<ApiResponder<Empty>> response = adminController.refreshLeetcodeToken(null);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isSuccess());
+        verify(leetcodeAuthStealer, times(1)).reloadCookie();
+    }
+
+    @Test
+    void testRequeueIncompleteQuestionsReportsQueuedCount() {
+        when(incompleteQuestionRequeuer.requeueIncompleteQuestions()).thenReturn(3);
+
+        ResponseEntity<ApiResponder<Empty>> response = adminController.requeueIncompleteQuestions(null);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Queued 3 incomplete question(s).", response.getBody().getMessage());
+        verify(incompleteQuestionRequeuer, times(1)).requeueIncompleteQuestions();
     }
 
     @Test

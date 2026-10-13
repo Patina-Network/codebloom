@@ -1,7 +1,10 @@
 package org.patinanetwork.codebloom.scheduled.leetcode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,6 +12,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.patinanetwork.codebloom.common.components.IncompleteQuestionRequeuer;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
 import org.patinanetwork.codebloom.common.db.models.question.Question;
@@ -31,6 +35,7 @@ public class RefetchIncompleteQuestionsServiceTest extends NoJdaRequired {
     private final QuestionRepository questionRepository;
     private final JobRepository jobRepository;
     private final RefetchIncompleteQuestionsService service;
+    private final IncompleteQuestionRequeuer requeuer;
 
     private Question testQuestion;
     private final String mockUserId = "ed3bfe18-e42a-467f-b4fa-07e8da4d2555";
@@ -39,10 +44,12 @@ public class RefetchIncompleteQuestionsServiceTest extends NoJdaRequired {
     public RefetchIncompleteQuestionsServiceTest(
             final QuestionRepository questionRepository,
             final JobRepository jobRepository,
-            final RefetchIncompleteQuestionsService service) {
+            final RefetchIncompleteQuestionsService service,
+            final IncompleteQuestionRequeuer requeuer) {
         this.questionRepository = questionRepository;
         this.jobRepository = jobRepository;
         this.service = service;
+        this.requeuer = requeuer;
     }
 
     @BeforeAll
@@ -119,7 +126,37 @@ public class RefetchIncompleteQuestionsServiceTest extends NoJdaRequired {
     }
 
     @Test
-    void handleDuplicateKeyError() {
+    void requeueSkipsQuestionsThatAlreadyHaveAnActiveJob() {
+        Question orphanedQuestion = Question.builder()
+                .userId(mockUserId)
+                .questionSlug("requeue-twice-" + System.currentTimeMillis())
+                .questionTitle("Requeue Twice")
+                .questionDifficulty(QuestionDifficulty.Medium)
+                .questionNumber(201)
+                .questionLink("https://leetcode.com/problems/requeue-twice/")
+                .description(Optional.of("Requeued twice; must end up with one active job."))
+                .pointsAwarded(Optional.of(100))
+                .acceptanceRate(0.75f)
+                .submittedAt(java.time.LocalDateTime.now())
+                .build();
+        questionRepository.createQuestion(orphanedQuestion);
+
+        try {
+            assertTrue(requeuer.requeueIncompleteQuestions() >= 1);
+            requeuer.requeueIncompleteQuestions();
+
+            List<Job> jobs = jobRepository.findJobsByQuestionId(orphanedQuestion.getId());
+            assertEquals(1, jobs.size(), "A second requeue must not add another active job");
+        } finally {
+            jobRepository
+                    .findJobsByQuestionId(orphanedQuestion.getId())
+                    .forEach(j -> jobRepository.deleteJobById(j.getId()));
+            questionRepository.deleteQuestionById(orphanedQuestion.getId());
+        }
+    }
+
+    @Test
+    void secondActiveJobForSameQuestionIsRejected() {
 
         Question collisionQuestion = Question.builder()
                 .userId(mockUserId)
@@ -147,22 +184,21 @@ public class RefetchIncompleteQuestionsServiceTest extends NoJdaRequired {
                 .questionId(collisionQuestion.getId())
                 .status(JobStatus.INCOMPLETE)
                 .build();
-        jobRepository.createJob(firstJob);
+        assertTrue(jobRepository.createJob(firstJob));
 
-        // make second job with same id
         Job secondJob = Job.builder()
                 .questionId(collisionQuestion.getId())
                 .status(JobStatus.INCOMPLETE)
                 .build();
 
-        jobRepository.createJob(secondJob);
+        assertFalse(jobRepository.createJob(secondJob));
+        assertNull(secondJob.getId());
 
         List<Job> jobs = jobRepository.findJobsByQuestionId(collisionQuestion.getId());
-        assertNotNull(jobs);
-        assertEquals(2, jobs.size());
+        assertEquals(1, jobs.size());
+        assertEquals(firstJob.getId(), jobs.get(0).getId());
 
         jobRepository.deleteJobById(firstJob.getId());
-        jobRepository.deleteJobById(secondJob.getId());
         questionRepository.deleteQuestionById(collisionQuestion.getId());
     }
 }

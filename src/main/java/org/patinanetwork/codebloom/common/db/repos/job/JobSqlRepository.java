@@ -34,21 +34,23 @@ public class JobSqlRepository implements JobRepository {
     }
 
     @Override
-    public void createJob(final Job job) {
+    public boolean createJob(final Job job) {
         String sql = """
             INSERT INTO "Job"
                 (id, "questionId", status)
             VALUES
                 (?, ?, ?)
+            ON CONFLICT ("questionId") WHERE status IN ('INCOMPLETE', 'PROCESSING')
+            DO NOTHING
             RETURNING
                 "createdAt", "nextAttemptAt"
             """;
 
-        job.setId(UUID.randomUUID().toString());
+        String id = UUID.randomUUID().toString();
 
         OffsetDateTime[] timestamps = jdbcClient
                 .sql(sql)
-                .param(1, UUID.fromString(job.getId()))
+                .param(1, UUID.fromString(id))
                 .param(2, job.getQuestionId())
                 .param(3, job.getStatus().name(), Types.OTHER)
                 .query((rs, rowNum) -> new OffsetDateTime[] {
@@ -57,10 +59,14 @@ public class JobSqlRepository implements JobRepository {
                 .optional()
                 .orElse(null);
 
-        if (timestamps != null) {
-            job.setCreatedAt(timestamps[0]);
-            job.setNextAttemptAt(timestamps[1]);
+        if (timestamps == null) {
+            return false;
         }
+
+        job.setId(id);
+        job.setCreatedAt(timestamps[0]);
+        job.setNextAttemptAt(timestamps[1]);
+        return true;
     }
 
     @Override

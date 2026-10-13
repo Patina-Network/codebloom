@@ -11,13 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.patinanetwork.codebloom.common.db.models.auth.Auth;
 import org.patinanetwork.codebloom.common.db.repos.auth.AuthRepository;
 import org.patinanetwork.codebloom.common.env.Env;
+import org.patinanetwork.codebloom.common.leetcode.auth.AuthenticationCredentials;
+import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationClient;
 import org.patinanetwork.codebloom.common.redis.RedisClient;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
 import org.patinanetwork.codebloom.common.reporter.report.Report;
 import org.patinanetwork.codebloom.common.reporter.report.location.Location;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
-import org.patinanetwork.codebloom.playwright.PlaywrightClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -38,29 +38,23 @@ public class LeetcodeAuthStealer {
     /** So we don't report that a csrf token is missing more than once per machine lifecycle. */
     private boolean reported = false;
 
-    @Value("${github.username}")
-    private String githubUsername;
-
-    @Value("${github.password}")
-    private String githubPassword;
-
     private final RedisClient redisClient;
     private final AuthRepository authRepository;
     private final Reporter reporter;
     private final Env env;
-    private final PlaywrightClient playwrightClient;
+    private final LeetcodeAuthenticationClient leetcodeAuthenticationClient;
 
     public LeetcodeAuthStealer(
             final RedisClient redisClient,
             final AuthRepository authRepository,
             final Reporter reporter,
             final Env env,
-            PlaywrightClient playwrightClient) {
+            final LeetcodeAuthenticationClient leetcodeAuthenticationClient) {
         this.redisClient = redisClient;
         this.authRepository = authRepository;
         this.reporter = reporter;
         this.env = env;
-        this.playwrightClient = playwrightClient;
+        this.leetcodeAuthenticationClient = leetcodeAuthenticationClient;
     }
 
     /**
@@ -161,20 +155,24 @@ public class LeetcodeAuthStealer {
 
     @VisibleForTesting
     String stealCookieImpl() {
-        Optional<Auth> auth = playwrightClient.getLeetcodeCookie(githubUsername, githubPassword);
+        Optional<AuthenticationCredentials> auth = leetcodeAuthenticationClient.getLeetcodeCookie();
         if (auth.isPresent()) {
             var a = auth.get();
-            this.csrf = a.getCsrf().orElse(null);
-            this.cookie = a.getToken();
-            redisClient.setAuth(a.getToken(), 4, ChronoUnit.HOURS);
+            var csrf = a.csrf();
+            var token = a.token();
+
+            this.csrf = csrf;
+            this.cookie = token;
+            redisClient.setAuth(token, 4, ChronoUnit.HOURS);
             log.info("auth token stored in redis");
             this.authRepository.createAuth(Auth.builder()
-                    .csrf(a.getCsrf())
-                    .token(a.getToken())
+                    .csrf(Optional.of(csrf))
+                    .token(token)
                     .createdAt(StandardizedOffsetDateTime.now())
                     .build());
             return cookie;
         }
+
         return null;
     }
 }

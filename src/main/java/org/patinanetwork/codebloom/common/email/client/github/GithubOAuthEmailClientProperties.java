@@ -2,7 +2,7 @@ package org.patinanetwork.codebloom.common.email.client.github;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "github.email")
+@ConfigurationProperties(prefix = "leetcode.auth.github.email")
 public class GithubOAuthEmailClientProperties {
 
     private String host;
