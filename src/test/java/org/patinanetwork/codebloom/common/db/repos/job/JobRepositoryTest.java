@@ -7,10 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,13 +26,16 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.patinanetwork.codebloom.common.components.IncompleteQuestionRequeuer;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
 import org.patinanetwork.codebloom.common.db.models.job.JobStatus;
 import org.patinanetwork.codebloom.common.db.repos.BaseRepositoryTest;
+import org.patinanetwork.codebloom.common.db.repos.question.QuestionRepository;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -159,5 +169,108 @@ public class JobRepositoryTest extends BaseRepositoryTest {
                 }
             }
         }
+    }
+
+    @Test
+    @Transactional
+    void recoveryResetsOnlyProcessingJobsAtOrBeforeCutoff() {
+        jobRepository.deleteAllJobs();
+        OffsetDateTime cutoff = StandardizedOffsetDateTime.now().minusHours(1);
+        Job stale = recoveryJob(JobStatus.PROCESSING, Optional.of(cutoff.minusSeconds(1)));
+        Job boundary = recoveryJob(JobStatus.PROCESSING, Optional.of(cutoff));
+        Job recent = recoveryJob(JobStatus.PROCESSING, Optional.of(cutoff.plusSeconds(1)));
+        Job queued = recoveryJob(JobStatus.INCOMPLETE, Optional.of(cutoff.minusHours(1)));
+        Job complete = recoveryJob(JobStatus.COMPLETE, Optional.of(cutoff.minusHours(1)));
+        Job unknownStart = recoveryJob(JobStatus.PROCESSING, Optional.empty());
+
+        OffsetDateTime beforeRecovery = StandardizedOffsetDateTime.now();
+        assertEquals(2, jobRepository.requeueStaleProcessingJobs(cutoff));
+
+        for (Job original : List.of(stale, boundary)) {
+            Job recovered = jobRepository.findJobById(original.getId()).orElseThrow();
+            assertEquals(JobStatus.INCOMPLETE, recovered.getStatus());
+            assertEquals(0, recovered.getAttempts());
+            assertTrue(recovered.getProcessedAt().isEmpty());
+            assertTrue(recovered.getCompletedAt().isEmpty());
+            assertFalse(recovered.getNextAttemptAt().isAfter(beforeRecovery));
+            assertEquals(original.getCreatedAt(), recovered.getCreatedAt());
+            assertEquals(List.of(recovered), jobRepository.findJobsByQuestionId(original.getQuestionId()));
+            assertTrue(jobRepository.findIncompleteJobs(10).contains(recovered));
+        }
+        for (Job unchanged : List.of(recent, queued, complete, unknownStart)) {
+            assertEquals(unchanged, jobRepository.findJobById(unchanged.getId()).orElseThrow());
+        }
+        assertEquals(0, jobRepository.requeueStaleProcessingJobs(cutoff));
+    }
+
+    @Test
+    @Transactional
+    void requeueCountsRecoveredJobsWithoutCreatingNewJobs() {
+        jobRepository.deleteAllJobs();
+        Job stale = recoveryJob(
+                JobStatus.PROCESSING,
+                Optional.of(StandardizedOffsetDateTime.now().minusHours(2)));
+        QuestionRepository questions = mock(QuestionRepository.class);
+        when(questions.getAllIncompleteQuestionsWithNoJob()).thenReturn(new ArrayList<>());
+        var requeuer = new IncompleteQuestionRequeuer(questions, jobRepository);
+
+        assertEquals(1, requeuer.requeueIncompleteQuestions());
+        Job recovered = jobRepository.findJobById(stale.getId()).orElseThrow();
+        assertEquals(JobStatus.INCOMPLETE, recovered.getStatus());
+        assertEquals(0, recovered.getAttempts());
+        assertEquals(List.of(recovered), jobRepository.findJobsByQuestionId(stale.getQuestionId()));
+        assertEquals(0, requeuer.requeueIncompleteQuestions());
+    }
+
+    @Test
+    void concurrentRequeuesRecoverAndCountTheStaleJobOnlyOnce() throws Exception {
+        Job stale = recoveryJob(
+                JobStatus.PROCESSING,
+                Optional.of(StandardizedOffsetDateTime.now().minusHours(2)));
+        QuestionRepository questions = mock(QuestionRepository.class);
+        when(questions.getAllIncompleteQuestionsWithNoJob()).thenReturn(new ArrayList<>());
+        var firstRequeuer = new IncompleteQuestionRequeuer(questions, jobRepository);
+        var secondRequeuer = new IncompleteQuestionRequeuer(questions, jobRepository);
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var results = List.of(firstRequeuer, secondRequeuer).stream()
+                    .map(requeuer -> executor.submit(() -> {
+                        ready.countDown();
+                        assertTrue(start.await(10, TimeUnit.SECONDS));
+                        return requeuer.requeueIncompleteQuestions();
+                    }))
+                    .toList();
+            assertTrue(ready.await(10, TimeUnit.SECONDS));
+            start.countDown();
+            int firstCount = results.get(0).get(10, TimeUnit.SECONDS);
+            int secondCount = results.get(1).get(10, TimeUnit.SECONDS);
+
+            assertEquals(
+                    List.of(0, 1),
+                    List.of(firstCount, secondCount).stream().sorted().toList());
+            Job recovered = jobRepository.findJobById(stale.getId()).orElseThrow();
+            assertEquals(JobStatus.INCOMPLETE, recovered.getStatus());
+            assertEquals(0, recovered.getAttempts());
+            assertEquals(List.of(recovered), jobRepository.findJobsByQuestionId(stale.getQuestionId()));
+        } finally {
+            start.countDown();
+            jobRepository.deleteJobById(stale.getId());
+        }
+    }
+
+    private Job recoveryJob(final JobStatus status, final Optional<OffsetDateTime> processedAt) {
+        Job job = Job.builder()
+                .questionId(UUID.randomUUID().toString())
+                .status(status)
+                .build();
+        assertTrue(jobRepository.createJob(job));
+        job.setAttempts(3);
+        job.setProcessedAt(processedAt);
+        job.setCompletedAt(Optional.of(StandardizedOffsetDateTime.now().minusMinutes(30)));
+        job.setNextAttemptAt(StandardizedOffsetDateTime.now().plusHours(2));
+        assertTrue(jobRepository.updateJob(job));
+        return jobRepository.findJobById(job.getId()).orElseThrow();
     }
 }

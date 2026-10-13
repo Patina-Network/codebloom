@@ -263,8 +263,9 @@ public class AdminController {
     }
 
     @Operation(summary = "Requeue incomplete questions", description = """
-        Creates a new processing job for every incomplete question that does not already have an active job. Questions \
-        that already have an INCOMPLETE or PROCESSING job are skipped. Only accessible to admins.
+        Restarts jobs stuck in PROCESSING for at least one hour with a fresh retry budget and creates a new job for \
+        every incomplete question without an active job. INCOMPLETE jobs and more recent PROCESSING jobs are skipped. \
+        The queued count includes recovered jobs. Only accessible to admins.
         """)
     @PostMapping("/questions/incomplete/requeue")
     public ResponseEntity<ApiResponder<Empty>> requeueIncompleteQuestions(

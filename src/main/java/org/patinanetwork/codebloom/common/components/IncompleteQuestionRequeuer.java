@@ -23,22 +23,26 @@ public class IncompleteQuestionRequeuer {
     }
 
     /**
-     * Creates a new job for every incomplete question that has no active job.
+     * Restarts jobs stuck in PROCESSING for at least one hour and creates a new job for every incomplete question that
+     * has no active job.
      *
-     * <p>Safe to call concurrently: the active-job unique index rejects duplicates, which are counted as skipped.
+     * <p>Concurrent calls only count jobs they recover or create: recovery checks the current status, and the
+     * active-job unique index rejects duplicate inserts.
      *
-     * @return number of jobs actually created.
+     * @return number of jobs recovered or created.
      */
     public int requeueIncompleteQuestions() {
-        ArrayList<Question> questions = questionRepository.getAllIncompleteQuestionsWithNoJob();
+        int requeuedCount = jobRepository.requeueStaleProcessingJobs(
+                StandardizedOffsetDateTime.now().minusHours(1));
 
-        if (questions.isEmpty()) {
-            log.info("All questions have complete information.");
+        ArrayList<Question> incompleteQuestionsWithNoJob = questionRepository.getAllIncompleteQuestionsWithNoJob();
+
+        if (requeuedCount == 0 && incompleteQuestionsWithNoJob.isEmpty()) {
+            log.info("No incomplete questions need requeueing.");
             return 0;
         }
 
-        int queued = 0;
-        for (Question question : questions) {
+        for (Question question : incompleteQuestionsWithNoJob) {
             String questionId = question.getId();
             log.warn("Question with id of {} does not have complete information.", questionId);
             Job newJob = Job.builder()
@@ -49,11 +53,11 @@ public class IncompleteQuestionRequeuer {
 
             if (jobRepository.createJob(newJob)) {
                 log.info("Added job for question of id {}", questionId);
-                queued++;
+                requeuedCount++;
             } else {
                 log.info("Question of id {} already has an active job, skipping", questionId);
             }
         }
-        return queued;
+        return requeuedCount;
     }
 }

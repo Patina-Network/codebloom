@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos.job;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.patinanetwork.codebloom.common.db.models.job.Job;
@@ -48,6 +49,14 @@ public interface JobRepository {
      * @return list of incomplete jobs ordered by earliest nextAttemptAt first
      */
     List<Job> findIncompleteJobs(int maxJobs);
+
+    /**
+     * Restarts PROCESSING jobs whose processing began at or before the cutoff, with zero attempts and no processing or
+     * completion timestamps. Recovered jobs are immediately eligible for processing.
+     *
+     * @return number of jobs recovered
+     */
+    int requeueStaleProcessingJobs(OffsetDateTime cutoff);
 
     /**
      * Updates an existing job in the database.

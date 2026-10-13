@@ -34,8 +34,10 @@ export default function RequeueIncompleteQuestionsModal() {
       >
         <form onSubmit={onSubmit}>
           <Text mt={12}>
-            Creates a new processing job for every incomplete question that does
-            not already have an active job.
+            Queues incomplete questions without an active job and restarts jobs
+            stuck processing for at least one hour with a fresh retry budget.
+            Already queued jobs and jobs processing for less than an hour are
+            left unchanged.
           </Text>
           <Text mt={12}>
             Each job calls LeetCode. If jobs have been failing because the auth
