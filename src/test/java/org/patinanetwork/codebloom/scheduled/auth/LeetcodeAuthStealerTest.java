@@ -1,12 +1,17 @@
 package org.patinanetwork.codebloom.scheduled.auth;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +29,7 @@ import org.patinanetwork.codebloom.common.db.models.auth.Auth;
 import org.patinanetwork.codebloom.common.db.repos.auth.AuthRepository;
 import org.patinanetwork.codebloom.common.env.Env;
 import org.patinanetwork.codebloom.common.lag.FakeLag;
+import org.patinanetwork.codebloom.common.leetcode.auth.AuthenticationCredentials;
 import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationClient;
 import org.patinanetwork.codebloom.common.redis.RedisClient;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
@@ -667,5 +673,31 @@ public class LeetcodeAuthStealerTest {
         assertTrue(logWatcher.list.stream()
                 .anyMatch(log -> log.getLevel().equals(Level.INFO)
                         && log.getFormattedMessage().contains("Lock failed to be acquired, bouncing...")));
+    }
+
+    @Test
+    @DisplayName("stealCookieImpl - Stores fetched credentials in memory, redis, and the auth repository")
+    void testStealCookieImplPersistsCredentials() {
+        when(leetcodeAuthenticationClient.getLeetcodeCookie())
+                .thenReturn(Optional.of(new AuthenticationCredentials("new-token", "new-csrf")));
+
+        assertEquals("new-token", leetcodeAuthStealer.stealCookieImpl());
+
+        assertEquals("new-token", leetcodeAuthStealer.getCookie());
+        assertEquals("new-csrf", leetcodeAuthStealer.getCsrf());
+        verify(redisClient).setAuth("new-token", 4, ChronoUnit.HOURS);
+        verify(authRepository)
+                .createAuth(argThat(a -> "new-token".equals(a.getToken()) && "new-csrf".equals(a.getCsrf())));
+    }
+
+    @Test
+    @DisplayName("stealCookieImpl - Persists nothing when no credentials are returned")
+    void testStealCookieImplWithoutCredentials() {
+        when(leetcodeAuthenticationClient.getLeetcodeCookie()).thenReturn(Optional.empty());
+
+        assertNull(leetcodeAuthStealer.stealCookieImpl());
+
+        verify(redisClient, never()).setAuth(anyString(), anyLong(), any());
+        verify(authRepository, never()).createAuth(any());
     }
 }
