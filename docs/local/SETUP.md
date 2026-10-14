@@ -196,7 +196,6 @@ You can feel free to use any viewer you want, but we would recommend [DataGrip](
 
 # Secrets
 
-You can speed up the setup process by making a copy of `.env.example` to `.env`.
-You will also find explanations and documentation about how to source the value for each key.
+Local `.env` comes from Azure.
 
 If there is a key specific to an environment (such as `CI` or `staging` environment), please consult the tech docs within the `CI` group.
