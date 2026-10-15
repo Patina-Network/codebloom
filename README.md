@@ -28,17 +28,17 @@ _Last updated: 02/14/2026_
 
 Codebloom features include
 
-- [User profiles with submission history](./docs/features/USER-PROFILE.md)
-- [Automatic LeetCode syncing in the background](./docs/features/BGSYNC.md)
-- [University-specific leaderboards](./docs/features/LEADERBOARD.md)
-- [Problem Of The Day](./docs/features/POTD.md)
-- [Automatic achievements](./docs/features/ACHIEVEMENTS.md)
-- [Embeddable widgets](./docs/features/EMBED.md)
-- [Dynamic question scoring](./docs/features/SCORES.md)
-- [Live multiplayer duels](./docs/features/DUELS.md)
-- [Club/organization integrations via Discord servers](./docs/features/DISCORD-INTEGRATIONS.md)
+- [User profiles with submission history](https://docs.patinanetwork.org/codebloom/features/USER-PROFILE/)
+- [Automatic LeetCode syncing in the background](https://docs.patinanetwork.org/codebloom/features/BGSYNC/)
+- [University-specific leaderboards](https://docs.patinanetwork.org/codebloom/features/LEADERBOARD/)
+- [Problem Of The Day](https://docs.patinanetwork.org/codebloom/features/POTD/)
+- [Automatic achievements](https://docs.patinanetwork.org/codebloom/features/ACHIEVEMENTS/)
+- [Embeddable widgets](https://docs.patinanetwork.org/codebloom/features/EMBED/)
+- [Dynamic question scoring](https://docs.patinanetwork.org/codebloom/features/SCORES/)
+- [Live multiplayer duels](https://docs.patinanetwork.org/codebloom/features/DUELS/)
+- [Club/organization integrations via Discord servers](https://docs.patinanetwork.org/codebloom/features/DISCORD-INTEGRATIONS/)
 
-[Goto `docs/features` to view all feature documentation](./docs/features)
+[View all Codebloom documentation](https://docs.patinanetwork.org/codebloom/)
 
 Codebloom is a public-first platform that does not require authentication to view most data, so please feel free to click around at [codebloom.patinanetwork.org](https://codebloom.patinanetwork.org)!
 
@@ -72,16 +72,16 @@ This repository is a monorepo that contains many different pieces of Codebloom, 
   - [Goto `.github/scripts/redeploy/` to view Bun Shell redeploy scripts](./.github/scripts/redeploy/)
   - [Goto `infra/`](./infra/)
   - [View detailed documentation](./infra/README.md)
-  - [View observability documentation](./docs/observability/README.md)
+  - [View observability documentation](https://docs.patinanetwork.org/codebloom/observability/)
 - Our internal tools (e.g. custom Ink CLI scripts & our internal standup bot) are currently being written in [Rust](https://rust-lang.org/) and [TypeScript](https://typescriptlang.org)
   - [Goto `internal/`](./internal/)
   - [View detailed documentation](./internal/README.md)
 - Environment secrets live in local env files generated from Azure.
-  - [View detailed documentation](./docs/local/SECRET.md)
+  - [View detailed documentation](https://docs.patinanetwork.org/codebloom/local/SECRET/)
 
 ## Setup
 
-Please go to [`docs/setup/README.md`](./docs/local/README.md) to begin setup instructions for local development.
+Please go to the [local development docs](https://docs.patinanetwork.org/codebloom/local/) to begin setup instructions for local development.
 
 ## Authors
 

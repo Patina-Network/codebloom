@@ -9,7 +9,7 @@ These tests run daily at 12:18 ET every day under [.github/scripts/test/run-e2e-
 
 ## Requirements
 
-- `pnpm` - Follow the main developer installation instructions under [docs/local/SETUP.md](../docs/local/SETUP.md).
+- `pnpm` - Follow the main developer installation instructions under [local setup](https://docs.patinanetwork.org/codebloom/local/SETUP/).
 
 ## Run
 

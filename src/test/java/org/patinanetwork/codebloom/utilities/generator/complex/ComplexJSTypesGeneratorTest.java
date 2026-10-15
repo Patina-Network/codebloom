@@ -1,10 +1,19 @@
 package org.patinanetwork.codebloom.utilities.generator.complex;
 
+import static java.nio.file.attribute.PosixFilePermission.OWNER_EXECUTE;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.patinanetwork.codebloom.common.db.models.question.topic.LeetcodeTopicEnum;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
 import org.patinanetwork.codebloom.shared.tag.TagMetadataList;
@@ -110,5 +119,30 @@ class ComplexJSTypesGeneratorTest {
             assertNotNull(metadata.getName());
             assertFalse(metadata.getName().isBlank());
         }
+    }
+
+    @Test
+    void resolveExecutableOnPathReturnsAbsoluteExecutable(@TempDir Path root) throws Exception {
+        Path blocked = root.resolve("blocked");
+        Path allowed = root.resolve("allowed");
+        Files.createDirectories(blocked);
+        Files.createDirectories(allowed);
+        Path blockedNode = blocked.resolve("node");
+        Path allowedNode = allowed.resolve("node");
+        Files.writeString(blockedNode, "");
+        Files.writeString(allowedNode, "");
+        Files.setPosixFilePermissions(blockedNode, Set.of(OWNER_READ, OWNER_WRITE));
+        Files.setPosixFilePermissions(allowedNode, Set.of(OWNER_READ, OWNER_EXECUTE));
+
+        String pathEnv = blocked + File.pathSeparator + "relative-bin" + File.pathSeparator + allowed;
+
+        assertEquals(allowedNode.toRealPath(), ComplexJSTypesGenerator.resolveExecutableOnPath(pathEnv, "node"));
+    }
+
+    @Test
+    void resolveExecutableOnPathRejectsRelativeOrMissingEntries() {
+        assertThrows(IOException.class, () -> ComplexJSTypesGenerator.resolveExecutableOnPath(null, "node"));
+        assertThrows(IOException.class, () -> ComplexJSTypesGenerator.resolveExecutableOnPath("   ", "node"));
+        assertThrows(IOException.class, () -> ComplexJSTypesGenerator.resolveExecutableOnPath("relative-bin", "node"));
     }
 }
