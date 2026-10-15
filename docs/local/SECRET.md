@@ -1,49 +1,19 @@
-# Prerequisites
+# Secrets
 
-Please ensure that you install the following (homebrew is a recommendation but not a requirement):
+Local environment files come from Azure. Git does not store them.
 
-1. Install `gpg`
+[Setup](./SETUP.md) covers the rest of local setup.
 
-```bash
-brew install gpg
-```
+These files stay on your machine:
 
-1. Install `git-crypt`
-
-```bash
-brew install git-crypt
-```
-
-# New Codebloom Developer (needs access)
-
-If you don't have access to environment secrets yet, you need to generate a public GPG key and add it to your GitHub profile. If you know what you are doing, you can choose to do so manually. Else, Codebloom has a script you can run to do it for you instead. Please run:
-
-```
-just git-crypt-generate-key
-```
-
-After getting access,
-from your main branch:
-run:
-
-```
-git pull
-```
-
-then run:
-
-```
-git-crypt unlock
-```
-
-and follow the instructions inside the script.
-
-# Existing Codebloom Developer (has access)
-
-Once the new developer has generated a key, please run:
-
-```
-just git-crypt-add-user
-```
-
-and follow the instructions inside the script.
+- `.env`
+- `.env.shared`
+- `.env.ci`
+- `.env.ci-app`
+- `.env.staging`
+- `.env.production`
+- `.env.production-ro`
+- `.env.migrator`
+- `infra/.env.production`
+- `internal/.env.ci`
+- `internal/standup-bot/.env.production`

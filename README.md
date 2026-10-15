@@ -76,8 +76,7 @@ This repository is a monorepo that contains many different pieces of Codebloom, 
 - Our internal tools (e.g. custom Ink CLI scripts & our internal standup bot) are currently being written in [Rust](https://rust-lang.org/) and [TypeScript](https://typescriptlang.org)
   - [Goto `internal/`](./internal/)
   - [View detailed documentation](./internal/README.md)
-- Our secrets across all environments which are decryped with [git-crypt](https://github.com/AGWA/git-crypt).
-  - [Goto `example.env`](./example.env)
+- Environment secrets live in local env files generated from Azure.
   - [View detailed documentation](./docs/local/SECRET.md)
 
 ## Setup

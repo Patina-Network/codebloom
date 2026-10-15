@@ -53,7 +53,18 @@ node_modules
 /.kotlin/
 
 .env
-!.env.**.example
+
+# Local secrets.
+.env.shared
+.env.ci
+.env.ci-app
+.env.staging
+.env.production
+.env.production-ro
+.env.migrator
+infra/.env.production
+internal/.env.ci
+internal/standup-bot/.env.production
 
 # Ignore the static folder, it will be generated in the build process for production use.
 **/static/*
