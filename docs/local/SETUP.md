@@ -52,7 +52,7 @@ The following instructions are using `homebrew` ([install instructions here](htt
 
 ## Windows
 
-Unfortunately, I don't have a Windows machine that I develop on anymore, so I am unable to provide solid instructions for setup. However, you should be able to follow the exact same directions for [MacOS](#macos) but with `WinGet`/`Scoopy` or manually installing each software.
+Windows install, database, and the errors that show up on a first run are in [Windows setup](./WINDOWS.md).
 
 # IDE Integration
 

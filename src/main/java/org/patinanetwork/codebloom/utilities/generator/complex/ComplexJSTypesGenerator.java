@@ -208,8 +208,10 @@ public class ComplexJSTypesGenerator implements CommandLineRunner {
         Files.createDirectories(outputPath.getParent());
         Files.writeString(outputPath, finalOutput.toString());
 
-        Path prettierBin = Paths.get("js/node_modules/.bin/prettier").toAbsolutePath();
+        Path prettierBin =
+                Paths.get("js/node_modules/prettier/bin/prettier.cjs").toAbsolutePath();
         new ProcessBuilder(
+                        "node",
                         prettierBin.toString(),
                         "--write",
                         outputPath.toAbsolutePath().toString())
