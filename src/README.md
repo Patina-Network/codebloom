@@ -14,7 +14,7 @@ View [STYLEGUIDE.md](../STYLEGUIDE.md) to view best practices.
 ## Requirements
 
 > [!WARNING]
-> It is HIGHLY recommended that you follow the setup instructions at [docs/local/README.md](../docs/local/README.md) to get up and running.
+> It is HIGHLY recommended that you follow the setup instructions at [local development docs](https://docs.patinanetwork.org/codebloom/local/) to get up and running.
 
 - [`openjdk@25`](https://openjdk.org/projects/jdk/25/) (though you may feel free to use any other distribution if you would like)
 - [`mvn`](https://maven.apache.org/what-is-maven.html) - you do not need to explicitly download this, just use `./mvnw` from the root directory instead (our `Justfile` commands all use `./mvnw` as well).
@@ -22,7 +22,7 @@ View [STYLEGUIDE.md](../STYLEGUIDE.md) to view best practices.
 ## Run
 
 > [!WARNING]
-> It is HIGHLY recommended that you follow the setup instructions at [docs/local/README.md](../docs/local/README.md) to get up and running.
+> It is HIGHLY recommended that you follow the setup instructions at [local development docs](https://docs.patinanetwork.org/codebloom/local/) to get up and running.
 
 ## Structure
 

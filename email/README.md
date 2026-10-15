@@ -7,7 +7,7 @@ These templates are then built into `*.html` files which are then loaded at runt
 ### Requirements
 
 - [pnpm](https://pnpm.io/)
-    > It is **STRONGLY** recommended that you follow the setup directions for `pnpm` inside of [docs/setup/README.md](../../docs/setup/README.md)
+    > It is **STRONGLY** recommended that you follow the setup directions for `pnpm` inside of [local setup](https://docs.patinanetwork.org/codebloom/local/SETUP/)
 
 ### Run
 

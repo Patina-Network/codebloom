@@ -3,13 +3,17 @@ package org.patinanetwork.codebloom.utilities.generator.complex;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.patinanetwork.codebloom.shared.tag.ParentTags;
 import org.patinanetwork.codebloom.shared.tag.TagMetadataList;
@@ -208,8 +212,11 @@ public class ComplexJSTypesGenerator implements CommandLineRunner {
         Files.createDirectories(outputPath.getParent());
         Files.writeString(outputPath, finalOutput.toString());
 
-        Path prettierBin = Paths.get("js/node_modules/.bin/prettier").toAbsolutePath();
+        Path nodeExecutable = resolveNodeExecutable();
+        Path prettierBin =
+                Paths.get("js/node_modules/prettier/bin/prettier.cjs").toAbsolutePath();
         new ProcessBuilder(
+                        nodeExecutable.toString(),
                         prettierBin.toString(),
                         "--write",
                         outputPath.toAbsolutePath().toString())
@@ -218,5 +225,36 @@ public class ComplexJSTypesGenerator implements CommandLineRunner {
                 .waitFor();
 
         log.info("Generated TypeScript file: {} with {} import(s)", outputPath, imports.size());
+    }
+
+    private static Path resolveNodeExecutable() throws IOException {
+        boolean windows =
+                System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
+        String[] executableNames = windows ? new String[] {"node.exe", "node"} : new String[] {"node"};
+        return resolveExecutableOnPath(System.getenv("PATH"), executableNames);
+    }
+
+    @VisibleForTesting
+    static Path resolveExecutableOnPath(String pathEnv, String... executableNames) throws IOException {
+        if (pathEnv == null || pathEnv.isBlank()) {
+            throw new IOException("PATH is unset, so node cannot be located");
+        }
+        for (String directory : pathEnv.split(Pattern.quote(File.pathSeparator))) {
+            String trimmed = directory.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            Path directoryPath = Paths.get(trimmed);
+            if (!directoryPath.isAbsolute()) {
+                continue;
+            }
+            for (String executableName : executableNames) {
+                Path candidate = directoryPath.resolve(executableName);
+                if (Files.isRegularFile(candidate) && Files.isExecutable(candidate)) {
+                    return candidate.toRealPath();
+                }
+            }
+        }
+        throw new IOException("node was not found in an absolute directory on PATH");
     }
 }

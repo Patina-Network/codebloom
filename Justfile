@@ -2,19 +2,19 @@ set shell := ["bash", "-uc"]
 
 # Migrate to local DB
 migrate *args:
-  dotenvx run -- ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db {{args}}
+  dotenvx run -- bash ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db {{args}}
 
 # Drop local DB
 drop *args:
-  dotenvx run -- ./mvnw flyway:clean -Dflyway.locations=filesystem:./db -Dflyway.cleanDisabled=false {{args}}
+  dotenvx run -- bash ./mvnw flyway:clean -Dflyway.locations=filesystem:./db -Dflyway.cleanDisabled=false {{args}}
 
 # Manually migrate STAGING DB if needed (CAREFUL!!!)
 migrate-stg *args:
-  dotenvx run -f .env.staging -- ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db/migration {{args}}
+  dotenvx run -f .env.staging -- bash ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db/migration {{args}}
 
 # Manually migrate PROD DB if needed (CAREFUL!!!)
 migrate-prod *args:
-  dotenvx run -f .env.production -- ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db/migration {{args}}
+  dotenvx run -f .env.production -- bash ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db/migration {{args}}
 
 # Manually copy production db to staging. (WILL DROP ALL STAGING DATA!!!) Check wiki for more details.
 copy-stg *args:
@@ -22,7 +22,7 @@ copy-stg *args:
 
 # Run the backend Spring server
 backend-dev *args:
-  dotenvx run -f .env -f .env.shared -- ./mvnw -Dspring-boot.run.profiles=dev spring-boot:run {{args}}
+  dotenvx run -f .env -f .env.shared -- bash ./mvnw -Dspring-boot.run.profiles=dev spring-boot:run {{args}}
 
 # Run the leetcode auth stealer service
 auth-dev *args:
@@ -34,30 +34,30 @@ auth-gen *args:
 
 # Run the backend Spring server with an exposed debugger at :5005
 backend-dev-debug *args:
-  dotenvx run -- ./mvnw \
+  dotenvx run -- bash ./mvnw \
     -Dspring-boot.run.profiles=dev \
     -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005" \
     spring-boot:run {{args}}
 
 # Builds and installs Spring backend
 backend-install *args:
-  ./mvnw install -DskipTests=true {{args}}
+  bash ./mvnw install -DskipTests=true {{args}}
 
 # Run backend formatter (check only)
 backend-spotless *args:
-  ./mvnw spotless:check
+  bash ./mvnw spotless:check
 
 # Run backend formatter (check & write)
 backend-spotless-fix *args:
-  ./mvnw spotless:apply
+  bash ./mvnw spotless:apply
 
 # Run backend linter, formatter, & tests
 backend-test *args:
-  just backend-spotless && dotenvx run -f .env -f .env.shared -- ./mvnw checkstyle:check verify -Dspring.profiles.active=ci {{args}}
+  just backend-spotless && dotenvx run -f .env -f .env.shared -- bash ./mvnw checkstyle:check verify -Dspring.profiles.active=ci {{args}}
 
 # Run backend tests with a debugger
 backend-testd *args:
-  just backend-spotless && dotenvx run -f .env -f .env.shared -- ./mvnw checkstyle:check verify -Dspring.profiles.active=ci -Dmaven.surefire.debug {{args}}
+  just backend-spotless && dotenvx run -f .env -f .env.shared -- bash ./mvnw checkstyle:check verify -Dspring.profiles.active=ci -Dmaven.surefire.debug {{args}}
 
 # Run the frontend 
 frontend-dev *args:
