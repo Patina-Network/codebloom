@@ -324,7 +324,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>11.1.0</version>
+                <version>13.10.0</version>
                 <configuration>
                     <url>
                         jdbc:postgresql://${env.DATABASE_HOST}:${env.DATABASE_PORT}/${env.DATABASE_NAME}</url>
