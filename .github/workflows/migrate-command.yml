@@ -47,7 +47,7 @@ jobs:
             return pr.head.sha;
 
       - name: Checkout PR
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.pr-head.outputs.result }}
           fetch-depth: 0

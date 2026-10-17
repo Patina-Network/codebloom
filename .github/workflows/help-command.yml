@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Help Comment
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup CI
         uses: tahminator/pipeline/actions/setup@a424f92d486342e1255fcdf377a7569eb230aabe # 1.0.97
