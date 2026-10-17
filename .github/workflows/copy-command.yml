@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Get PR head SHA
         id: pr-head
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           PR_ID: ${{ inputs.prId }}
         with:
