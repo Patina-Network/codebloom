@@ -50,7 +50,7 @@
         <dependency>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.14</version>
+            <version>0.8.15</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -276,7 +276,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.14</version>
+                <version>0.8.15</version>
                 <executions>
                     <!-- Attach JaCoCo agent before tests -->
                     <execution>
