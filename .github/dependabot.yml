@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - "/.github/composite/**"
+    schedule: { interval: weekly }
+  - package-ecosystem: bun
+    directory: /.github/scripts
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directories:
+      - /e2e
+      - /email
+      - /js
+    schedule: { interval: weekly }
+  - package-ecosystem: maven
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: cargo
+    directory: /internal/standup-bot
+    schedule: { interval: weekly }
+  - package-ecosystem: uv
+    directory: /internal/leetcode-auth-stealer-service
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directories:
+      - /infra
+      - /internal/standup-bot
+      - /internal/leetcode-auth-stealer-service
+    schedule: { interval: weekly }
