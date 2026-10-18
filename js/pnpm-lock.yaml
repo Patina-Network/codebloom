@@ -147,8 +147,8 @@ importers:
         specifier: ^9.17.0
         version: 9.17.0(jiti@2.6.1)
       eslint-plugin-no-relative-import-paths:
-        specifier: ^1.6.1
-        version: 1.6.1
+        specifier: ^1.7.3
+        version: 1.7.3
       eslint-plugin-perfectionist:
         specifier: ^4.8.0
         version: 4.8.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.6.3)
@@ -1829,8 +1829,8 @@ packages:
     resolution: {integrity: sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==}
     engines: {node: '>=10'}
 
-  eslint-plugin-no-relative-import-paths@1.6.1:
-    resolution: {integrity: sha512-YZNeOnsOrJcwhFw0X29MXjIzu2P/f5X2BZDPWw1R3VUYBRFxNIh77lyoL/XrMU9ewZNQPcEvAgL/cBOT1P330A==}
+  eslint-plugin-no-relative-import-paths@1.7.3:
+    resolution: {integrity: sha512-vEpNX0fvhoHdBu8eI05+XXYswnGHW2HJYmnJJeR8zOwgo59GgWv98z22XyZvMEHHcjSX4yGX2Ni/GyxGpBjfgw==}
 
   eslint-plugin-perfectionist@4.8.0:
     resolution: {integrity: sha512-ZF04IAPGItYMlj9xjgvvl/QpksZf79g0dkxbNcuxDjbcUSZ4CwucJ7h5Yzt5JuHe+i6igQbUYEp40j4ndfbvWQ==}
@@ -5517,7 +5517,7 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-plugin-no-relative-import-paths@1.6.1: {}
+  eslint-plugin-no-relative-import-paths@1.7.3: {}
 
   eslint-plugin-perfectionist@4.8.0(eslint@9.17.0(jiti@2.6.1))(typescript@5.6.3):
     dependencies:
