@@ -1,3 +1,4 @@
+import MetricsChart from "@/app/user/[userId]/_components/UserProfile/MetricsChart/MetricsChart";
 import ProfilePicture from "@/app/user/[userId]/_components/UserProfile/ProfilePicture/ProfilePicture";
 import UserProfileHeader from "@/app/user/[userId]/_components/UserProfile/UserProfileHeader";
 import UserTags from "@/app/user/[userId]/_components/UserProfile/UserTags/UserTags";
@@ -64,6 +65,7 @@ export default function UserProfilePage() {
               <ProfilePicture userId={userId} />
               <UserProfileHeader userId={userId} />
               <UserTags userId={userId} />
+              <MetricsChart userId={userId} key={userId} />
             </Flex>
           </Box>
           <Box
