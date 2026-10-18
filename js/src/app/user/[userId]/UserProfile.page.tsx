@@ -1,6 +1,7 @@
 import ProfilePicture from "@/app/user/[userId]/_components/UserProfile/ProfilePicture/ProfilePicture";
 import UserProfileHeader from "@/app/user/[userId]/_components/UserProfile/UserProfileHeader";
 import UserTags from "@/app/user/[userId]/_components/UserProfile/UserTags/UserTags";
+import MetricsChart from "@/app/user/[userId]/_components/UserProfile/MetricsChart/MetricsChart";
 import MiniUserSubmissions from "@/app/user/[userId]/submissions/_components/UserSubmissions/MiniUserSubmissions";
 import ToastWithRedirect from "@/components/ui/toast/ToastWithRedirect";
 import { getUserSubmissionsUrl } from "@/lib/helper/leaderboardDateRange";
@@ -64,6 +65,7 @@ export default function UserProfilePage() {
               <ProfilePicture userId={userId} />
               <UserProfileHeader userId={userId} />
               <UserTags userId={userId} />
+              <MetricsChart userId={userId}/>
             </Flex>
           </Box>
           <Box
