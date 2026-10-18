@@ -94,6 +94,9 @@ public class UserMetricsSqlRepository implements UserMetricsRepository {
                     AND "deletedAt" IS NULL
                     AND (cast(:from AS timestamptz) IS NULL OR "createdAt" >= :from)
                     AND (cast(:to AS timestamptz) IS NULL OR "createdAt" <= :to)
+                ORDER BY
+                    "createdAt" ASC,
+                    points ASC
                 LIMIT CASE WHEN :pageSize > 0 THEN :pageSize END
                 OFFSET :offset
                 """;
