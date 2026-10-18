@@ -63,7 +63,7 @@
         "@vitest/coverage-v8": "4.1.11",
         "eslint": "^9.17.0",
         "eslint-plugin-no-relative-import-paths": "^1.7.3",
-        "eslint-plugin-perfectionist": "^4.8.0",
+        "eslint-plugin-perfectionist": "^5.12.1",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^5.1.0",
         "eslint-plugin-react-refresh": "^0.4.16",
