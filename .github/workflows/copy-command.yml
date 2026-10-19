@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Get PR head SHA
         id: pr-head
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           PR_ID: ${{ inputs.prId }}
         with:
@@ -47,7 +47,7 @@ jobs:
             return pr.head.sha;
 
       - name: Checkout PR
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.pr-head.outputs.result }}
 
