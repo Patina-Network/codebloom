@@ -50,11 +50,12 @@ updates:
     patterns: ["*"]
     cooldown: { default-days: 7 }
     multi-ecosystem-group: cicd
-  - package-ecosystem: bun
-    directory: /.github/scripts
-    patterns: ["*"]
-    cooldown: { default-days: 7 }
-    multi-ecosystem-group: cicd
+  # cannot enable until https://github.com/dependabot/dependabot-core/issues/15237 is fixed
+  # - package-ecosystem: bun
+  #   directory: /.github/scripts
+  #   patterns: ["*"]
+  #   cooldown: { default-days: 7 }
+  #   multi-ecosystem-group: cicd
   # non-main
   - package-ecosystem: cargo
     directory: /internal/standup-bot
