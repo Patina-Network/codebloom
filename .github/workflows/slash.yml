@@ -13,7 +13,7 @@ jobs:
     if: >-
       github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout Repository
