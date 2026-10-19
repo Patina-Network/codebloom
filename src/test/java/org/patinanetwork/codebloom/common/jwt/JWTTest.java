@@ -5,13 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.Duration;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.patinanetwork.codebloom.config.NoJdaRequired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.core.JacksonException;
 
 @SpringBootTest
 public class JWTTest extends NoJdaRequired {
@@ -37,7 +37,7 @@ public class JWTTest extends NoJdaRequired {
         String jwt = null;
         try {
             jwt = jwtClient.encode(userTag);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             e.printStackTrace();
             fail("Failed to create JWT");
         }
@@ -46,7 +46,7 @@ public class JWTTest extends NoJdaRequired {
         JWTTestObject reParsedJsonTag = null;
         try {
             reParsedJsonTag = jwtClient.decode(jwt, JWTTestObject.class);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             e.printStackTrace();
             fail("Failed to parse JWT");
         }
@@ -60,7 +60,7 @@ public class JWTTest extends NoJdaRequired {
         String jwt = null;
         try {
             jwt = jwtClient.encode(userTag, Duration.ofMillis(500));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             e.printStackTrace();
             fail("Failed to create JWT");
         }

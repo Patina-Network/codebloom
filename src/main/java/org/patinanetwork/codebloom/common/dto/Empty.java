@@ -1,6 +1,6 @@
 package org.patinanetwork.codebloom.common.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Use {@code Empty.of()} when you want to return a successful response, but have no data to send back to the client.

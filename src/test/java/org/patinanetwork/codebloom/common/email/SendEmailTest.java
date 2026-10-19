@@ -2,8 +2,6 @@ package org.patinanetwork.codebloom.common.email;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import java.util.HashMap;
@@ -20,6 +18,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -39,14 +39,14 @@ public class SendEmailTest extends NoJdaRequired {
         RestAssured.baseURI = "http://localhost";
     }
 
-    private String buildTestEmailPayload(final String email) throws JsonProcessingException {
+    private String buildTestEmailPayload(final String email) throws JacksonException {
         Map<String, Object> body = new HashMap<>();
         body.put("email", email);
         return new ObjectMapper().writeValueAsString(body);
     }
 
     @Test
-    void testNonValidSchoolEmail() throws JsonProcessingException {
+    void testNonValidSchoolEmail() throws JacksonException {
         String payload = buildTestEmailPayload("name@example.com ");
         ApiResponder<Empty> apiResponder = RestAssured.given()
                 .header("Content-Type", "application/json")
@@ -63,7 +63,7 @@ public class SendEmailTest extends NoJdaRequired {
     }
 
     @Test
-    void testValidSchoolEmail() throws JsonProcessingException {
+    void testValidSchoolEmail() throws JacksonException {
         String payload = buildTestEmailPayload("TIMMY.APPLES420@stu-mail.hunter.cuny.edu");
 
         ApiResponder<Empty> apiResponder = RestAssured.given()

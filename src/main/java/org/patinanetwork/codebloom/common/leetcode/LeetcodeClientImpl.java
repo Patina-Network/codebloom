@@ -1,7 +1,5 @@
 package org.patinanetwork.codebloom.common.leetcode;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -41,6 +39,8 @@ import org.patinanetwork.codebloom.common.leetcode.queries.SelectProblemQuery;
 import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /** TODO: Add an input to determine whether the request must be processed quickly or not. */
 @Component
@@ -166,21 +166,21 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             long questionId =
                     node.path("data").path("question").path("questionId").asLong();
             String questionTitle =
-                    node.path("data").path("question").path("title").asText();
+                    node.path("data").path("question").path("title").asString();
             String titleSlug =
-                    node.path("data").path("question").path("titleSlug").asText();
+                    node.path("data").path("question").path("titleSlug").asString();
             String link = "https://leetcode.com/problems/" + titleSlug;
             String difficulty =
-                    node.path("data").path("question").path("difficulty").asText();
-            String question = questionNode.path("content").asText(null);
+                    node.path("data").path("question").path("difficulty").asString();
+            String question = questionNode.path("content").asString(null);
             if (question != null && question.isBlank()) {
                 question = null;
             }
             boolean isPaidOnly = questionNode.path("isPaidOnly").asBoolean(false);
 
-            String statsJson = node.path("data").path("question").path("stats").asText();
+            String statsJson = node.path("data").path("question").path("stats").asString();
             JsonNode stats = mapper.readTree(statsJson);
-            String acRateString = stats.get("acRate").asText();
+            String acRateString = stats.get("acRate").asString();
             float acRate = Float.parseFloat(acRateString.replace("%", "")) / 100f;
 
             JsonNode topicTagsNode = node.path("data").path("question").path("topicTags");
@@ -189,8 +189,8 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             for (JsonNode el : topicTagsNode) {
                 tags.add(LeetcodeTopicTag.builder()
-                        .name(el.get("name").asText())
-                        .slug(el.get("slug").asText())
+                        .name(el.get("name").asString())
+                        .slug(el.get("slug").asString())
                         .build());
             }
 
@@ -259,14 +259,14 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
                 for (JsonNode submission : submissionsNode) {
                     long id = submission.path("id").asLong();
-                    String title = submission.path("title").asText();
-                    String titleSlug = submission.path("titleSlug").asText();
-                    String timestampString = submission.path("timestamp").asText();
+                    String title = submission.path("title").asString();
+                    String titleSlug = submission.path("titleSlug").asString();
+                    String timestampString = submission.path("timestamp").asString();
                     long epochSeconds = Long.parseLong(timestampString);
                     Instant instant = Instant.ofEpochSecond(epochSeconds);
 
                     LocalDateTime timestamp = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-                    String statusDisplay = submission.path("statusDisplay").asText();
+                    String statusDisplay = submission.path("statusDisplay").asString();
                     submissions.add(new LeetcodeSubmission(id, title, titleSlug, timestamp, statusDisplay));
                 }
             }
@@ -313,14 +313,14 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             JsonNode baseNode = node.path("data").path("submissionDetails");
 
             long runtime = baseNode.path("runtime").asLong();
-            String runtimeDisplay = baseNode.path("runtimeDisplay").asText();
+            String runtimeDisplay = baseNode.path("runtimeDisplay").asString();
             float runtimePercentile = (float) baseNode.path("runtimePercentile").asDouble();
             long memory = baseNode.path("memory").asLong();
-            String memoryDisplay = baseNode.path("memoryDisplay").asText();
+            String memoryDisplay = baseNode.path("memoryDisplay").asString();
             float memoryPercentile = (float) baseNode.path("memoryPercentile").asDouble();
-            String code = baseNode.path("code").asText();
-            String langName = baseNode.path("lang").path("name").asText();
-            String langVerboseName = baseNode.path("lang").path("verboseName").asText();
+            String code = baseNode.path("code").asString();
+            String langName = baseNode.path("lang").path("name").asString();
+            String langVerboseName = baseNode.path("lang").path("verboseName").asString();
             Lang lang = (Strings.isNullOrEmpty(langName) || Strings.isNullOrEmpty(langVerboseName))
                     ? null
                     : new Lang(langName, langVerboseName);
@@ -375,10 +375,10 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             JsonNode baseNode =
                     node.path("data").path("activeDailyCodingChallengeQuestion").path("question");
 
-            String titleSlug = baseNode.path("titleSlug").asText();
-            String title = baseNode.path("title").asText();
+            String titleSlug = baseNode.path("titleSlug").asString();
+            String title = baseNode.path("title").asString();
             var difficulty =
-                    QuestionDifficulty.valueOf(baseNode.path("difficulty").asText());
+                    QuestionDifficulty.valueOf(baseNode.path("difficulty").asString());
 
             return new POTD(title, titleSlug, difficulty);
         } catch (InterruptedException e) {
@@ -421,11 +421,11 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             JsonNode node = mapper.readTree(body);
             JsonNode baseNode = node.path("data").path("matchedUser");
 
-            var returnedUsername = baseNode.path("username").asText();
-            var ranking = baseNode.path("profile").path("ranking").asText();
-            var userAvatar = baseNode.path("profile").path("userAvatar").asText();
-            var realName = baseNode.path("profile").path("realName").asText();
-            var aboutMe = baseNode.path("profile").path("aboutMe").asText().trim();
+            var returnedUsername = baseNode.path("username").asString();
+            var ranking = baseNode.path("profile").path("ranking").asString();
+            var userAvatar = baseNode.path("profile").path("userAvatar").asString();
+            var realName = baseNode.path("profile").path("realName").asString();
+            var aboutMe = baseNode.path("profile").path("aboutMe").asString().trim();
 
             return new UserProfile(returnedUsername, ranking, userAvatar, realName, aboutMe);
         } catch (InterruptedException e) {
@@ -472,8 +472,8 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             for (JsonNode edge : edges) {
                 JsonNode node = edge.path("node");
                 result.add(LeetcodeTopicTag.builder()
-                        .name(node.get("name").asText())
-                        .slug(node.get("slug").asText())
+                        .name(node.get("name").asString())
+                        .slug(node.get("slug").asString())
                         .build());
             }
 
@@ -523,18 +523,18 @@ public class LeetcodeClientImpl implements LeetcodeClient {
                 List<LeetcodeTopicTag> tags = new ArrayList<>();
                 for (JsonNode tag : topicTags) {
                     tags.add(LeetcodeTopicTag.builder()
-                            .name(tag.get("name").asText())
-                            .slug(tag.get("slug").asText())
+                            .name(tag.get("name").asString())
+                            .slug(tag.get("slug").asString())
                             .build());
                 }
 
                 result.add(LeetcodeQuestion.builder()
                         .link("https://leetcode.com/problems/"
-                                + question.get("titleSlug").asText())
+                                + question.get("titleSlug").asString())
                         .questionId(question.get("questionFrontendId").asLong())
-                        .questionTitle(question.get("title").asText())
-                        .titleSlug(question.get("titleSlug").asText())
-                        .difficulty(question.get("difficulty").asText())
+                        .questionTitle(question.get("title").asString())
+                        .titleSlug(question.get("titleSlug").asString())
+                        .difficulty(question.get("difficulty").asString())
                         .acceptanceRate((float) question.get("acRate").asDouble())
                         .topics(tags)
                         .build());

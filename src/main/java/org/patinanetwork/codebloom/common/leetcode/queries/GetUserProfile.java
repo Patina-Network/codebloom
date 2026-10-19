@@ -1,9 +1,9 @@
 package org.patinanetwork.codebloom.common.leetcode.queries;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class GetUserProfile {
 
@@ -22,7 +22,7 @@ public class GetUserProfile {
         }
         """;
 
-    public static String body(final String username) throws JsonProcessingException {
+    public static String body(final String username) throws JacksonException {
         ObjectMapper objectMapper = new ObjectMapper();
 
         Map<String, Object> requestBodyMap = new HashMap<>();

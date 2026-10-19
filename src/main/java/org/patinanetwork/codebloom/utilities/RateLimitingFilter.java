@@ -1,6 +1,5 @@
 package org.patinanetwork.codebloom.utilities;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.Filter;
@@ -18,6 +17,7 @@ import org.patinanetwork.codebloom.common.simpleredis.SimpleRedisProvider;
 import org.patinanetwork.codebloom.common.simpleredis.SimpleRedisSlot;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @Profile("!ci")

@@ -1,9 +1,9 @@
 package org.patinanetwork.codebloom.common.leetcode.queries;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class SelectAcceptedSubmisisonsQuery {
 
@@ -21,7 +21,7 @@ public class SelectAcceptedSubmisisonsQuery {
         }
         """;
 
-    public static String body(final String username, final int limit) throws JsonProcessingException {
+    public static String body(final String username, final int limit) throws JacksonException {
         // API doesn't let you get more than this amount.
         int submissionsLimit;
         if (limit < 1 || limit > 20) {
