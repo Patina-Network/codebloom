@@ -4,7 +4,7 @@ multi-ecosystem-groups:
   main:
     schedule: { interval: weekly }
     commit-message: { prefix: "deps(main)" }
-  ci:
+  cicd:
     schedule: { interval: weekly }
     commit-message: { prefix: "deps(ci)" }
   non-main:
@@ -38,19 +38,19 @@ updates:
     patterns: ["*"]
     cooldown: { default-days: 7 }
     multi-ecosystem-group: main
-  # ci
+  # cicd
   - package-ecosystem: github-actions
     directories:
       - /
       - "/.github/composite/**"
     patterns: ["*"]
     cooldown: { default-days: 7 }
-    multi-ecosystem-group: ci
+    multi-ecosystem-group: cicd
   - package-ecosystem: bun
     directory: /.github/scripts
     patterns: ["*"]
     cooldown: { default-days: 7 }
-    multi-ecosystem-group: ci
+    multi-ecosystem-group: cicd
   # non-main
   - package-ecosystem: cargo
     directory: /internal/standup-bot
