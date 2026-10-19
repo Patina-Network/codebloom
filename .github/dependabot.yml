@@ -25,6 +25,10 @@ updates:
       - /js
     patterns: ["*"]
     cooldown: { default-days: 7 }
+    # openapi-typescript is pinned and patched via pnpm patchedDependencies
+    # (js/patches/openapi-typescript@7.8.0.patch); bump it by hand and regenerate the patch.
+    ignore:
+      - dependency-name: openapi-typescript
     multi-ecosystem-group: main
   - package-ecosystem: uv
     directory: /internal/leetcode-auth-stealer-service
