@@ -23,6 +23,7 @@
         "globals": "^17.13.0",
         "@eslint/js": "^10.0.1",
         "@playwright/test": "^1.64.0",
+        "@typescript/native": "npm:typescript@^7.0.2",
         "@types/bun": "^1.4.3",
         "@types/node": "^26.6.5",
         "eslint": "^10.12.0",
@@ -30,10 +31,11 @@
         "eslint-plugin-perfectionist": "^5.12.1",
         "global": "^4.4.0",
         "prettier": "^3.9.10",
-        "typescript": "^7.0.2",
+        "typescript": "npm:@typescript/typescript6@^6.0.2",
         "typescript-eslint": "^8.71.1"
     },
     "patchedDependencies": {},
+    "packageManager": "pnpm@10.24.0",
     "pnpm": {
         "overrides": {
             "brace-expansion@<2": ">=1.1.18 <2",
