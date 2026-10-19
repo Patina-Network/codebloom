@@ -17,7 +17,7 @@ on:
 jobs:
   runE2E:
     name: "Run E2E"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout Repository

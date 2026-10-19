@@ -20,7 +20,7 @@ concurrency:
 jobs:
   backendPreTest:
     name: Backend Pre Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout Repository
@@ -31,7 +31,7 @@ jobs:
 
   e2ePreTest:
     name: E2E Pre Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout Repository
@@ -52,7 +52,7 @@ jobs:
 
   backendTests:
     name: Backend Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: backendPreTest
 
     steps:
@@ -66,7 +66,7 @@ jobs:
 
   frontendTests:
     name: Frontend Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: backendPreTest
 
     steps:
@@ -89,9 +89,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
 
     steps:
       - name: Checkout repository
@@ -115,9 +115,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
 
     steps:
       - name: Checkout repository
@@ -141,9 +141,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
 
     steps:
       - name: Checkout repository
@@ -161,7 +161,7 @@ jobs:
 
   deployStagingLeetcodeAuthService:
     name: Deploy staging codebloom-leetcode-auth-stealer-service to K8s
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: buildStagingLeetcodeAuthServiceImage
 
     if: github.event_name == 'pull_request'
@@ -181,7 +181,7 @@ jobs:
 
   validateDBSchema:
     name: Validate DB Schema on Prod DB
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: backendPreTest
 
     steps:
@@ -207,9 +207,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
 
     steps:
       - name: Checkout repository
@@ -232,9 +232,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
 
     steps:
       - name: Checkout repository
@@ -256,9 +256,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
 
     steps:
       - name: Checkout repository
@@ -276,7 +276,7 @@ jobs:
 
   deployLeetcodeAuthService:
     name: Deploy codebloom-leetcode-auth-stealer-service to K8s
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: buildLeetcodeAuthServiceImage
 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -296,7 +296,7 @@ jobs:
 
   deploy:
     name: deploy codebloom to K8S
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: buildImage
     environment: production
 
@@ -316,7 +316,7 @@ jobs:
 
   deployStandupBot:
     name: deploy codebloom-standup-bot to K8S
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: buildStandupBotImage
     environment: production
 

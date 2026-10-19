@@ -29,7 +29,7 @@ permissions:
 jobs:
   copy:
     name: Copy Production Database to Staging
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Get PR head SHA
         id: pr-head
