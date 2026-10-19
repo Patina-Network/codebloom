@@ -6,7 +6,7 @@ import SearchBox from "@/components/ui/table/SearchBox";
 import { useAllLeaderboardsMetadataQuery } from "@/lib/api/queries/leaderboard";
 import { timeDiff } from "@/lib/timeDiff";
 import { Box, Flex, Overlay, Table, Text, Tooltip } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function AllLeaderboardAdmin() {
   const {

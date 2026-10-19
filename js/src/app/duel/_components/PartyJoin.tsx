@@ -3,8 +3,8 @@ import { partyCodeSchema } from "@/lib/api/schema/duel";
 import { Button, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { useNavigate } from "react-router-dom";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useNavigate } from "react-router";
 import z from "zod";
 
 export default function PartyJoin() {
@@ -12,7 +12,7 @@ export default function PartyJoin() {
   const navigate = useNavigate();
 
   const form = useForm({
-    validate: zodResolver(partyCodeSchema),
+    validate: zod4Resolver(partyCodeSchema),
     initialValues: {
       joinCode: "",
     },

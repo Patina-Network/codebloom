@@ -2,7 +2,7 @@ import RecentSubmissionsSkeleton from "@/app/dashboard/_components/RecentSubmiss
 import CodebloomCard from "@/components/ui/CodebloomCard";
 import { useUserSubmissionsQuery } from "@/lib/api/queries/user";
 import { Badge, Box, Button, Center, Flex, Text, Title } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function RecentSubmissions({ userId }: { userId: string }) {
   const { data, status } = useUserSubmissionsQuery({ userId });

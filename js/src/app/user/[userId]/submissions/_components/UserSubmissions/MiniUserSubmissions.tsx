@@ -9,7 +9,7 @@ import { useUserSubmissionsQuery } from "@/lib/api/queries/user";
 import { ApiUtils } from "@/lib/api/utils";
 import { timeDiff } from "@/lib/timeDiff";
 import { Badge, Box, Overlay, Text, Group, Stack } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function MiniUserSubmissions({ userId }: { userId: string }) {
   const { data, status, isPlaceholderData } = useUserSubmissionsQuery({

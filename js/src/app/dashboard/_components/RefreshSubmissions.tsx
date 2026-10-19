@@ -12,7 +12,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useLocalStorage, useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function RefreshSubmissions({
   schoolRegistered,

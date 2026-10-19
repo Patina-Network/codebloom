@@ -5,7 +5,7 @@ import { DateTimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import d from "dayjs";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -13,7 +13,7 @@ export default function NewAnnouncementModal() {
   const [isModalOpen, setModalOpen] = useState(false);
   const { mutate, status } = useCreateAnnouncementLeaderboardMutation();
   const form = useForm({
-    validate: zodResolver(newAnnouncementSchema),
+    validate: zod4Resolver(newAnnouncementSchema),
     initialValues: {
       message: "",
       showTimer: false,

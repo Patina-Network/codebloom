@@ -3,7 +3,7 @@ import Toast from "@/components/ui/toast/Toast";
 import ToastWithRedirect from "@/components/ui/toast/ToastWithRedirect";
 import { useAuthQuery } from "@/lib/api/queries/auth";
 import { Box, Loader } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 export default function ClubSignupPage() {
   const { data, status } = useAuthQuery();

@@ -1,7 +1,7 @@
 import { LeaderboardById } from "@/app/leaderboard/_components/Leaderboard";
 import { LeaderboardMetadataById } from "@/app/leaderboard/_components/LeaderboardMetadata/LeaderboardMetadata";
 import { Box } from "@mantine/core";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 export default function LeaderboardWithIdPage() {
   const { leaderboardId } = useParams();

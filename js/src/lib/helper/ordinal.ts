@@ -23,9 +23,6 @@ export default function getOrdinal(n: number): OrdinalString {
 }
 
 export type OrdinalString =
-  | `${number}th`
-  | `${number}st`
-  | `${number}nd`
-  | `${number}rd`;
+  `${number}th` | `${number}st` | `${number}nd` | `${number}rd`;
 
 export type OrdinalSuffix = "th" | "st" | "nd" | "rd";

@@ -13,7 +13,13 @@ export default tseslint.config(
       perfectionist,
     },
     rules: {
-      "perfectionist/sort-imports": "error",
+      // perfectionist v5 added `^@/.+` to the default internalPattern, which splits
+      // `@/` imports into a separate group. Keep the repo's existing convention of
+      // sorting `@/` imports alphabetically alongside external packages.
+      "perfectionist/sort-imports": [
+        "error",
+        { internalPattern: ["^~/.+", "^#.+"] },
+      ],
     },
   },
   { ignores: ["dist", "coverage"] },

@@ -1,6 +1,6 @@
 import { useDebouncedValue } from "@mantine/hooks";
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 type UseUrlStateOptions = {
   enabled?: boolean;
@@ -34,35 +34,25 @@ export function useURLState<T>(
     debounce = defaultProps.debounce,
   }: UseUrlStateOptions = defaultProps,
 ) {
-  const [initial, setInitial] = useState(true);
-  const [value, setValue] = useState<T>(() => defaultValue);
-  const [debouncedValue] = useDebouncedValue<T>(value, debounce);
   const [searchParams, setSearchParams] = useSearchParams();
-
-  // On initial mount, update the state with the URL params. This hook will not run if the hook is not enabled or the initial value has already been provided.
-  useEffect(() => {
-    if (!enabled || !initial) {
-      return;
-    }
-
-    const param = searchParams.get(name);
-
+  // On mount, seed the state from the URL params. The URL is not read if the hook is not enabled.
+  // Seeding in the initializer (not an effect) keeps the debounced value in sync from the first render.
+  const [value, setValue] = useState<T>(() => {
+    const param = enabled ? searchParams.get(name) : null;
     // No value found in the URL.
     if (param == null) {
-      setValue(defaultValue);
-      setInitial(false);
-      return;
+      return defaultValue;
     }
 
     const val = coerce(param, defaultValue);
     // If coercion of type fails, it will return Symbol.
-    setValue(typeof val === "symbol" ? defaultValue : val);
-    setInitial(false);
-  }, [defaultValue, name, searchParams, enabled, initial]);
+    return typeof val === "symbol" ? defaultValue : val;
+  });
+  const [debouncedValue] = useDebouncedValue<T>(value, debounce);
 
-  // Update the URL with the new state, only if the initial value hasn't been set already and if the hook is enabled.
+  // Update the URL with the new state, only if the hook is enabled.
   useEffect(() => {
-    if (!enabled || initial) {
+    if (!enabled) {
       return;
     }
 
@@ -93,7 +83,6 @@ export function useURLState<T>(
     debouncedValue,
     defaultValue,
     enabled,
-    initial,
     name,
     resetOnDefault,
     setSearchParams,

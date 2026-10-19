@@ -19,9 +19,9 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import z from "zod";
 
 type ClubSignUpProps = {
@@ -43,7 +43,7 @@ export default function ClubSignUpForm({
   const [imgError, setImgError] = useState(false);
 
   const form = useForm({
-    validate: zodResolver(clubVerificationFormSchema),
+    validate: zod4Resolver(clubVerificationFormSchema),
     initialValues: {
       password: "",
     },

@@ -1,6 +1,6 @@
 import { schoolFF } from "@/lib/ff";
 import { Menu, Avatar } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 const DEFAULT_AVATAR_URL =
   "https://assets.leetcode.com/users/default_avatar.jpg";

@@ -4,7 +4,7 @@ import DocumentTitle from "@/components/ui/title/DocumentTitle";
 import { useReporter } from "@/lib/reporter";
 import { CustomErrorResponse } from "@/lib/reporter/types";
 import { Box, Button, Flex, Group, Text, Title } from "@mantine/core";
-import { isRouteErrorResponse, Link, useRouteError } from "react-router-dom";
+import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
 export default function ErrorPage() {
   const unknownError = useRouteError();

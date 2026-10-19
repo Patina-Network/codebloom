@@ -22,7 +22,7 @@ import { IconCircleCheckFilled, IconSearch } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { FaDiscord } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function UserSearch() {
   const {

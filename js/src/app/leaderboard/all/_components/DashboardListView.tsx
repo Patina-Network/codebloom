@@ -16,7 +16,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function DashboardListView() {
   const {

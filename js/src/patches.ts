@@ -69,11 +69,15 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
         return input.pathname.startsWith("/api");
       }
 
-      throw new Error("fetch does not currently support Request.");
+      // `Request` objects always carry an absolute URL.
+      return new URL(input.url).pathname.startsWith("/api");
     })();
 
     if (isApi) {
-      const headers = new Headers(init?.headers);
+      // Per fetch semantics, `init.headers` replaces a `Request`'s own headers.
+      const headers = new Headers(
+        init?.headers ?? (input instanceof Request ? input.headers : undefined),
+      );
 
       if (!headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");

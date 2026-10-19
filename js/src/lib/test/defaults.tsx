@@ -1,5 +1,12 @@
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 import "@/patches";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import utc from "dayjs/plugin/utc";
+
+// Mirror the global dayjs plugin registration done in `main.tsx`.
+dayjs.extend(utc);
+dayjs.extend(customParseFormat);
 
 // Mock ResizeObserver for Mantine ScrollArea
 class ResizeObserverMock {

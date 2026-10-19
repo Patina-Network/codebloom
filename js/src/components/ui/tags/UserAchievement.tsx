@@ -5,7 +5,7 @@ import { ApiUtils } from "@/lib/api/utils";
 import { Image, Tooltip, Box, Text, Stack, Divider } from "@mantine/core";
 import dayjs from "dayjs";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 type AchievementDto = Api<"AchievementDto">;
 interface UserAchievementProps {

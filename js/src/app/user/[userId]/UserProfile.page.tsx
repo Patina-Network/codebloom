@@ -5,7 +5,7 @@ import MiniUserSubmissions from "@/app/user/[userId]/submissions/_components/Use
 import ToastWithRedirect from "@/components/ui/toast/ToastWithRedirect";
 import { getUserSubmissionsUrl } from "@/lib/helper/leaderboardDateRange";
 import { Center, Button, Flex, Box, Text } from "@mantine/core";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router";
 
 export default function UserProfilePage() {
   const { userId } = useParams();

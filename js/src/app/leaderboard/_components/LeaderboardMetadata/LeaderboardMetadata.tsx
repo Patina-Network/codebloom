@@ -11,7 +11,7 @@ import {
 import useCountdown from "@/lib/hooks/useCountdown";
 import { Box, Button, Center, Skeleton, Title } from "@mantine/core";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 type LeaderboardMetadataOptions = {
   showClock?: boolean;

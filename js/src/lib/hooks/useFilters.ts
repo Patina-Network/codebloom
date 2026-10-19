@@ -1,7 +1,7 @@
 import { Tag } from "@/lib/api/types/schema";
 import { ApiUtils } from "@/lib/api/utils";
 import { useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { useImmer } from "use-immer";
 
 export type TagEnumToBooleanFilterObject = Record<Tag, boolean>;

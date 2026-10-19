@@ -23,7 +23,7 @@ import UserSearchPage from "@/app/user/all/UserSearch.page";
 import PageShell from "@/components/ui/page/PageShell";
 import ToastWithRedirect from "@/components/ui/toast/ToastWithRedirect";
 import { duelFF, schoolFF } from "@/lib/ff";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router";
 
 export const router = createBrowserRouter([
   {

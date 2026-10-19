@@ -3,10 +3,10 @@
 }
 
 .description > pre {
-    background-color: rgba(51, 48, 48, 0.8);
+    background-color: rgb(51, 48, 48, 0.8);
     border-radius: 1rem;
     padding: 2rem;
     min-width: 0;
     white-space: pre-wrap;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
 }

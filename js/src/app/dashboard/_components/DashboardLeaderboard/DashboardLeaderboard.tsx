@@ -30,7 +30,7 @@ import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { useState } from "react";
 import { FaDiscord } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function LeaderboardForDashboard({
   userId,

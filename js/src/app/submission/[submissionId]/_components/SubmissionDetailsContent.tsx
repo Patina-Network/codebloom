@@ -10,8 +10,8 @@ import { capitalize } from "@/lib/helper/capitalize";
 import { Badge, Box, Button, Center, Flex, Text, Title } from "@mantine/core";
 import { FaDiscord } from "react-icons/fa";
 import { FiExternalLink } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import ShikiHighlighter from "react-shiki";
 
 export default function SubmissionDetailsContent({

@@ -29,14 +29,7 @@ type AllPathSegents<TKey extends PathsKey> = CollectAllSegments<
 >;
 
 type HttpMethodLower =
-  | "get"
-  | "post"
-  | "put"
-  | "delete"
-  | "options"
-  | "head"
-  | "patch"
-  | "trace";
+  "get" | "post" | "put" | "delete" | "options" | "head" | "patch" | "trace";
 type HttpMethodUpper = Uppercase<HttpMethodLower>;
 
 type PathsKey = keyof paths;
