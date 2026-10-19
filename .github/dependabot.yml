@@ -1,31 +1,64 @@
 version: 2
+
+multi-ecosystem-groups:
+  main:
+    schedule: { interval: weekly }
+    commit-message: { prefix: "deps(main)" }
+  ci:
+    schedule: { interval: weekly }
+    commit-message: { prefix: "deps(ci)" }
+  non-main:
+    schedule: { interval: monthly }
+    commit-message: { prefix: "deps(non-main)" }
+
 updates:
-  - package-ecosystem: github-actions
-    directories:
-      - /
-      - "/.github/composite/**"
-    schedule: { interval: weekly }
-  - package-ecosystem: bun
-    directory: /.github/scripts
-    schedule: { interval: weekly }
+  # main
+  - package-ecosystem: maven
+    directory: /
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: main
   - package-ecosystem: npm
     directories:
       - /e2e
       - /email
       - /js
-    schedule: { interval: weekly }
-  - package-ecosystem: maven
-    directory: /
-    schedule: { interval: weekly }
-  - package-ecosystem: cargo
-    directory: /internal/standup-bot
-    schedule: { interval: weekly }
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: main
   - package-ecosystem: uv
     directory: /internal/leetcode-auth-stealer-service
-    schedule: { interval: weekly }
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: main
   - package-ecosystem: docker
     directories:
       - /infra
-      - /internal/standup-bot
       - /internal/leetcode-auth-stealer-service
-    schedule: { interval: weekly }
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: main
+  # ci
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - "/.github/composite/**"
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: ci
+  - package-ecosystem: bun
+    directory: /.github/scripts
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: ci
+  # non-main
+  - package-ecosystem: cargo
+    directory: /internal/standup-bot
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: non-main
+  - package-ecosystem: docker
+    directory: /internal/standup-bot
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: non-main
