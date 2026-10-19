@@ -2,7 +2,7 @@ import ProblemOfTheDaySkeleton from "@/app/dashboard/_components/ProblemOfTheDay
 import CodebloomCard from "@/components/ui/CodebloomCard";
 import { useFetchPotdQuery } from "@/lib/api/queries/potd";
 import { Badge, Button, Center, Flex, Title } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function ProblemOfTheDay() {
   const { data, status } = useFetchPotdQuery();

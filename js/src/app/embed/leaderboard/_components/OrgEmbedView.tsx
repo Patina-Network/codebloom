@@ -29,7 +29,7 @@ import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { useEffect, useMemo } from "react";
 import { FaArrowLeft, FaArrowRight, FaDiscord } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router";
 
 export default function OrgLeaderboardEmbed() {
   const [searchParams] = useSearchParams();

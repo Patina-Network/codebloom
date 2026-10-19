@@ -9,7 +9,7 @@ import { useAuthQuery } from "@/lib/api/queries/auth";
 import { Button, Center, Loader, Space, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function LoginPage() {
   // This handles any sort of callback info we get from the backend.

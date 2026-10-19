@@ -1,7 +1,6 @@
 package org.patinanetwork.codebloom.utilities.generator.complex;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +23,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 @Profile("dev | ci")
 @Component
@@ -50,8 +50,9 @@ public class ComplexJSTypesGenerator implements CommandLineRunner {
         }
     }
 
-    private final ObjectMapper objectMapper =
-            new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    private final JsonMapper objectMapper = JsonMapper.builder()
+            .changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+            .build();
 
     private void generateAll() throws Exception {
         generateTypes();

@@ -5,7 +5,7 @@ import { DateTimePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import d from "dayjs";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { useState } from "react";
 import { z } from "zod";
 
@@ -43,7 +43,7 @@ function EditLeaderboardForm({
       syntaxHighlightingLanguage: syntaxHighlightingLanguage,
       shouldExpireBy: shouldExpireBy ? d(shouldExpireBy).toISOString() : null,
     }),
-    validate: zodResolver(adminSchema(currentLeaderboardName)),
+    validate: zod4Resolver(adminSchema(currentLeaderboardName)),
   });
 
   const onSubmit = (values: z.infer<ReturnType<typeof adminSchema>>) => {

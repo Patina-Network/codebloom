@@ -13,8 +13,8 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { zodResolver } from "mantine-form-zod-resolver";
-import { useNavigate } from "react-router-dom";
+import { zod4Resolver } from "mantine-form-zod-resolver";
+import { useNavigate } from "react-router";
 import { z } from "zod";
 
 export default function ReportIssueForm() {
@@ -27,7 +27,7 @@ export default function ReportIssueForm() {
       description: "",
       email: "",
     },
-    validate: zodResolver(reportIssueSchema),
+    validate: zod4Resolver(reportIssueSchema),
   });
 
   const onSubmit = (data: z.infer<typeof reportIssueSchema>) => {

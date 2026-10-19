@@ -16,7 +16,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 /**
  * Renders a scrollable list of incomplete questions.

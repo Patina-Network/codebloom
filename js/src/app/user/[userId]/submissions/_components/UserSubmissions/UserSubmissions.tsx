@@ -18,7 +18,7 @@ import { timeDiff } from "@/lib/timeDiff";
 import { Badge, Box, Overlay, Text, Stack, Group, Flex } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function UserSubmissions({ userId }: { userId: string }) {
   const {

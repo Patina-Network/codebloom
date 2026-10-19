@@ -15,7 +15,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function AboutUs() {
   const targetSectionRef = useRef<HTMLDivElement>(null);

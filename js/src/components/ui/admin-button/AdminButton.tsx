@@ -1,6 +1,6 @@
 import { useAuthQuery } from "@/lib/api/queries/auth";
 import { Button } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export function GotoAdminPageButton() {
   const { data, status } = useAuthQuery();

@@ -20,7 +20,7 @@ import {
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { FaDiscord } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export default function MiniLeaderboardDesktop() {
   const { data, status, filters, toggleFilter, isPlaceholderData } =

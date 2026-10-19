@@ -1,7 +1,7 @@
 import UserSubmissionsPage from "@/app/user/[userId]/submissions/UserSubmissions.page";
 import { TestUtils, TestUtilTypes } from "@/lib/test";
 import { screen } from "@testing-library/react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router";
 
 const routes = (
   <Routes>

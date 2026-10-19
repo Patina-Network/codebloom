@@ -60,8 +60,8 @@ public class ControllerExceptionHandlerTest {
 
     @Test
     void testNoResourceFoundReturns404WithoutReportingOrErrorLog() {
-        var response =
-                controllerExceptionHandler.handleNoResourceFound(new NoResourceFoundException(HttpMethod.GET, ".env"));
+        var response = controllerExceptionHandler.handleNoResourceFound(
+                new NoResourceFoundException(HttpMethod.GET, "/.env", ".env"));
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         verifyNoInteractions(errorReporter);

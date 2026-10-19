@@ -38,7 +38,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { FaArrowLeft, FaArrowRight, FaDiscord } from "react-icons/fa";
 import { SiLeetcode } from "react-icons/si";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export function CurrentLeaderboard() {
   const query = useCurrentLeaderboardUsersQuery();

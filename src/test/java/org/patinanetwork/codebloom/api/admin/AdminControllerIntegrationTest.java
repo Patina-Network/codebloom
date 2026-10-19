@@ -2,8 +2,6 @@ package org.patinanetwork.codebloom.api.admin;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import java.util.HashMap;
@@ -20,6 +18,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @Import(TestProtector.class)
@@ -39,7 +39,7 @@ public class AdminControllerIntegrationTest extends NoJdaRequired {
         RestAssured.baseURI = "http://localhost";
     }
 
-    private String buildTestAdminToggleBody(final String id, final boolean toggleTo) throws JsonProcessingException {
+    private String buildTestAdminToggleBody(final String id, final boolean toggleTo) throws JacksonException {
         Map<String, Object> body = new HashMap<>();
         body.put("id", id);
         body.put("toggleTo", toggleTo);
@@ -48,7 +48,7 @@ public class AdminControllerIntegrationTest extends NoJdaRequired {
     }
 
     @Test
-    void testAdminToggle() throws JsonProcessingException {
+    void testAdminToggle() throws JacksonException {
         ApiResponder<UserDto> apiResponder = RestAssured.given()
                 .when()
                 // Everyone should have this user ID on their dev db from the repeated

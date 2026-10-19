@@ -3,7 +3,7 @@ import { theme } from "@/lib/theme";
 import { Box, Button, ButtonProps, Group } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import { useImmer } from "use-immer";
 
 interface StateProps {

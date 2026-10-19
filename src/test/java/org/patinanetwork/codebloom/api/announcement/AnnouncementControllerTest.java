@@ -3,8 +3,6 @@ package org.patinanetwork.codebloom.api.announcement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import java.util.HashMap;
@@ -28,6 +26,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,10 +71,10 @@ public class AnnouncementControllerTest extends NoJdaRequired {
     /**
      * Use builder pattern to pass in input.
      *
-     * @throws JsonProcessingException
+     * @throws JacksonException
      */
     private String builtTestCreateAnnouncementPayload(final CreateAnnouncementBody createAnnouncementBody)
-            throws JsonProcessingException {
+            throws JacksonException {
         Map<String, Object> body = new HashMap<>();
         body.put("message", createAnnouncementBody.getMessage());
         body.put("showTimer", createAnnouncementBody.isShowTimer());
@@ -84,7 +84,7 @@ public class AnnouncementControllerTest extends NoJdaRequired {
 
     @Test
     @Order(1)
-    void createNewTestAnnouncementAsAdmin() throws JsonProcessingException {
+    void createNewTestAnnouncementAsAdmin() throws JacksonException {
         ApiResponder<AnnouncementDto> apiResponder = RestAssured.given()
                 .when()
                 .header("Content-Type", "application/json")

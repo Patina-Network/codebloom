@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { zodResolver } from "mantine-form-zod-resolver";
+import { zod4Resolver } from "mantine-form-zod-resolver";
 import { z } from "zod";
 
 type SchoolModalProps = {
@@ -25,7 +25,7 @@ export default function SchoolEmailModal({
 }: SchoolModalProps) {
   const { mutate, status } = useVerifySchoolMutation();
   const form = useForm({
-    validate: zodResolver(schoolVerificationFormSchema),
+    validate: zod4Resolver(schoolVerificationFormSchema),
     initialValues: {
       email: "",
     },

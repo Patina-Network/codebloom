@@ -25,6 +25,9 @@
         "noUnusedLocals": false,
         "noUnusedParameters": false,
         "noPropertyAccessFromIndexSignature": false,
-        "baseUrl": "./"
+        "paths": {
+            "*": ["./*"]
+        },
+        "types": ["bun", "node"]
     }
 }

@@ -3,6 +3,7 @@ package org.patinanetwork.codebloom.common.redis;
 import lombok.Getter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.UnifiedJedis;
 
 @Component
@@ -12,6 +13,6 @@ public class JedisClientManager {
     private UnifiedJedis client;
 
     public JedisClientManager(JedisClientConfiguration jedisClientConfiguration) {
-        client = new UnifiedJedis(jedisClientConfiguration.getUrl());
+        client = RedisClient.create(jedisClientConfiguration.getUrl());
     }
 }

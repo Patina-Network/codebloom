@@ -866,7 +866,7 @@ public class LeetcodeClientTest {
     @ValueSource(booleans = {true, false})
     void paidOnlyFlagPreservesNullContent(boolean isPaidOnly) throws Exception {
         when(httpResponse.statusCode()).thenReturn(200);
-        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        var mapper = new tools.jackson.databind.ObjectMapper();
         var data = new java.util.HashMap<String, Object>();
         data.put("questionId", "1");
         data.put("title", "Premium");
