@@ -1,4 +1,4 @@
-FROM ubuntu:25.10
+FROM ubuntu:26.04
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.15 /uv /bin/uv
 
