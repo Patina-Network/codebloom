@@ -8,7 +8,6 @@ import {
 import SubmissionDetailsContent from "@/app/submission/[submissionId]/_components/SubmissionDetailsContent";
 import { TestUtils, TestUtilTypes } from "@/lib/test";
 import { screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 
 describe("SubmissionDetailsContent API Succeeded", () => {
@@ -51,7 +50,7 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     );
 
     await waitFor(() => {
-      const link = screen.getByRole("link");
+      const link = screen.getByRole("link", { name: /open on leetcode/i });
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute(
         "href",
@@ -102,34 +101,17 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     });
   });
 
-  it("should render go to profile button after successful API call", async () => {
+  it("should link author name to user profile after successful API call", async () => {
     renderProviderFn?.(
       <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /go to profile/i }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "aphrodite" })).toHaveAttribute(
+        "href",
+        "/user/user-1",
+      );
     });
-  });
-
-  it("should navigate to user profile when go to profile button is clicked", async () => {
-    const user = userEvent.setup();
-    renderProviderFn?.(
-      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId("submission-skeleton-question-title"),
-      ).not.toBeInTheDocument();
-    });
-
-    const profileButton = screen.getByRole("button", {
-      name: /go to profile/i,
-    });
-    await user.click(profileButton);
   });
 
   it("should render language after successful API call", async () => {
@@ -148,7 +130,7 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Runtime: 50ms")).toBeInTheDocument();
+      expect(screen.getByText("50ms")).toBeInTheDocument();
     });
   });
 
@@ -158,7 +140,7 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Memory: 16MB")).toBeInTheDocument();
+      expect(screen.getByText("16MB")).toBeInTheDocument();
     });
   });
 

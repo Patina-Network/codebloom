@@ -50,15 +50,6 @@ describe("SubmissionDetailsContentSkeleton", () => {
     expect(info3).toBeVisible();
   });
 
-  it("should render user profile button skeleton", () => {
-    renderProviderFn?.(<SubmissionDetailsContentSkeleton />);
-    const element = screen.getByTestId(
-      "submission-skeleton-user-profile-button",
-    );
-    expect(element).toBeInTheDocument();
-    expect(element).toBeVisible();
-  });
-
   it("should render question details skeleton", () => {
     renderProviderFn?.(<SubmissionDetailsContentSkeleton />);
     const element = screen.getByTestId("submission-skeleton-question-details");
