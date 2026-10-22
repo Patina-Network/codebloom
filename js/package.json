@@ -22,6 +22,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "@mantine/charts": "^9.7.3",
         "@mantine/core": "^8.1.2",
         "@mantine/dates": "^8.1.2",
         "@mantine/form": "^8.1.2",
@@ -42,6 +43,7 @@
         "react-router": "^7.18.0",
         "react-router-dom": "^7.18.0",
         "react-shiki": "^0.9.1",
+        "recharts": "^3.10.1",
         "type-fest": "github:tahminator/type-fest#main",
         "use-debounce": "^10.0.4",
         "use-immer": "^0.11.0",
