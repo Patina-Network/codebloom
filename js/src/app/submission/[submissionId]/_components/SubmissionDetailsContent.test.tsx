@@ -3,6 +3,8 @@ import {
   submissionDetailsFailedHandler,
   submissionDetailsErrorHandler,
   submissionDetailsProcessingHandler,
+  submissionDetailsSparseHandler,
+  submissionDetailsVerifiedHandler,
   MOCK_SUBMISSION_ID,
 } from "@/__mock__/submissions";
 import SubmissionDetailsContent from "@/app/submission/[submissionId]/_components/SubmissionDetailsContent";
@@ -51,7 +53,7 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     );
 
     await waitFor(() => {
-      const link = screen.getByRole("link");
+      const link = screen.getByRole("link", { name: /open on leetcode/i });
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute(
         "href",
@@ -102,34 +104,17 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     });
   });
 
-  it("should render go to profile button after successful API call", async () => {
+  it("should link author name to user profile after successful API call", async () => {
     renderProviderFn?.(
       <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /go to profile/i }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "aphrodite" })).toHaveAttribute(
+        "href",
+        "/user/user-1",
+      );
     });
-  });
-
-  it("should navigate to user profile when go to profile button is clicked", async () => {
-    const user = userEvent.setup();
-    renderProviderFn?.(
-      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
-    );
-
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId("submission-skeleton-question-title"),
-      ).not.toBeInTheDocument();
-    });
-
-    const profileButton = screen.getByRole("button", {
-      name: /go to profile/i,
-    });
-    await user.click(profileButton);
   });
 
   it("should render language after successful API call", async () => {
@@ -148,7 +133,7 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Runtime: 50ms")).toBeInTheDocument();
+      expect(screen.getByText("50ms")).toBeInTheDocument();
     });
   });
 
@@ -158,7 +143,7 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Memory: 16MB")).toBeInTheDocument();
+      expect(screen.getByText("16MB")).toBeInTheDocument();
     });
   });
 
@@ -212,5 +197,61 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     await waitFor(() => {
       expect(screen.getByText("Submission not found.")).toBeInTheDocument();
     });
+  });
+
+  it("should render verified nickname, submitted time and topics when available", async () => {
+    server.use(submissionDetailsVerifiedHandler);
+    renderProviderFn?.(
+      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Aphrodite" })).toHaveAttribute(
+        "href",
+        "/user/user-1",
+      );
+    });
+    expect(screen.queryByText("aphrodite")).not.toBeInTheDocument();
+    expect(screen.getByText("Submitted")).toBeInTheDocument();
+    expect(screen.getByText("2d ago")).toBeInTheDocument();
+    expect(screen.getByText("Array")).toBeInTheDocument();
+  });
+
+  it("should render fallbacks when optional submission fields are missing", async () => {
+    server.use(submissionDetailsSparseHandler);
+    renderProviderFn?.(
+      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("link", { name: "Unknown user" }),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(
+      screen.getByText("No available description found."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Csharp")).toBeInTheDocument();
+    expect(screen.queryByText("Submitted")).not.toBeInTheDocument();
+  });
+
+  it("should copy the solution code to the clipboard", async () => {
+    const user = userEvent.setup();
+    renderProviderFn?.(
+      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
+    );
+
+    const copyButton = await screen.findByRole("button", {
+      name: "Copy code",
+    });
+    await user.click(copyButton);
+
+    await waitFor(async () => {
+      expect(await navigator.clipboard.readText()).toBe(
+        "def twoSum(nums, target):\n    pass",
+      );
+    });
+    expect(await screen.findByText("Copied")).toBeInTheDocument();
   });
 });
