@@ -2,8 +2,6 @@
     font-size: clamp(1.375rem, 4vw, 2rem);
 }
 
-/* Mantine reserves 24px (the control height) below the content for the
-   absolutely positioned toggle; add the toggle's top offset to that reservation. */
 .spoilerRoot[data-has-spoiler] {
     margin-bottom: calc(24px + var(--mantine-spacing-md));
 }

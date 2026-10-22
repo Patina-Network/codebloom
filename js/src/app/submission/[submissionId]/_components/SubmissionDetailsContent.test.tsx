@@ -3,11 +3,14 @@ import {
   submissionDetailsFailedHandler,
   submissionDetailsErrorHandler,
   submissionDetailsProcessingHandler,
+  submissionDetailsSparseHandler,
+  submissionDetailsVerifiedHandler,
   MOCK_SUBMISSION_ID,
 } from "@/__mock__/submissions";
 import SubmissionDetailsContent from "@/app/submission/[submissionId]/_components/SubmissionDetailsContent";
 import { TestUtils, TestUtilTypes } from "@/lib/test";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 
 describe("SubmissionDetailsContent API Succeeded", () => {
@@ -194,5 +197,61 @@ describe("SubmissionDetailsContent API Succeeded", () => {
     await waitFor(() => {
       expect(screen.getByText("Submission not found.")).toBeInTheDocument();
     });
+  });
+
+  it("should render verified nickname, submitted time and topics when available", async () => {
+    server.use(submissionDetailsVerifiedHandler);
+    renderProviderFn?.(
+      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Aphrodite" })).toHaveAttribute(
+        "href",
+        "/user/user-1",
+      );
+    });
+    expect(screen.queryByText("aphrodite")).not.toBeInTheDocument();
+    expect(screen.getByText("Submitted")).toBeInTheDocument();
+    expect(screen.getByText("2d ago")).toBeInTheDocument();
+    expect(screen.getByText("Array")).toBeInTheDocument();
+  });
+
+  it("should render fallbacks when optional submission fields are missing", async () => {
+    server.use(submissionDetailsSparseHandler);
+    renderProviderFn?.(
+      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("link", { name: "Unknown user" }),
+      ).toBeInTheDocument();
+    });
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(
+      screen.getByText("No available description found."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Csharp")).toBeInTheDocument();
+    expect(screen.queryByText("Submitted")).not.toBeInTheDocument();
+  });
+
+  it("should copy the solution code to the clipboard", async () => {
+    const user = userEvent.setup();
+    renderProviderFn?.(
+      <SubmissionDetailsContent submissionId={MOCK_SUBMISSION_ID} />,
+    );
+
+    const copyButton = await screen.findByRole("button", {
+      name: "Copy code",
+    });
+    await user.click(copyButton);
+
+    await waitFor(async () => {
+      expect(await navigator.clipboard.readText()).toBe(
+        "def twoSum(nums, target):\n    pass",
+      );
+    });
+    expect(await screen.findByText("Copied")).toBeInTheDocument();
   });
 });
