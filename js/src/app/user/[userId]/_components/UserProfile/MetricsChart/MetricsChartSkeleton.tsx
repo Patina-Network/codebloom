@@ -5,7 +5,7 @@ export default function MetricsChartSkeleton() {
     <>
       <Flex direction={"column"} align={"center"} gap={"sm"} w={"100%"}>
         <Divider w={"70%"} />
-        <Skeleton height={150} width={150} mx={"md"} />
+        <Skeleton height={250} width={"70%"} mx={"md"} />
       </Flex>
     </>
   );
