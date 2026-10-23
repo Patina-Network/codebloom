@@ -52,7 +52,7 @@ jobs:
           ref: ${{ steps.pr-head.outputs.result }}
 
       - name: Setup CI
-        uses: tahminator/pipeline/actions/setup@a424f92d486342e1255fcdf377a7569eb230aabe # 1.0.97
+        uses: tahminator/pipeline/actions/setup@0d54deb9e9abab9530e4aa889a6c79c88a0ff5c7 # 1.0.99
         with:
           LINT_CI: true
           SECRETS: ${{ toJSON(secrets) }}
