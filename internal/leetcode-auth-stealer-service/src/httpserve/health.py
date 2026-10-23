@@ -8,8 +8,13 @@ if TYPE_CHECKING:
     from httpserve.router import AppState
 
 
-async def _livez(_: web.Request) -> web.Response:
-    return web.Response(text="OK", status=200)
+async def _livez(request: web.Request) -> web.Response:
+    state: AppState = request.app["app_state"]
+
+    return web.Response(
+        text="OK" if state.live else "mr stark i dont feel so good",
+        status=200 if state.live else 503,
+    )
 
 
 async def _readyz(request: web.Request) -> web.Response:

@@ -1,4 +1,5 @@
 import asyncio
+from collections.abc import Callable
 
 import grpc
 import structlog
@@ -8,7 +9,7 @@ from generated import (
     LeetcodeAuthStealerService_pb2,
     LeetcodeAuthStealerService_pb2_grpc,
 )
-from prom import record_auth_failure, record_auth_success
+from prom import AuthFailureReason, record_auth_failure, record_auth_success
 from provider.camou import CamouProvider
 from provider.dto import (
     AuthenticationTimeout,
@@ -24,9 +25,23 @@ logger = structlog.get_logger()
 class AuthService(
     LeetcodeAuthStealerService_pb2_grpc.LeetcodeAuthStealerServiceServicer
 ):
-    def __init__(self, c: Config, provider: CamouProvider) -> None:
+    def __init__(
+        self,
+        c: Config,
+        provider: CamouProvider,
+        on_failure: Callable[[], None],
+    ) -> None:
         self.provider = provider
         self.timeout_seconds = c.auth_timeout_seconds
+        self.on_failure = on_failure
+
+    def _fail(self, reason: AuthFailureReason) -> None:
+        record_auth_failure(reason)
+
+        logger.warning(
+            "Authentication failed, marking service as unalive", reason=reason
+        )
+        self.on_failure()
 
     async def Authenticate(
         self,
@@ -45,36 +60,36 @@ class AuthService(
                     Credentials(request.login, request.password)
                 )
         except BadCredentials:
-            record_auth_failure("bad_credentials")
+            self._fail("bad_credentials")
             await context.abort(
                 grpc.StatusCode.UNAUTHENTICATED, "Invalid LeetCode credentials"
             )
         except ManualVerificationRequired:
-            record_auth_failure("manual_verification_required")
+            self._fail("manual_verification_required")
             await context.abort(
                 grpc.StatusCode.FAILED_PRECONDITION,
                 "Manual two-step verification is required",
             )
         except AuthenticationUnavailable:
-            record_auth_failure("authentication_unavailable")
+            self._fail("authentication_unavailable")
             await context.abort(
                 grpc.StatusCode.UNAVAILABLE, "LeetCode authentication is unavailable"
             )
         except AuthenticationTimeout, TimeoutError:
-            record_auth_failure("timeout")
+            self._fail("timeout")
             await context.abort(
                 grpc.StatusCode.DEADLINE_EXCEEDED, "LeetCode authentication timed out"
             )
         except asyncio.CancelledError:
-            record_auth_failure("cancelled")
+            self._fail("cancelled")
             raise
         except Exception:
-            record_auth_failure("internal_error")
+            self._fail("internal_error")
             logger.exception("Authenticate failed")
             await context.abort(grpc.StatusCode.INTERNAL, "Authenticate failed")
 
         if not cookies.leetcode_session or not cookies.csrf_token:
-            record_auth_failure("incomplete_authentication")
+            self._fail("incomplete_authentication")
             await context.abort(
                 grpc.StatusCode.INTERNAL, "Provider returned incomplete authentication"
             )
