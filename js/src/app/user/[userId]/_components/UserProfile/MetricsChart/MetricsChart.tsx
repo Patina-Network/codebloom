@@ -8,7 +8,7 @@ import { Box, Divider } from "@mantine/core";
 import "@mantine/charts/styles.css";
 import d from "dayjs";
 
-export default function MetricsChart({ userId }: { userId: string }) {
+export default function MetricsChart({ userId }: { readonly userId: string }) {
   const { data, status, page, goBack, goForward, goTo } = useUserMetricsQuery({
     userId,
   });
@@ -43,6 +43,7 @@ export default function MetricsChart({ userId }: { userId: string }) {
           h={250}
           data={pageData}
           dataKey="createdAt"
+          data-testId = "metrics-area-chart"
           series={[
             { name: "points", label: "Points", color: theme.colors.patina[4] },
           ]}
