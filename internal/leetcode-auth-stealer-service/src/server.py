@@ -33,12 +33,13 @@ async def serve(c: Config) -> None:
     server = grpc.aio.server(
         interceptors=[RequestIdInterceptor()],
         # more than 1 will crash the pod due to multiple browsers
-        maximum_concurrent_rpcs=1
+        maximum_concurrent_rpcs=1,
     )
     invis_provider = CamouProvider(c)
+    app_state = AppState(c, ready=False)
 
     LeetcodeAuthStealerService_pb2_grpc.add_LeetcodeAuthStealerServiceServicer_to_server(
-        AuthService(c, invis_provider), server
+        AuthService(c, invis_provider, app_state.mark_unalive), server
     )
 
     if c.grpc_reflection:
@@ -53,7 +54,6 @@ async def serve(c: Config) -> None:
     if server.add_insecure_port(address) == 0:
         raise RuntimeError(f"Unable to bind gRPC server to {address}")
 
-    app_state = AppState(c, ready=False)
     app = register_routes(web.Application(), app_state)
     runner = web.AppRunner(app)
 
