@@ -7,6 +7,9 @@ import { AreaChart } from "@mantine/charts";
 import { Box, Divider } from "@mantine/core";
 import "@mantine/charts/styles.css";
 import d from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+d.extend(utc);
 
 export default function MetricsChart({ userId }: { readonly userId: string }) {
   const { data, status, page, goBack, goForward, goTo } = useUserMetricsQuery({
@@ -43,7 +46,7 @@ export default function MetricsChart({ userId }: { readonly userId: string }) {
           h={250}
           data={pageData}
           dataKey="createdAt"
-          data-testId = "metrics-area-chart"
+          data-testId="metrics-area-chart"
           series={[
             { name: "points", label: "Points", color: theme.colors.patina[4] },
           ]}
@@ -59,6 +62,7 @@ export default function MetricsChart({ userId }: { readonly userId: string }) {
         goBack={goBack}
         goForward={goForward}
         goTo={goTo}
+        data-testId="metrics-paginator"
       />
     </>
   );
