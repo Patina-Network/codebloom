@@ -304,6 +304,92 @@ export const useGetAllUsersInfiniteQuery = ({
   };
 };
 
+/**
+ * Fetches the user's metrics.
+ */
+export const useUserMetricsQuery = ({
+  userId,
+  initialPage = 1,
+  tieToUrl = false,
+  pageSize = 5,
+}: {
+  userId: string;
+  initialPage?: number;
+  tieToUrl?: boolean;
+  pageSize?: number;
+}) => {
+  const { page, goBack, goForward, goTo } = usePagination({
+    initialPage: initialPage,
+    tieToUrl: tieToUrl,
+  });
+
+  const {
+    startDate,
+    endDate,
+    setStartDate,
+    setEndDate,
+    debouncedStartDate,
+    debouncedEndDate,
+  } = useURLDateRange(tieToUrl);
+
+  // if seconds are not included, use start of day and end of day
+  const processedStartDate = useMemo(
+    () => {
+      if (debouncedStartDate){
+        if (debouncedStartDate.includes(":")) 
+          return d.utc(debouncedStartDate).toISOString();
+        return d(debouncedStartDate).startOf("day").utc().toISOString();
+      }
+      return undefined;
+    },
+    [debouncedStartDate],
+  );
+  const processedEndDate = useMemo(
+    () => {
+      if (debouncedEndDate){
+        if (debouncedEndDate.includes(":"))
+          return d.utc(debouncedEndDate).toISOString();
+        return d(debouncedEndDate).endOf("day").utc().toISOString();
+      }
+      return undefined;
+    },
+    [debouncedEndDate],
+  );
+
+  const apiURL = ApiURL.create("/api/user/{userId}/metrics", {
+    method: "GET",
+    params: {
+      userId,
+    },
+    queries: {
+      page,
+      pageSize,
+      startDate: processedStartDate,
+      endDate: processedEndDate,
+    },
+  });
+
+  const { queryKey } = apiURL;
+  const query = useQuery({
+    queryKey,
+    queryFn: () => fetchUserMetrics(apiURL),
+    placeholderData: keepPreviousData,
+  });
+
+  return {
+    ...query,
+    page,
+    goBack,
+    goForward,
+    goTo,
+    pageSize,
+    startDate,
+    endDate,
+    setStartDate,
+    setEndDate,
+  };
+};
+
 async function fetchUserProfile({
   url,
   method,
@@ -340,6 +426,22 @@ async function fetchAllUsers({
   method,
   res,
 }: ApiURL<"/api/user/all", "get">) {
+  const response = await fetch(url, {
+    method,
+  });
+
+  await sleep(650);
+
+  const json = res(await response.json());
+
+  return json;
+}
+
+async function fetchUserMetrics({
+  url,
+  method,
+  res,
+}: ApiURL<"/api/user/{userId}/metrics", "get">) {
   const response = await fetch(url, {
     method,
   });
