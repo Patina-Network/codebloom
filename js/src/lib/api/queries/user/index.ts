@@ -333,28 +333,22 @@ export const useUserMetricsQuery = ({
   } = useURLDateRange(tieToUrl);
 
   // if seconds are not included, use start of day and end of day
-  const processedStartDate = useMemo(
-    () => {
-      if (debouncedStartDate){
-        if (debouncedStartDate.includes(":")) 
-          return d.utc(debouncedStartDate).toISOString();
-        return d(debouncedStartDate).startOf("day").utc().toISOString();
-      }
-      return undefined;
-    },
-    [debouncedStartDate],
-  );
-  const processedEndDate = useMemo(
-    () => {
-      if (debouncedEndDate){
-        if (debouncedEndDate.includes(":"))
-          return d.utc(debouncedEndDate).toISOString();
-        return d(debouncedEndDate).endOf("day").utc().toISOString();
-      }
-      return undefined;
-    },
-    [debouncedEndDate],
-  );
+  const processedStartDate = useMemo(() => {
+    if (debouncedStartDate) {
+      if (debouncedStartDate.includes(":"))
+        return d.utc(debouncedStartDate).toISOString();
+      return d(debouncedStartDate).startOf("day").utc().toISOString();
+    }
+    return undefined;
+  }, [debouncedStartDate]);
+  const processedEndDate = useMemo(() => {
+    if (debouncedEndDate) {
+      if (debouncedEndDate.includes(":"))
+        return d.utc(debouncedEndDate).toISOString();
+      return d(debouncedEndDate).endOf("day").utc().toISOString();
+    }
+    return undefined;
+  }, [debouncedEndDate]);
 
   const apiURL = ApiURL.create("/api/user/{userId}/metrics", {
     method: "GET",
