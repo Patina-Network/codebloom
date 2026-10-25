@@ -65,7 +65,7 @@ export default function UserProfilePage() {
               <ProfilePicture userId={userId} />
               <UserProfileHeader userId={userId} />
               <UserTags userId={userId} />
-              <MetricsChart userId={userId} />
+              <MetricsChart userId={userId} key={userId} />
             </Flex>
           </Box>
           <Box
