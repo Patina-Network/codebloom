@@ -62,19 +62,33 @@ export default function DashboardPage() {
               <OnboardingLeetcodeUser />
             : <RefreshSubmissions schoolRegistered={schoolRegistered} />}
           </Center>
-          <Flex direction={smallPhone ? "row" : "column"} gap={"md"}>
-            <Flex direction={"column"} flex={1}>
-              <ProblemOfTheDay />
-            </Flex>
-            <Flex direction={"column"} flex={1}>
-              <DashboardLeaderboard
-                userId={data.user.id}
-                userTags={data.user.tags}
-              />
-            </Flex>
-            <Flex direction={"column"} flex={1}>
-              <RecentSubmissions userId={data.user.id} />
-            </Flex>
+          <Flex
+            direction={smallPhone ? "row" : "column"}
+            gap={"md"}
+            align="flex-start"
+          >
+            <div
+              style={{
+                order: smallPhone ? 1 : 2,
+              }}
+            >
+              <Flex direction={"column"}>
+                <ProblemOfTheDay />
+              </Flex>
+            </div>
+            <div style={{ order: smallPhone ? 2 : 1 }}>
+              <Flex direction={"column"} flex={1}>
+                <DashboardLeaderboard
+                  userId={data.user.id}
+                  userTags={data.user.tags}
+                />
+              </Flex>
+            </div>
+            <div style={{ order: 3 }}>
+              <Flex direction={"column"} flex={1}>
+                <RecentSubmissions userId={data.user.id} />
+              </Flex>
+            </div>
           </Flex>
         </Flex>
       </Box>
