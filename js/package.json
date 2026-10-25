@@ -22,7 +22,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@mantine/charts": "^9.7.3",
+        "@mantine/charts": "^8.1.2",
         "@mantine/core": "^8.1.2",
         "@mantine/dates": "^8.1.2",
         "@mantine/form": "^8.1.2",

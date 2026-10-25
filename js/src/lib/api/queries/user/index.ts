@@ -367,7 +367,8 @@ export const useUserMetricsQuery = ({
   const query = useQuery({
     queryKey,
     queryFn: () => fetchUserMetrics(apiURL),
-    placeholderData: keepPreviousData,
+    placeholderData: (previousData, previousQuery) =>
+      previousQuery?.queryKey[2] === queryKey[2] ? previousData : undefined,
   });
 
   return {

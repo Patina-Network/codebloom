@@ -18,37 +18,37 @@ const MOCK_METRICS = [
     id: "metric-1",
     userId: FIXED_USER_ID,
     points: 500,
-    createdAt: new Date(2026, 9, 1, 0).toISOString(),
+    createdAt: new Date(Date.UTC(2026, 9, 1)).toISOString(),
   },
   {
     id: "metric-2",
     userId: FIXED_USER_ID,
     points: 1500,
-    createdAt: new Date(2026, 9, 2, 0).toISOString(),
+    createdAt: new Date(Date.UTC(2026, 9, 2)).toISOString(),
   },
   {
     id: "metric-3",
     userId: FIXED_USER_ID,
     points: 2000,
-    createdAt: new Date(2026, 9, 3, 0).toISOString(),
+    createdAt: new Date(Date.UTC(2026, 9, 3)).toISOString(),
   },
   {
     id: "metric-4",
     userId: FIXED_USER_ID,
     points: 3000,
-    createdAt: new Date(2026, 9, 4, 0).toISOString(),
+    createdAt: new Date(Date.UTC(2026, 9, 4)).toISOString(),
   },
   {
     id: "metric-5",
     userId: FIXED_USER_ID,
     points: 3000,
-    createdAt: new Date(2026, 9, 5, 0).toISOString(),
+    createdAt: new Date(Date.UTC(2026, 9, 5)).toISOString(),
   },
   {
     id: "metric-6",
     userId: FIXED_USER_ID,
     points: 3000,
-    createdAt: new Date(2026, 9, 6, 0).toISOString(),
+    createdAt: new Date(Date.UTC(2026, 9, 6)).toISOString(),
   },
 ];
 
