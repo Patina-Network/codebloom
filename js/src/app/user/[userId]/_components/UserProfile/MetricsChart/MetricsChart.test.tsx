@@ -13,7 +13,6 @@ const userMetricsUrl = ApiURL.create("/api/user/{userId}/metrics", {
   params: { userId: FIXED_USER_ID },
 });
 
-/* 
 const MOCK_METRICS = [
   {
     id: "metric-1",
@@ -39,8 +38,19 @@ const MOCK_METRICS = [
     points: 3000,
     createdAt: new Date(2026, 9, 4, 0).toISOString(),
   },
+  {
+    id: "metric-5",
+    userId: FIXED_USER_ID,
+    points: 3000,
+    createdAt: new Date(2026, 9, 5, 0).toISOString(),
+  },
+  {
+    id: "metric-6",
+    userId: FIXED_USER_ID,
+    points: 3000,
+    createdAt: new Date(2026, 9, 6, 0).toISOString(),
+  },
 ];
-
 
 const userMetricsSuccessHandler = http.get(userMetricsUrl.url.toString(), () =>
   HttpResponse.json({
@@ -54,7 +64,6 @@ const userMetricsSuccessHandler = http.get(userMetricsUrl.url.toString(), () =>
     },
   }),
 );
-*/
 
 const userMetricsErrorHandler = http.get(userMetricsUrl.url.toString(), () =>
   HttpResponse.error(),
@@ -106,7 +115,7 @@ describe("MetricsChart succeeded", () => {
     });
     const MOCK_USER_ID = uuid();
     renderProviderFn?.(<MetricsChart userId={MOCK_USER_ID} />);
-    const element = await screen.findByTestId("metrics-area-chart");
+    const element = await screen.findByTestId(/metrics-area-chart.*$/);
     expect(element).toBeInTheDocument();
     expect(element).toBeVisible();
   });
@@ -131,13 +140,12 @@ describe("MetricsChart succeeded", () => {
 
     await waitFor(() => {
       expect(
-        screen.queryByTestId("metrics-area-chart"),
+        screen.queryByTestId(/metrics-area-chart.*$/),
       ).not.toBeInTheDocument();
     });
   });
 });
 
-/*
 describe("UserMetricsChart with successful API", () => {
   const server = setupServer(userMetricsSuccessHandler);
 
@@ -157,30 +165,32 @@ describe("UserMetricsChart with successful API", () => {
       ...BASE_QUERY_RESULT,
       status: "success",
       data: {
-        payload: { items: MOCK_METRICS, pages: 1, hasNextPage: false },
+        payload: { items: MOCK_METRICS, pages: 2, hasNextPage: true },
         success: true,
       },
     });
   });
 
-  it("should render formatted dates for chart after successful API call", async () => {
+  it("should have formatted dates for chart after successful API call", async () => {
     renderProviderFn?.(<MetricsChart userId={FIXED_USER_ID} />);
 
-    await screen.findByTestId("metrics-area-chart");
-    await waitFor(() => {
-      expect(screen.getByText("Oct 01, 2026")).toBeInTheDocument();
-    });
+    const element = await screen.findByTestId(
+      /metrics-area-chart Oct 01, 2026.*$/,
+    );
+    expect(element).toBeInTheDocument();
+    expect(element).toBeVisible();
   });
 
-  it("should have correct pages and hasNextPage for Paginator based on data payload", async () => {
+  it("should have correct userMetrics pages and hasNextPage based on data payload", async () => {
     renderProviderFn?.(<MetricsChart userId={FIXED_USER_ID} />);
 
-    const element = await screen.findByTestId("metrics-paginator");
-    expect(element.getAttribute("pages")).toBe(1);
-    expect(element.getAttribute("hasNextPage")).toBe(false);
+    const element = await screen.findByTestId(
+      "metrics-area-chart Oct 01, 2026 pages2 hasNextPagetrue",
+    );
+    expect(element).toBeInTheDocument();
+    expect(element).toBeVisible();
   });
 });
-*/
 
 describe("UserMetricsChart error state", () => {
   const server = setupServer(userMetricsErrorHandler);

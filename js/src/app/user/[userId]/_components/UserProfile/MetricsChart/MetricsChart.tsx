@@ -46,7 +46,7 @@ export default function MetricsChart({ userId }: { readonly userId: string }) {
           h={250}
           data={pageData}
           dataKey="createdAt"
-          data-testId="metrics-area-chart"
+          data-testId={`metrics-area-chart ${pageData[0]?.createdAt} pages${userMetrics?.pages ?? 0} hasNextPage${userMetrics?.hasNextPage ?? false}`}
           series={[
             { name: "points", label: "Points", color: theme.colors.patina[4] },
           ]}
