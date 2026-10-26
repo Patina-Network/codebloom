@@ -1,6 +1,7 @@
 import RecentSubmissionsSkeleton from "@/app/dashboard/_components/RecentSubmissions/RecentSubmissionsSkeleton";
 import CodebloomCard from "@/components/ui/CodebloomCard";
 import { useUserSubmissionsQuery } from "@/lib/api/queries/user";
+import { timeDiff } from "@/lib/timeDiff";
 import { Badge, Box, Button, Center, Flex, Text, Title } from "@mantine/core";
 import { Link } from "react-router-dom";
 
@@ -131,12 +132,17 @@ export default function RecentSubmissions({ userId }: { userId: string }) {
                 </Badge>
               </Box>
             </Flex>
-            <Text
-              ta={"center"}
-              className="transition-all group-hover:!text-blue-500"
-            >
-              +{q.pointsAwarded} points
-            </Text>
+            <Flex direction={"column"}>
+              <Text ta={"right"} size={"xs"} c="dimmed">
+                {timeDiff(new Date(q.submittedAt))}
+              </Text>
+              <Text
+                ta={"center"}
+                className="transition-all group-hover:!text-blue-500"
+              >
+                +{q.pointsAwarded} points
+              </Text>
+            </Flex>
           </Flex>
         );
       })}
