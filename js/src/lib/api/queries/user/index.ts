@@ -311,7 +311,7 @@ export const useUserMetricsQuery = ({
   userId,
   initialPage = 1,
   tieToUrl = false,
-  pageSize = 5,
+  pageSize = 20,
 }: {
   userId: string;
   initialPage?: number;
@@ -339,7 +339,7 @@ export const useUserMetricsQuery = ({
         return d.utc(debouncedStartDate).toISOString();
       return d(debouncedStartDate).startOf("day").utc().toISOString();
     }
-    return undefined;
+    return d(0).utc().toISOString();
   }, [debouncedStartDate]);
   const processedEndDate = useMemo(() => {
     if (debouncedEndDate) {
@@ -347,7 +347,7 @@ export const useUserMetricsQuery = ({
         return d.utc(debouncedEndDate).toISOString();
       return d(debouncedEndDate).endOf("day").utc().toISOString();
     }
-    return undefined;
+    return d().utc().toISOString();
   }, [debouncedEndDate]);
 
   const apiURL = ApiURL.create("/api/user/{userId}/metrics", {
@@ -356,7 +356,7 @@ export const useUserMetricsQuery = ({
       userId,
     },
     queries: {
-      page,
+      page: initialPage,
       pageSize,
       startDate: processedStartDate,
       endDate: processedEndDate,
@@ -367,8 +367,7 @@ export const useUserMetricsQuery = ({
   const query = useQuery({
     queryKey,
     queryFn: () => fetchUserMetrics(apiURL),
-    placeholderData: (previousData, previousQuery) =>
-      previousQuery?.queryKey[2] === queryKey[2] ? previousData : undefined,
+    placeholderData: keepPreviousData,
   });
 
   return {

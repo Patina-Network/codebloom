@@ -62,7 +62,6 @@ export default function MetricsChart({ userId }: { readonly userId: string }) {
         goBack={goBack}
         goForward={goForward}
         goTo={goTo}
-        data-testId="metrics-paginator"
       />
     </>
   );
