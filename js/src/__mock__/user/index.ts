@@ -1,4 +1,5 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
+import { Tag } from "@/lib/api/types/schema";
 import { http, HttpResponse } from "msw";
 
 const allUsersUrl = ApiURL.create("/api/user/all", {
@@ -14,7 +15,14 @@ export const MOCK_USERS = [
     nickname: null,
     admin: false,
     profileUrl: null,
-    tags: [],
+    tags: [
+      {
+        id: "tag-1",
+        createdAt: "2024-01-01T00:00:00Z",
+        userId: "user-1",
+        tag: Tag.Patina,
+      },
+    ],
     achievements: [],
   },
   {
@@ -84,5 +92,23 @@ export const getAllUsersErrorHandler = http.get(
   allUsersUrl.url.toString(),
   () => {
     return HttpResponse.error();
+  },
+);
+
+const userProfileUrl = ApiURL.create("/api/user/{userId}/profile", {
+  method: "GET",
+  params: {
+    userId: MOCK_USERS[0].id,
+  },
+});
+
+export const getUserProfileHandler = http.get(
+  userProfileUrl.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: true,
+      message: "User profile loaded!",
+      payload: MOCK_USERS[0],
+    } satisfies ReturnType<typeof userProfileUrl.res>);
   },
 );
