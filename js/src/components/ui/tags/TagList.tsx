@@ -25,7 +25,7 @@ export default function TagList({
   gap = "xs",
   expanded = false,
   onTagClick,
-}: TagListProps) {
+}: Readonly<TagListProps>) {
   const filteredTags = ApiUtils.filterUnusedTags(tags);
   const tagItems = useMemo(
     () =>
@@ -66,7 +66,7 @@ export default function TagList({
   );
 }
 
-function TagBadge({ userTag, size, onTagClick }: TagBadgeProps) {
+function TagBadge({ userTag, size, onTagClick }: Readonly<TagBadgeProps>) {
   const metadata = ApiUtils.getMetadataByTagEnum(userTag.tag);
 
   return (
