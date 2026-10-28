@@ -8,7 +8,7 @@ export default function ProblemOfTheDay() {
   const { data, status } = useFetchPotdQuery();
 
   const renderStatusCard = (message: string) => (
-    <CodebloomCard miw={"31vw"} mih={"63vh"}>
+    <CodebloomCard miw={"31vw"} mih={{ base: "auto", md: "63vh" }}>
       <Flex
         direction={"row"}
         justify={"center"}

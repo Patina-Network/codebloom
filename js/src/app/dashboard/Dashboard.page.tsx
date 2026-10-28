@@ -46,6 +46,22 @@ export default function DashboardPage() {
       />
     );
   }
+
+  const problemOfTheDaySection = (
+    <div>
+      <Flex direction={"column"}>
+        <ProblemOfTheDay />
+      </Flex>
+    </div>
+  );
+  const leaderboardSection = (
+    <div>
+      <Flex direction={"column"} flex={1}>
+        <DashboardLeaderboard userId={data.user.id} userTags={data.user.tags} />
+      </Flex>
+    </div>
+  );
+
   return (
     <>
       <DocumentTitle title={`CodeBloom - Dashboard`} />
@@ -65,26 +81,19 @@ export default function DashboardPage() {
           <Flex
             direction={smallPhone ? "row" : "column"}
             gap={"md"}
-            align="flex-start"
+            align={smallPhone ? "flex-start" : "stretch"}
           >
-            <div
-              style={{
-                order: smallPhone ? 1 : 2,
-              }}
-            >
-              <Flex direction={"column"}>
-                <ProblemOfTheDay />
-              </Flex>
-            </div>
-            <div style={{ order: smallPhone ? 2 : 1 }}>
-              <Flex direction={"column"} flex={1}>
-                <DashboardLeaderboard
-                  userId={data.user.id}
-                  userTags={data.user.tags}
-                />
-              </Flex>
-            </div>
-            <div style={{ order: 3 }}>
+            {smallPhone ?
+              <>
+                {problemOfTheDaySection}
+                {leaderboardSection}
+              </>
+            : <>
+                {leaderboardSection}
+                {problemOfTheDaySection}
+              </>
+            }
+            <div>
               <Flex direction={"column"} flex={1}>
                 <RecentSubmissions userId={data.user.id} />
               </Flex>
