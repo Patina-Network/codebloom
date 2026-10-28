@@ -10,11 +10,13 @@ interface TagListProps {
   size?: number;
   gap?: string | number;
   expanded?: boolean;
+  onTagClick?: (userTag: Api<"UserTag">) => void;
 }
 
 interface TagBadgeProps {
   userTag: Api<"UserTag">;
   size: number;
+  onTagClick?: (userTag: Api<"UserTag">) => void;
 }
 
 export default function TagList({
@@ -22,14 +24,20 @@ export default function TagList({
   size = 20,
   gap = "xs",
   expanded = false,
+  onTagClick,
 }: TagListProps) {
   const filteredTags = ApiUtils.filterUnusedTags(tags);
   const tagItems = useMemo(
     () =>
       filteredTags.map((userTag) => (
-        <TagBadge key={userTag.id} userTag={userTag} size={size} />
+        <TagBadge
+          key={userTag.id}
+          userTag={userTag}
+          size={size}
+          onTagClick={onTagClick}
+        />
       )),
-    [filteredTags, size],
+    [filteredTags, size, onTagClick],
   );
 
   if (!tagFF) return null;
@@ -58,7 +66,7 @@ export default function TagList({
   );
 }
 
-function TagBadge({ userTag, size }: TagBadgeProps) {
+function TagBadge({ userTag, size, onTagClick }: TagBadgeProps) {
   const metadata = ApiUtils.getMetadataByTagEnum(userTag.tag);
 
   return (
@@ -67,6 +75,7 @@ function TagBadge({ userTag, size }: TagBadgeProps) {
         src={metadata.icon}
         alt={metadata.alt}
         style={{ height: size, width: "auto", cursor: "pointer" }}
+        onClick={() => onTagClick?.(userTag)}
       />
     </Tooltip>
   );
