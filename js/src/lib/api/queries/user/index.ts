@@ -347,7 +347,7 @@ export const useUserMetricsQuery = ({
         return d.utc(debouncedEndDate).toISOString();
       return d(debouncedEndDate).endOf("day").utc().toISOString();
     }
-    return d().utc().toISOString();
+    return undefined;
   }, [debouncedEndDate]);
 
   const apiURL = ApiURL.create("/api/user/{userId}/metrics", {
@@ -356,7 +356,7 @@ export const useUserMetricsQuery = ({
       userId,
     },
     queries: {
-      page: initialPage,
+      page,
       pageSize,
       startDate: processedStartDate,
       endDate: processedEndDate,
