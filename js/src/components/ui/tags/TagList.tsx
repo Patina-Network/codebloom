@@ -2,7 +2,14 @@ import AchievementCarousel from "@/components/ui/carousel/ItemCarousel";
 import { Api } from "@/lib/api/types";
 import { ApiUtils } from "@/lib/api/utils";
 import { tagFF } from "@/lib/ff";
-import { Image, Tooltip, Stack, Divider, Text } from "@mantine/core";
+import {
+  Image,
+  Tooltip,
+  Stack,
+  Divider,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { useMemo } from "react";
 
 interface TagListProps {
@@ -68,15 +75,25 @@ export default function TagList({
 
 function TagBadge({ userTag, size, onTagClick }: Readonly<TagBadgeProps>) {
   const metadata = ApiUtils.getMetadataByTagEnum(userTag.tag);
+  const image = (
+    <Image
+      src={metadata.icon}
+      alt={metadata.alt}
+      style={{ height: size, width: "auto" }}
+    />
+  );
 
   return (
     <Tooltip label={metadata.name} color="dark.4" withArrow position="top">
-      <Image
-        src={metadata.icon}
-        alt={metadata.alt}
-        style={{ height: size, width: "auto", cursor: "pointer" }}
-        onClick={() => onTagClick?.(userTag)}
-      />
+      {onTagClick ?
+        <UnstyledButton
+          type="button"
+          aria-label={metadata.name}
+          onClick={() => onTagClick(userTag)}
+        >
+          {image}
+        </UnstyledButton>
+      : image}
     </Tooltip>
   );
 }
