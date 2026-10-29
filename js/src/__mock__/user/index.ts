@@ -1,5 +1,5 @@
 import { ApiURL } from "@/lib/api/common/apiURL";
-import { Tag } from "@/lib/api/types/schema";
+import { QuestionDifficulty, Tag } from "@/lib/api/types/schema";
 import { http, HttpResponse } from "msw";
 
 const allUsersUrl = ApiURL.create("/api/user/all", {
@@ -110,5 +110,104 @@ export const getUserProfileHandler = http.get(
       message: "User profile loaded!",
       payload: MOCK_USERS[0],
     } satisfies ReturnType<typeof userProfileUrl.res>);
+  },
+);
+
+const userSubmissionsUrl = ApiURL.create("/api/user/{userId}/submissions", {
+  method: "GET",
+  params: {
+    userId: MOCK_USERS[0].id,
+  },
+});
+
+export const MOCK_USER_SUBMISSIONS = [
+  {
+    id: "submission-1",
+    userId: "user-1",
+    questionSlug: "two-sum",
+    questionNumber: 1,
+    questionTitle: "Two Sum",
+    questionLink: "https://leetcode.com/problems/two-sum",
+    questionDifficulty: QuestionDifficulty.Easy,
+    description: "<p>Given an array of integers, return indices.</p>",
+    acceptanceRate: 0.49,
+    pointsAwarded: 10,
+    code: "def twoSum(nums, target):\n    pass",
+    runtime: "50ms",
+    memory: "16MB",
+    language: "python3",
+    createdAt: "2024-01-01T00:00:00Z",
+    submittedAt: "2024-01-01T00:00:00Z",
+    submissionId: null,
+    topics: [],
+  },
+  {
+    id: "submission-2",
+    userId: "user-1",
+    questionSlug: "add-two-numbers",
+    questionNumber: 2,
+    questionTitle: "Add Two Numbers",
+    questionLink: "https://leetcode.com/problems/add-two-numbers",
+    questionDifficulty: QuestionDifficulty.Medium,
+    description: "<p>Add two numbers represented by linked lists.</p>",
+    acceptanceRate: 0.49,
+    pointsAwarded: 20,
+    code: "def addTwoNumbers(l1, l2):\n    pass",
+    runtime: "50ms",
+    memory: "16MB",
+    language: "python3",
+    createdAt: "2024-01-02T00:00:00Z",
+    submittedAt: "2024-01-02T00:00:00Z",
+    submissionId: null,
+    topics: [],
+  },
+];
+
+export const userSubmissionsHandler = http.get(
+  userSubmissionsUrl.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: true,
+      message: "Submissions loaded!",
+      payload: {
+        hasNextPage: false,
+        pages: 1,
+        pageSize: 20,
+        items: MOCK_USER_SUBMISSIONS,
+      },
+    } satisfies ReturnType<typeof userSubmissionsUrl.res>);
+  },
+);
+
+export const userSubmissionsEmptyHandler = http.get(
+  userSubmissionsUrl.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: true,
+      message: "Submissions loaded!",
+      payload: {
+        hasNextPage: false,
+        pages: 1,
+        pageSize: 20,
+        items: [],
+      },
+    } satisfies ReturnType<typeof userSubmissionsUrl.res>);
+  },
+);
+
+export const userSubmissionsFailedHandler = http.get(
+  userSubmissionsUrl.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: false,
+      message: "Failed to load submissions",
+    } satisfies ReturnType<typeof userSubmissionsUrl.res>);
+  },
+);
+
+export const userSubmissionsErrorHandler = http.get(
+  userSubmissionsUrl.url.toString(),
+  () => {
+    return HttpResponse.error();
   },
 );
