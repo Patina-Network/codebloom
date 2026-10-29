@@ -1,8 +1,16 @@
+import { getUserProfileHandler } from "@/__mock__/user";
 import UserProfilePage from "@/app/user/[userId]/UserProfile.page";
 import { TestUtils, TestUtilTypes } from "@/lib/test";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { setupServer } from "msw/node";
 import { Route, Routes } from "react-router-dom";
+
+const mockNavigate = vi.fn();
+vi.mock("react-router-dom", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("react-router-dom")>()),
+  useNavigate: () => mockNavigate,
+}));
 
 class ResizeObserverMock {
   observe() {}
@@ -135,6 +143,36 @@ describe("UserProfilePage", () => {
         "href",
         expect.stringContaining("endDate="),
       );
+    });
+  });
+
+  describe("should navigate to leaderboard when a tag is clicked", () => {
+    const server = setupServer(getUserProfileHandler);
+
+    beforeAll(() => server.listen());
+    afterEach(() => {
+      server.resetHandlers();
+    });
+    afterAll(() => server.close());
+
+    let renderProviderFn: TestUtilTypes.RenderWithAllProvidersFn | null = null;
+    beforeEach(() => {
+      renderProviderFn = TestUtils.getRenderWithAllProvidersFn();
+    });
+
+    it("should navigate to leaderboard with tag query param", async () => {
+      const user = userEvent.setup();
+      renderProviderFn?.(routes, "/user/user-1");
+
+      const tagBadge = await screen.findByRole("button", {
+        name: "Patina Network",
+      });
+
+      expect(tagBadge).toBeInTheDocument();
+
+      await user.click(tagBadge);
+
+      expect(mockNavigate).toHaveBeenCalledWith("/leaderboard?patina=true");
     });
   });
 });
