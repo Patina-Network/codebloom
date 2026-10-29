@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 export default function RecentSubmissions({ userId }: { userId: string }) {
   const { data, status } = useUserSubmissionsQuery({ userId });
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     const timer = window.setInterval(() => setTick((tick) => tick + 1), 60_000);
