@@ -3,17 +3,10 @@ import CodebloomCard from "@/components/ui/CodebloomCard";
 import { useUserSubmissionsQuery } from "@/lib/api/queries/user";
 import { timeDiff } from "@/lib/timeDiff";
 import { Badge, Box, Button, Center, Flex, Text, Title } from "@mantine/core";
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function RecentSubmissions({ userId }: { userId: string }) {
   const { data, status } = useUserSubmissionsQuery({ userId });
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setTick((tick) => tick + 1), 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   if (status === "pending") {
     return <RecentSubmissionsSkeleton />;
