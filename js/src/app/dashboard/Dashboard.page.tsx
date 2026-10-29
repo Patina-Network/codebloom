@@ -71,40 +71,32 @@ export default function DashboardPage() {
             {smallPhone ?
               <>
                 {
-                  <div>
-                    <Flex direction={"column"}>
-                      <ProblemOfTheDay />
-                    </Flex>
-                  </div>
+                  <Flex direction={"column"}>
+                    <ProblemOfTheDay />
+                  </Flex>
                 }
                 {
-                  <div>
-                    <Flex direction={"column"} flex={1}>
-                      <DashboardLeaderboard
-                        userId={data.user.id}
-                        userTags={data.user.tags}
-                      />
-                    </Flex>
-                  </div>
+                  <Flex direction={"column"} flex={1}>
+                    <DashboardLeaderboard
+                      userId={data.user.id}
+                      userTags={data.user.tags}
+                    />
+                  </Flex>
                 }
               </>
             : <>
                 {
-                  <div>
-                    <Flex direction={"column"} flex={1}>
-                      <DashboardLeaderboard
-                        userId={data.user.id}
-                        userTags={data.user.tags}
-                      />
-                    </Flex>
-                  </div>
+                  <Flex direction={"column"} flex={1}>
+                    <DashboardLeaderboard
+                      userId={data.user.id}
+                      userTags={data.user.tags}
+                    />
+                  </Flex>
                 }
                 {
-                  <div>
-                    <Flex direction={"column"}>
-                      <ProblemOfTheDay />
-                    </Flex>
-                  </div>
+                  <Flex direction={"column"}>
+                    <ProblemOfTheDay />
+                  </Flex>
                 }
               </>
             }
