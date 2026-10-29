@@ -441,7 +441,7 @@ async function fetchUserMetrics({
     method,
   });
 
-  await sleep(500);
+  await sleep(600);
 
   const json = res(await response.json());
 
