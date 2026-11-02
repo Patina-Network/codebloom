@@ -121,10 +121,13 @@ export const createDiscordAnnouncementSuccessHandler = http.post(
 export const createDiscordAnnouncementPartialFailureHandler = http.post(
   createDiscordAnnouncement.url.toString(),
   () => {
-    return HttpResponse.json({
-      success: false,
-      message: CREATE_DISCORD_ANNOUNCEMENT_FAILURE_MESSAGE,
-    });
+    return HttpResponse.json(
+      {
+        success: false,
+        message: CREATE_DISCORD_ANNOUNCEMENT_FAILURE_MESSAGE,
+      },
+      { status: 500 },
+    );
   },
 );
 
