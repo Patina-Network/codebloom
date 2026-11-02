@@ -273,6 +273,7 @@ public class UserSqlRepository implements UserRepository {
                 WHERE
                     ("discordName" ILIKE :query OR "leetcodeUsername" ILIKE :query OR "nickname" ILIKE :query)
                 ORDER BY
+                    admin DESC NULLS LAST,
                     id
                 LIMIT :limit OFFSET :offset
             """;
