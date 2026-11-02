@@ -1,5 +1,6 @@
 import DeleteAnnouncementButton from "@/app/admin/_components/announcements/DeleteAnnouncementButton";
 import NewAnnouncementModal from "@/app/admin/_components/announcements/NewAnnouncementModal";
+import NewDiscordAnnouncementModal from "@/app/admin/_components/announcements/NewDiscordAnnouncementModal";
 import IncompleteQuestionList from "@/app/admin/_components/incomplete/IncompleteQuestionList";
 import RequeueIncompleteQuestionsModal from "@/app/admin/_components/incomplete/RequeueIncompleteQuestionsModal";
 import AllLeaderboardAdmin from "@/app/admin/_components/leaderboards/pagination/AllLeaderboardAdmin";
@@ -18,6 +19,9 @@ export default function AdminIndex() {
       </Flex>
       <Flex w={"100%"} direction={"row"} justify={"center"}>
         <DeleteAnnouncementButton />
+      </Flex>
+      <Flex w={"100%"} direction={"row"} justify={"center"}>
+        <NewDiscordAnnouncementModal />
       </Flex>
       <Flex w={"100%"} direction={"row"} justify={"center"}>
         <RefreshLeetcodeTokenModal />

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.patinanetwork.codebloom.api.admin.body.*;
+import org.patinanetwork.codebloom.api.admin.body.jda.CreateDiscordAnnouncementBody;
 import org.patinanetwork.codebloom.api.admin.body.jda.DeleteMessageBody;
 import org.patinanetwork.codebloom.common.components.DiscordClubManager;
 import org.patinanetwork.codebloom.common.components.IncompleteQuestionRequeuer;
@@ -320,6 +321,27 @@ public class AdminController {
         }
 
         return ResponseEntity.ok(ApiResponder.success("Discord Message successfully deleted", Empty.of()));
+    }
+
+    @Operation(
+            summary = "Sends announcement to all clubs' discord channels",
+            description =
+                    "Sends an embedded message to the leaderboard channels of all guilds associated with their clubs. Only accessible to admins.")
+    @PostMapping("/discord/announcement/")
+    public ResponseEntity<ApiResponder<Empty>> sendDiscordAnnouncement(
+            @Valid @RequestBody final CreateDiscordAnnouncementBody createDiscordAnnouncementBody,
+            @Protected(admin = true) final AuthenticationObject authenticationObject) {
+
+        boolean allSent =
+                discordClubManager.sendAnnouncementDiscordMessageToAllClubs(createDiscordAnnouncementBody.getMessage());
+
+        if (!allSent) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponder.failure(
+                            "Announcement failed to send to one or more clubs. Check logs for details."));
+        }
+
+        return ResponseEntity.ok(ApiResponder.success("Announcement successfully sent to all clubs!", Empty.of()));
     }
 
     @Operation(
