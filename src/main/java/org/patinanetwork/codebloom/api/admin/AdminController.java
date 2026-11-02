@@ -332,13 +332,13 @@ public class AdminController {
             @Valid @RequestBody final CreateDiscordAnnouncementBody createDiscordAnnouncementBody,
             @Protected(admin = true) final AuthenticationObject authenticationObject) {
 
-        boolean allSent =
+        List<String> failedClubs =
                 discordClubManager.sendAnnouncementDiscordMessageToAllClubs(createDiscordAnnouncementBody.getMessage());
 
-        if (!allSent) {
+        if (!failedClubs.isEmpty()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponder.failure(
-                            "Announcement failed to send to one or more clubs. Check logs for details."));
+                    .body(ApiResponder.failure("Announcement failed to send to: %s. Check logs for details."
+                            .formatted(String.join(", ", failedClubs))));
         }
 
         return ResponseEntity.ok(ApiResponder.success("Announcement successfully sent to all clubs!", Empty.of()));

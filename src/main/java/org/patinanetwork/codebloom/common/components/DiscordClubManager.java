@@ -389,11 +389,11 @@ public class DiscordClubManager {
         return true;
     }
 
-    public boolean sendAnnouncementDiscordMessageToAllClubs(final String announcement) {
+    public List<String> sendAnnouncementDiscordMessageToAllClubs(final String announcement) {
         var discordClubs = discordClubRepository.getAllActiveDiscordClubs();
         return discordClubs.stream()
-                .map(club -> sendAnnouncementDiscordMessage(club, announcement))
-                .reduce(Boolean::logicalAnd)
-                .orElse(false);
+                .filter(club -> !sendAnnouncementDiscordMessage(club, announcement))
+                .map(DiscordClub::getName)
+                .toList();
     }
 }

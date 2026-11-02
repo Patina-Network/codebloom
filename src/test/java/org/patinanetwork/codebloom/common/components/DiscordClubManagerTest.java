@@ -529,6 +529,60 @@ public class DiscordClubManagerTest {
         assertEquals(20, result.getClubRank());
     }
 
+    @Test
+    void testSendAnnouncementDiscordMessageToAllClubsEmptyClubList() {
+        when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Collections.emptyList());
+
+        List<String> failed = discordClubManager.sendAnnouncementDiscordMessageToAllClubs("hello");
+
+        assertTrue(failed.isEmpty());
+        verify(jdaClient, never()).sendEmbedWithImages(any());
+    }
+
+    @Test
+    void testSendAnnouncementDiscordMessageToAllClubsSuccess() {
+        DiscordClub mockClub = createMockDiscordClub("Club 1", Tag.Rpi);
+        when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Arrays.asList(mockClub));
+
+        List<String> failed = discordClubManager.sendAnnouncementDiscordMessageToAllClubs("big news");
+
+        assertTrue(failed.isEmpty());
+
+        ArgumentCaptor<EmbeddedImagesMessageOptions> captor =
+                ArgumentCaptor.forClass(EmbeddedImagesMessageOptions.class);
+        verify(jdaClient).sendEmbedWithImages(captor.capture());
+
+        assertEquals("big news", captor.getValue().getDescription());
+        assertEquals("Announcement for Club 1", captor.getValue().getTitle());
+    }
+
+    @Test
+    void testSendAnnouncementDiscordMessageToAllClubsJdaThrowsReturnsClubName() {
+        DiscordClub mockClub = createMockDiscordClub("Broken Club", Tag.Rpi);
+        when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Arrays.asList(mockClub));
+
+        doThrow(new RuntimeException()).when(jdaClient).sendEmbedWithImages(any(EmbeddedImagesMessageOptions.class));
+
+        List<String> failed = discordClubManager.sendAnnouncementDiscordMessageToAllClubs("hello");
+
+        assertEquals(List.of("Broken Club"), failed);
+        assertTrue(logWatcher.list.stream().anyMatch(e -> e.getFormattedMessage()
+                .contains("Error in DiscordClubManager when sending announcement to club Broken Club")));
+    }
+
+    @Test
+    void testSendAnnouncementDiscordMessageToAllClubsMixedOnlyReturnsFailures() {
+        DiscordClub goodClub = createMockDiscordClub("Good Club", Tag.Rpi);
+        DiscordClub badClub = createMockDiscordClubWithoutMetadata("Bad Club", Tag.Baruch);
+        when(badClub.getId()).thenReturn("club-id-3");
+        when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Arrays.asList(goodClub, badClub));
+
+        List<String> failed = discordClubManager.sendAnnouncementDiscordMessageToAllClubs("hello");
+
+        assertEquals(List.of("Bad Club"), failed);
+        verify(jdaClient, times(1)).sendEmbedWithImages(any(EmbeddedImagesMessageOptions.class));
+    }
+
     private DiscordClub createMockDiscordClub(final String name, final Tag tag) {
         DiscordClubMetadata metadata = mock(DiscordClubMetadata.class);
         when(metadata.getGuildId()).thenReturn(Optional.of("123456789"));

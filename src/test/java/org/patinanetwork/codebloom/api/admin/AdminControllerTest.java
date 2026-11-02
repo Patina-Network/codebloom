@@ -513,7 +513,7 @@ public class AdminControllerTest {
     @Test
     void testDiscordAnnouncementFailure() {
         when(discordClubManager.sendAnnouncementDiscordMessageToAllClubs((anyString())))
-                .thenReturn(false);
+                .thenReturn(List.of("Club A", "Club B"));
 
         CreateDiscordAnnouncementBody body = CreateDiscordAnnouncementBody.builder()
                 .message("This is a test announcement.")
@@ -524,14 +524,14 @@ public class AdminControllerTest {
         assertNotNull(response.getBody());
         assertFalse(response.getBody().isSuccess());
         assertEquals(
-                "Announcement failed to send to one or more clubs. Check logs for details.",
+                "Announcement failed to send to: Club A, Club B. Check logs for details.",
                 response.getBody().getMessage());
     }
 
     @Test
     void testDiscordAnnouncementSuccess() {
         when(discordClubManager.sendAnnouncementDiscordMessageToAllClubs((anyString())))
-                .thenReturn(true);
+                .thenReturn(List.of());
 
         CreateDiscordAnnouncementBody body = CreateDiscordAnnouncementBody.builder()
                 .message("This is a test announcement.")

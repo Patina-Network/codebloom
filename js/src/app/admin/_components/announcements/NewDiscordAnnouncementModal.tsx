@@ -18,12 +18,13 @@ export default function NewDiscordAnnouncementModal() {
   });
 
   const toggleModal = () => {
+    form.clearErrors();
     setModalOpen((prev) => !prev);
   };
 
   const onSubmit = (data: z.infer<typeof newDiscordAnnouncementSchema>) => {
     mutate(
-      { ...data },
+      { ...data, message: data.message.trim() },
       {
         onSuccess: async (data) => {
           notifications.show({
@@ -34,6 +35,12 @@ export default function NewDiscordAnnouncementModal() {
             form.reset();
             setModalOpen(false);
           }
+        },
+        onError: (error) => {
+          notifications.show({
+            message: error.message,
+            color: "red",
+          });
         },
       },
     );
