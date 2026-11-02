@@ -5,8 +5,10 @@ import Toast from "@/components/ui/toast/Toast";
 import { useUserProfileQuery } from "@/lib/api/queries/user";
 import { Group, Text, Stack } from "@mantine/core";
 import { IconAlertTriangle } from "@tabler/icons-react";
+import { useNavigate } from "react-router-dom";
 
 export default function UserTags({ userId }: { userId: string }) {
+  const navigate = useNavigate();
   const { data, status } = useUserProfileQuery({ userId });
 
   if (status === "pending") {
@@ -34,7 +36,15 @@ export default function UserTags({ userId }: { userId: string }) {
 
   return (
     <Stack gap="md" w="100%">
-      <TagList tags={tags} size={40} gap="xs" expanded={true} />
+      <TagList
+        tags={tags}
+        size={40}
+        gap="xs"
+        expanded={true}
+        onTagClick={(userTag) =>
+          navigate(`/leaderboard?${userTag.tag.toLowerCase()}=true`)
+        }
+      />
       <UserAchievement achievements={achievements} size={40} gap="xs" />
     </Stack>
   );

@@ -2,7 +2,14 @@ import AchievementCarousel from "@/components/ui/carousel/ItemCarousel";
 import { Api } from "@/lib/api/types";
 import { ApiUtils } from "@/lib/api/utils";
 import { tagFF } from "@/lib/ff";
-import { Image, Tooltip, Stack, Divider, Text } from "@mantine/core";
+import {
+  Image,
+  Tooltip,
+  Stack,
+  Divider,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { useMemo } from "react";
 
 interface TagListProps {
@@ -10,11 +17,13 @@ interface TagListProps {
   size?: number;
   gap?: string | number;
   expanded?: boolean;
+  onTagClick?: (userTag: Api<"UserTag">) => void;
 }
 
 interface TagBadgeProps {
   userTag: Api<"UserTag">;
   size: number;
+  onTagClick?: (userTag: Api<"UserTag">) => void;
 }
 
 export default function TagList({
@@ -22,14 +31,20 @@ export default function TagList({
   size = 20,
   gap = "xs",
   expanded = false,
-}: TagListProps) {
+  onTagClick,
+}: Readonly<TagListProps>) {
   const filteredTags = ApiUtils.filterUnusedTags(tags);
   const tagItems = useMemo(
     () =>
       filteredTags.map((userTag) => (
-        <TagBadge key={userTag.id} userTag={userTag} size={size} />
+        <TagBadge
+          key={userTag.id}
+          userTag={userTag}
+          size={size}
+          onTagClick={onTagClick}
+        />
       )),
-    [filteredTags, size],
+    [filteredTags, size, onTagClick],
   );
 
   if (!tagFF) return null;
@@ -58,16 +73,27 @@ export default function TagList({
   );
 }
 
-function TagBadge({ userTag, size }: TagBadgeProps) {
+function TagBadge({ userTag, size, onTagClick }: Readonly<TagBadgeProps>) {
   const metadata = ApiUtils.getMetadataByTagEnum(userTag.tag);
+  const image = (
+    <Image
+      src={metadata.icon}
+      alt={metadata.alt}
+      style={{ height: size, width: "auto" }}
+    />
+  );
 
   return (
     <Tooltip label={metadata.name} color="dark.4" withArrow position="top">
-      <Image
-        src={metadata.icon}
-        alt={metadata.alt}
-        style={{ height: size, width: "auto", cursor: "pointer" }}
-      />
+      {onTagClick ?
+        <UnstyledButton
+          type="button"
+          aria-label={metadata.name}
+          onClick={() => onTagClick(userTag)}
+        >
+          {image}
+        </UnstyledButton>
+      : image}
     </Tooltip>
   );
 }
