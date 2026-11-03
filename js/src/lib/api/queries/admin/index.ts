@@ -255,6 +255,41 @@ async function deleteAnnouncement({ id }: { id: string }) {
 }
 
 /**
+ * Creates Discord announcement
+ */
+
+export const useCreateDiscordAnnouncementMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createDiscordAnnouncement,
+    onSuccess: async (data) => {
+      if (data.success) {
+        queryClient.invalidateQueries({
+          queryKey: ApiURL.prefix("/api/admin/discord/announcement"),
+        });
+      }
+    },
+  });
+};
+
+async function createDiscordAnnouncement({ message }: { message: string }) {
+  const { url, method, req, res } = ApiURL.create(
+    "/api/admin/discord/announcement/",
+    {
+      method: "POST",
+    },
+  );
+  const response = await fetch(url, {
+    method,
+    body: req({
+      message,
+    }),
+  });
+
+  return res(await response.json());
+}
+
+/**
  * Trigger a refresh of the LeetCode auth token.
  */
 export const useRefreshLeetcodeTokenMutation = () => {

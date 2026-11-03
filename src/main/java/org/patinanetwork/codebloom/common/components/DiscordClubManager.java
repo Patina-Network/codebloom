@@ -364,4 +364,36 @@ public class DiscordClubManager {
     public boolean deleteMessageById(Long channelId, Long messageId) {
         return jdaClient.deleteMessageById(channelId, messageId);
     }
+
+    private boolean sendAnnouncementDiscordMessage(final DiscordClub club, final String announcement) {
+        try {
+            var guildId = club.getDiscordClubMetadata().flatMap(DiscordClubMetadata::getGuildId);
+            var channelId = club.getDiscordClubMetadata().flatMap(DiscordClubMetadata::getLeaderboardChannelId);
+            if (guildId.isEmpty() || channelId.isEmpty()) {
+                log.warn("Missing guildId or leaderboardChannelId for club {}", club.getId());
+                return false;
+            }
+            jdaClient.sendEmbedWithImages(EmbeddedImagesMessageOptions.builder()
+                    .guildId(Long.valueOf(guildId.get()))
+                    .channelId(Long.valueOf(channelId.get()))
+                    .description(announcement)
+                    .title("Announcement for %s".formatted(club.getName()))
+                    .footerText("Codebloom - LeetCode Leaderboard for %s".formatted(club.getName()))
+                    .footerIcon("%s/favicon.ico".formatted(serverUrlUtils.getUrl()))
+                    .color(new Color(69, 129, 103))
+                    .build());
+        } catch (Exception e) {
+            log.error("Error in DiscordClubManager when sending announcement to club {}", club.getName(), e);
+            return false;
+        }
+        return true;
+    }
+
+    public List<String> sendAnnouncementDiscordMessageToAllClubs(final String announcement) {
+        var discordClubs = discordClubRepository.getAllActiveDiscordClubs();
+        return discordClubs.stream()
+                .filter(club -> !sendAnnouncementDiscordMessage(club, announcement))
+                .map(DiscordClub::getName)
+                .toList();
+    }
 }

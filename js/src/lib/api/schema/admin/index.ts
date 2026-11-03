@@ -5,3 +5,7 @@ export const newAnnouncementSchema = z.object({
   showTimer: z.boolean(),
   expiresAt: z.string(),
 });
+
+export const newDiscordAnnouncementSchema = z.object({
+  message: z.string().trim().min(1).max(4096),
+});

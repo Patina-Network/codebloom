@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.patinanetwork.codebloom.api.admin.body.DeleteAnnouncementBody;
 import org.patinanetwork.codebloom.api.admin.body.EditLeaderboardBody;
 import org.patinanetwork.codebloom.api.admin.body.NewLeaderboardBody;
+import org.patinanetwork.codebloom.api.admin.body.jda.CreateDiscordAnnouncementBody;
 import org.patinanetwork.codebloom.api.admin.body.jda.DeleteMessageBody;
 import org.patinanetwork.codebloom.common.components.DiscordClubManager;
 import org.patinanetwork.codebloom.common.components.IncompleteQuestionRequeuer;
@@ -507,6 +508,42 @@ public class AdminControllerTest {
         assertNotNull(response.getBody());
         assertTrue(response.getBody().isSuccess());
         assertEquals("Discord Message successfully deleted", response.getBody().getMessage());
+    }
+
+    @Test
+    void testDiscordAnnouncementFailure() {
+        when(discordClubManager.sendAnnouncementDiscordMessageToAllClubs((anyString())))
+                .thenReturn(List.of("Club A", "Club B"));
+
+        CreateDiscordAnnouncementBody body = CreateDiscordAnnouncementBody.builder()
+                .message("This is a test announcement.")
+                .build();
+
+        ResponseEntity<ApiResponder<Empty>> response = adminController.sendDiscordAnnouncement(body, null);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals(
+                "Announcement failed to send to: Club A, Club B. Check logs for details.",
+                response.getBody().getMessage());
+    }
+
+    @Test
+    void testDiscordAnnouncementSuccess() {
+        when(discordClubManager.sendAnnouncementDiscordMessageToAllClubs((anyString())))
+                .thenReturn(List.of());
+
+        CreateDiscordAnnouncementBody body = CreateDiscordAnnouncementBody.builder()
+                .message("This is a test announcement.")
+                .build();
+
+        ResponseEntity<ApiResponder<Empty>> response = adminController.sendDiscordAnnouncement(body, null);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals(
+                "Announcement successfully sent to all clubs!",
+                response.getBody().getMessage());
     }
 
     @Test

@@ -91,3 +91,55 @@ export const requeueIncompleteFailureHandler = http.post(
     );
   },
 );
+
+const createDiscordAnnouncement = ApiURL.create(
+  "/api/admin/discord/announcement/",
+  {
+    method: "POST",
+  },
+);
+
+export const CREATE_DISCORD_ANNOUNCEMENT_SUCCESS_MESSAGE =
+  "Announcement sent to all clubs.";
+export const CREATE_DISCORD_ANNOUNCEMENT_FAILURE_MESSAGE =
+  "Failed to send announcement to: Club 1";
+export const CREATE_DISCORD_ANNOUNCEMENT_SERVER_ERROR_MESSAGE =
+  "Failed to send announcement: server error.";
+
+export const createDiscordAnnouncementSuccessHandler = http.post(
+  createDiscordAnnouncement.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: true,
+      payload: {},
+      message: CREATE_DISCORD_ANNOUNCEMENT_SUCCESS_MESSAGE,
+    } satisfies UnknownApiResponse<Empty>);
+  },
+);
+
+// 200 with success: false, which is how the backend reports clubs that failed.
+export const createDiscordAnnouncementPartialFailureHandler = http.post(
+  createDiscordAnnouncement.url.toString(),
+  () => {
+    return HttpResponse.json(
+      {
+        success: false,
+        message: CREATE_DISCORD_ANNOUNCEMENT_FAILURE_MESSAGE,
+      },
+      { status: 500 },
+    );
+  },
+);
+
+export const createDiscordAnnouncementServerErrorHandler = http.post(
+  createDiscordAnnouncement.url.toString(),
+  () => {
+    return HttpResponse.json(
+      {
+        success: false,
+        message: CREATE_DISCORD_ANNOUNCEMENT_SERVER_ERROR_MESSAGE,
+      },
+      { status: 500 },
+    );
+  },
+);
