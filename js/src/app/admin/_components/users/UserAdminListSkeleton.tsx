@@ -3,6 +3,7 @@ import { Box, Flex, Skeleton } from "@mantine/core";
 export default function UserAdminListSkeleton() {
   return (
     <Box p={"xs"}>
+      <Skeleton height={35} width="20%" mb="md" mt="md" ml="auto" />
       <Skeleton height={35} width="100%" mb="md" mt="md" />
       <Skeleton height={50} mb="sm" radius="md" />
       {[...Array(5)].map((_, i) => (

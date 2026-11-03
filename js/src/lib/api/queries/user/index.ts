@@ -208,14 +208,26 @@ export const useGetAllUsersQuery = (
     goTo(1);
   }, [searchQuery, goTo]);
 
+  const [adminFilter, setAdminFilter] = useURLState("adminFilter", false, {
+    enabled: tieToUrl,
+    debounce: 100,
+  });
+
+  const toggleAdminFilter = useCallback(() => {
+    setAdminFilter((prev) => !prev);
+    goTo(1);
+  }, [goTo, setAdminFilter]);
+
   const apiURL = ApiURL.create("/api/user/all", {
     method: "GET",
     queries: {
       page,
       query: debouncedQuery,
       pageSize,
+      adminFilter,
     },
   });
+
   const { queryKey } = apiURL;
 
   const query = useQuery({
@@ -234,6 +246,9 @@ export const useGetAllUsersQuery = (
     setSearchQuery,
     debouncedQuery,
     pageSize,
+    adminFilter,
+    setAdminFilter,
+    toggleAdminFilter,
   };
 };
 

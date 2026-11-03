@@ -1,10 +1,20 @@
 import UserAdminListSkeleton from "@/app/admin/_components/users/UserAdminListSkeleton";
+import FilterDropdown from "@/components/ui/dropdown/FilterDropdown";
+import FilterDropdownItem from "@/components/ui/dropdown/FilterDropdownItem";
 import Paginator from "@/components/ui/table/Paginator";
 import SearchBox from "@/components/ui/table/SearchBox";
 import { useToggleAdminMutation } from "@/lib/api/queries/admin";
 import { useGetAllUsersQuery } from "@/lib/api/queries/user";
 import { theme } from "@/lib/theme";
-import { Box, Button, Overlay, Table, Text, Tooltip } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Flex,
+  Overlay,
+  Table,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { FaDiscord } from "react-icons/fa";
@@ -25,6 +35,8 @@ export default function UserAdminList() {
     searchQuery,
     setSearchQuery,
     debouncedQuery,
+    adminFilter,
+    toggleAdminFilter,
   } = useGetAllUsersQuery();
 
   const { mutate } = useToggleAdminMutation();
@@ -42,6 +54,23 @@ export default function UserAdminList() {
   }
 
   const pageData = data.payload;
+
+  const filterDropdown = (
+    <Box pos="relative" display="inline-block">
+      <FilterDropdown buttonName="Filters">
+        <FilterDropdownItem
+          value={adminFilter}
+          toggle={toggleAdminFilter}
+          switchMode
+          name={
+            <Flex gap="0.5rem" align="center">
+              Admin Status
+            </Flex>
+          }
+        />
+      </FilterDropdown>
+    </Box>
+  );
 
   const onToggle = (userId: string, currentAdminStatus: boolean) => {
     // Check the mutate function origin on why we
@@ -75,6 +104,9 @@ export default function UserAdminList() {
 
   return (
     <>
+      <Box display="block" style={{ textAlign: "right" }} m={"lg"} mb={0}>
+        {filterDropdown}
+      </Box>
       <SearchBox
         query={searchQuery}
         onChange={(event) => {
@@ -82,6 +114,7 @@ export default function UserAdminList() {
         }}
         placeholder={"Search for user"}
         m={"lg"}
+        mt={0}
         mb={0}
       />
       <Box style={{ overflowX: "auto" }} m={"lg"} mt={0}>
