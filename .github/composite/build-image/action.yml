@@ -26,7 +26,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup CI
-      uses: tahminator/pipeline/actions/setup@0d54deb9e9abab9530e4aa889a6c79c88a0ff5c7 # 1.0.99
+      uses: tahminator/pipeline/actions/setup@aa4f2ffcca89a9dcad96c1eac1e57b5a533f8c26 # 1.0.100
       with:
         LINT_CI: true
         SECRETS: ${{ inputs.SECRETS }}
