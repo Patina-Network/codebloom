@@ -6,7 +6,7 @@ COPY internal/standup-bot/Cargo.toml internal/standup-bot/Cargo.lock ./
 COPY internal/standup-bot/src ./src
 RUN cargo build --release -v
 
-FROM mirror.gcr.io/library/alpine:3.24.2
+FROM mirror.gcr.io/library/alpine:3.24.3
 
 WORKDIR /app
 
