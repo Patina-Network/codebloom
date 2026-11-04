@@ -44,9 +44,10 @@ docker build -f internal/leetcode-auth-service/Dockerfile internal
 
 - `REDIS_URL`: required.
 - `LEETCODE_AUTH_USERNAME`, `LEETCODE_AUTH_PASSWORD`: required, sent to LASS.
-- `LASS_URL`: LASS gRPC address, default `http://localhost:50051`.
-- `LASS_TIMEOUT_SECONDS`: deadline for one LASS login, default `180`.
-- `REFRESH_LOCK_TTL_SECONDS`: how long the refresh lock lives if it is never released, default `LASS_TIMEOUT_SECONDS + 30`. Keep it above `LASS_TIMEOUT_SECONDS`, or a slow refresh can lose its lock and a second pod may refresh at the same time.
+- `GRPC_LASS_HOST`: LASS gRPC host and port, without a URI scheme; default `localhost:50051`.
+- `GRPC_LASS_TLS`: `true` selects HTTPS; `false` selects HTTP (default `false`).
+- `GRPC_LASS_TIMEOUT_SECONDS`: deadline for one LASS login, default `180`.
+- `REFRESH_LOCK_TTL_SECONDS`: how long the refresh lock lives if it is never released, default `GRPC_LASS_TIMEOUT_SECONDS + 30`. Keep it above `GRPC_LASS_TIMEOUT_SECONDS`, or a slow refresh can lose its lock and a second pod may refresh at the same time.
 - `REFRESH_CHECK_INTERVAL_SECONDS`: how often the stored entry's age is checked, default `900` (15 minutes).
 - `TOKEN_MAX_AGE_SECONDS`: age at which the scheduled check refreshes, default `14400` (4 hours).
 - `GRPC_PORT` / `HTTP_PORT`: default `50052` / `8082`.

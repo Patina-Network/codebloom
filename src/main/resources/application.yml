@@ -117,9 +117,6 @@ app:
   commit:
     sha: "${VERSION:@commit.sha@}"
 
-jedis:
-  url: ${REDIS_URL}
-
 playwright:
   # change to false in application-dev.yaml to see Playwright browser attempting auth
   headless: true

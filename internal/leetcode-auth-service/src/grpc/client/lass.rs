@@ -32,7 +32,7 @@ impl GrpcLASS {
     /// down.
     pub fn new(config: &Config) -> anyhow::Result<Self> {
         let channel = Endpoint::from_shared(config.grpc_lass_url.clone())
-            .context("LASS_URL must be a valid URI")?
+            .context("GRPC_LASS_HOST must form a valid URI with the GRPC_LASS_TLS scheme")?
             .connect_timeout(Duration::from_secs(5))
             .timeout(config.grpc_lass_timeout)
             .connect_lazy();
