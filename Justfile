@@ -1,5 +1,15 @@
 set shell := ["bash", "-uc"]
 
+### Azure cmds
+
+# logout and authenticate again
+re-auth:
+  az logout && just auth
+
+# authenticate
+auth:
+  just install-pre-scripts && az login
+
 # Migrate to local DB
 migrate *args:
   dotenvx run -- bash ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db {{args}}
@@ -22,11 +32,11 @@ copy-stg *args:
 
 # Run the backend Spring server
 backend-dev *args:
-  dotenvx run -f .env -f .env.shared -- bash ./mvnw -Dspring-boot.run.profiles=dev spring-boot:run {{args}}
+  sops exec-env .env.shared.yaml 'dotenvx run --overload -f .env -- bash ./mvnw -Dspring-boot.run.profiles=dev spring-boot:run {{args}}'
 
 # Run the leetcode auth service
 las-dev *args:
-  cd ./internal/leetcode-auth-service && cargo build && dotenvx run -f ../../.env -- cargo run
+  cd ./internal/leetcode-auth-service && cargo build && sops exec-env ../../.env.shared.yaml 'dotenvx run --overload -f ../../.env -- cargo run {{args}}'
 
 # Run the leetcode auth stealer service
 lass-dev *args:
@@ -87,9 +97,35 @@ email-dev *args:
 email-gen *args:
   cd email && bash email.sh {{args}}
 
+# Use if you created a new secret file and need to encrypt it with SOPS
+# If you are editing a file that has already been encrypted, see `just edit`
+encrypt file *args:
+  just install-pre-scripts && sops --encrypt --in-place {{ file }} {{ args }}
+
+# Securely edit any secret file that is encrypted with SOPS
+# You can change the editor it will call on by changing the $EDITOR environment variable
+# 
+# you can choose to set it one time for the scope of the command: `EDITOR="nvim" just edit secrets.yaml`
+# or you can put `export EDITOR=nvim` inside of your `~/.zshrc`, then restart your terminal & run: `just edit secrets.yaml`
+#
+# if you would like to use VSCode, `EDITOR="code --wait"` (You may have to follow this first: https://code.visualstudio.com/docs/setup/mac#_launch-vs-code-from-the-command-line)
+edit file *args:
+  just install-pre-scripts && sops edit {{ file }} {{ args }}
+
 # Run the dev servers (backend & frontend & auth service)
 dev *args:
-  npx mprocs "just backend-dev" "just frontend-dev" "just las-dev" "just lass-dev" {{args}}
+  just install-pre-scripts && npx mprocs "just backend-dev" "just frontend-dev" "just las-dev" "just lass-dev" {{args}}
+
+# Git hooks are installed on almost every command
+# so that we don't accidentally add unencrypted secrets to the git history.
+install-pre-scripts:
+  just install-pre-commit && just install-pre-push
+
+install-pre-commit:
+  cp pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+install-pre-push:
+  cp pre-commit .git/hooks/pre-push && chmod +x .git/hooks/pre-push
 
 # Run the dev servers (backend & frontend & auth service) but the backend will launch a debugger server.
 devd *args:

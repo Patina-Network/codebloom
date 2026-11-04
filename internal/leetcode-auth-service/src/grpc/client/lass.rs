@@ -31,10 +31,10 @@ impl GrpcLASS {
     /// Connects lazily so this service starts, and keeps serving stored credentials, while LASS is
     /// down.
     pub fn new(config: &Config) -> anyhow::Result<Self> {
-        let channel = Endpoint::from_shared(config.lass_url.clone())
+        let channel = Endpoint::from_shared(config.grpc_lass_url.clone())
             .context("LASS_URL must be a valid URI")?
             .connect_timeout(Duration::from_secs(5))
-            .timeout(config.lass_timeout)
+            .timeout(config.grpc_lass_timeout)
             .connect_lazy();
 
         Ok(Self {
