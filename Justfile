@@ -42,9 +42,9 @@ las-dev *args:
 lass-dev *args:
   cd ./internal/leetcode-auth-stealer-service && uv sync && GRPC_REFLECTION=true GRPC_VERBOSITY=ERROR uv run src/server.py
 
-# Generate the leetcode auth stealer gRPC stubs for the main codebloom service
-lass-gen *args:
-  cd ./internal/leetcode-auth-stealer-service && uv sync && uv run src/generate.py
+# Generate the leetcode auth service gRPC stubs for the main codebloom service
+las-gen *args:
+  rm -rf lib/leetcode-auth-service/src/main/java && bash ./mvnw -q protobuf:compile protobuf:compile-custom {{args}}
 
 # Run the backend Spring server with an exposed debugger at :5005
 backend-dev-debug *args:

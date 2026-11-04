@@ -66,10 +66,10 @@ springdoc:
     version: OPENAPI_3_0
 
 grpc:
-  leetcode-auth-stealer-service:
-    host: ${GRPC_LASS_HOST:localhost:50051}
-    tls: ${GRPC_LASS_TLS:false}
-    timeout: ${GRPC_LASS_TIMEOUT:2m} # extremely long running, give it time to breathe in local
+  leetcode-auth-service:
+    host: ${GRPC_LAS_HOST:localhost:50052}
+    tls: ${GRPC_LAS_TLS:false}
+    timeout: ${GRPC_LAS_TIMEOUT:20ms}
 
 leetcode:
   auth:

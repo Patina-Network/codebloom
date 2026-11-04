@@ -10,9 +10,11 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
+import org.patinanetwork.codebloom.common.leetcode.auth.AuthenticationCredentials;
+import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -39,7 +41,7 @@ class LeetcodeClientCircuitBreakerTest {
     private LeetcodeClientImpl leetcodeClient;
 
     @MockitoBean
-    private LeetcodeAuthStealer leetcodeAuthStealer;
+    private LeetcodeAuthenticationService leetcodeAuthenticationService;
 
     @MockitoBean
     private HttpClient httpClient;
@@ -59,8 +61,8 @@ class LeetcodeClientCircuitBreakerTest {
         Object target = AopTestUtils.getTargetObject(leetcodeClient);
         ReflectionTestUtils.setField(target, "client", httpClient);
 
-        when(leetcodeAuthStealer.getCookie()).thenReturn("test-cookie");
-        when(leetcodeAuthStealer.getCsrf()).thenReturn(null);
+        when(leetcodeAuthenticationService.getAuthenticationCredentials())
+                .thenReturn(new AuthenticationCredentials(Optional.of("test-cookie"), Optional.empty()));
 
         when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenThrow(new RuntimeException("boom"));
