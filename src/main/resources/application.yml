@@ -72,22 +72,6 @@ grpc:
     # both RPCs answer from Redis in milliseconds; refreshToken returns before the login runs
     timeout: ${GRPC_LAS_TIMEOUT:1s}
 
-leetcode:
-  auth:
-    strategy: direct # can be "direct" or "github"
-    direct:
-      username: ${LEETCODE_AUTH_USERNAME}
-      password: ${LEETCODE_AUTH_PASSWORD}
-    github:
-      username: ${GH_USERNAME}
-      password: ${GH_PASSWORD}
-      email:
-        host: ${GH_EMAIL_HOST}
-        port: ${GH_EMAIL_PORT}
-        type: ${GH_EMAIL_TYPE}
-        username: ${GH_EMAIL_USERNAME}
-        password: ${GH_EMAIL_PASSWORD}
-
 jda:
   discord:
     token: ${DISCORD_TOKEN}
