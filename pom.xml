@@ -235,7 +235,28 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+            </extension>
+        </extensions>
         <plugins>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <!-- run with `just las-gen`; output is committed to lib/leetcode-auth-service -->
+                <configuration>
+                    <protoSourceRoot>${project.basedir}/internal/leetcode-auth-service/proto</protoSourceRoot>
+                    <protocArtifact>com.google.protobuf:protoc:4.36.2:exe:${os.detected.classifier}</protocArtifact>
+                    <pluginId>grpc-java</pluginId>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.84.1:exe:${os.detected.classifier}</pluginArtifact>
+                    <outputDirectory>${project.basedir}/lib/leetcode-auth-service/src/main/java</outputDirectory>
+                    <clearOutputDirectory>false</clearOutputDirectory>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -249,7 +270,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>lib/leetcode-auth-stealer-service/src/main/java</source>
+                                <source>lib/leetcode-auth-service/src/main/java</source>
                             </sources>
                         </configuration>
                     </execution>
