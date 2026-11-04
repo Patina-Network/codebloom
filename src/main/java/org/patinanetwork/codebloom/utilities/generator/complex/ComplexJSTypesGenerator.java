@@ -215,14 +215,21 @@ public class ComplexJSTypesGenerator implements CommandLineRunner {
         Path nodeExecutable = resolveNodeExecutable();
         Path prettierBin =
                 Paths.get("js/node_modules/prettier/bin/prettier.cjs").toAbsolutePath();
-        new ProcessBuilder(
+
+        // Don't inherit IO: under surefire, stdin/stdout are the test runner's command channel, and a
+        // child writing to or reading from them corrupts it. Capture output and log it instead.
+        Process prettier = new ProcessBuilder(
                         nodeExecutable.toString(),
                         prettierBin.toString(),
                         "--write",
                         outputPath.toAbsolutePath().toString())
-                .inheritIO()
-                .start()
-                .waitFor();
+                .redirectErrorStream(true)
+                .start();
+        prettier.getOutputStream().close();
+        try (var output = prettier.inputReader()) {
+            output.lines().forEach(line -> log.info("[prettier] {}", line));
+        }
+        prettier.waitFor();
 
         log.info("Generated TypeScript file: {} with {} import(s)", outputPath, imports.size());
     }
