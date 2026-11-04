@@ -5,7 +5,6 @@ import com.microsoft.playwright.options.ScreenshotType;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
-import org.patinanetwork.codebloom.common.email.client.github.GithubOAuthEmailClient;
 import org.patinanetwork.codebloom.common.url.ServerUrlUtils;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +20,6 @@ public class PlaywrightClient {
 
     public PlaywrightClient(
             final ServerUrlUtils serverUrlUtils,
-            final GithubOAuthEmailClient githubOAuthEmailClient,
             final PlaywrightProvider playwrightProvider) {
         this.serverUrlUtils = serverUrlUtils;
         this.playwrightProvider = playwrightProvider;
