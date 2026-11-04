@@ -1,0 +1,7 @@
+src/proto
+
+/target
+.env
+
+clippy-report.json
+lcov.info
