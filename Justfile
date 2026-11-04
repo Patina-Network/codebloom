@@ -24,12 +24,16 @@ copy-stg *args:
 backend-dev *args:
   dotenvx run -f .env -f .env.shared -- bash ./mvnw -Dspring-boot.run.profiles=dev spring-boot:run {{args}}
 
+# Run the leetcode auth service
+las-dev *args:
+  cd ./internal/leetcode-auth-service && cargo build && dotenvx run -f ../../.env -- cargo run
+
 # Run the leetcode auth stealer service
-auth-dev *args:
+lass-dev *args:
   cd ./internal/leetcode-auth-stealer-service && uv sync && GRPC_REFLECTION=true GRPC_VERBOSITY=ERROR uv run src/server.py
 
 # Generate the leetcode auth stealer gRPC stubs for the main codebloom service
-auth-gen *args:
+lass-gen *args:
   cd ./internal/leetcode-auth-stealer-service && uv sync && uv run src/generate.py
 
 # Run the backend Spring server with an exposed debugger at :5005
@@ -85,7 +89,7 @@ email-gen *args:
 
 # Run the dev servers (backend & frontend & auth service)
 dev *args:
-  npx concurrently "just backend-dev" "just frontend-dev" "just auth-dev" {{args}}
+  npx mprocs "just backend-dev" "just frontend-dev" "just las-dev" "just lass-dev" {{args}}
 
 # Run the dev servers (backend & frontend & auth service) but the backend will launch a debugger server.
 devd *args:
