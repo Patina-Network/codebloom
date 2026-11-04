@@ -18,9 +18,7 @@ public class PlaywrightClient {
     private final ServerUrlUtils serverUrlUtils;
     private final PlaywrightProvider playwrightProvider;
 
-    public PlaywrightClient(
-            final ServerUrlUtils serverUrlUtils,
-            final PlaywrightProvider playwrightProvider) {
+    public PlaywrightClient(final ServerUrlUtils serverUrlUtils, final PlaywrightProvider playwrightProvider) {
         this.serverUrlUtils = serverUrlUtils;
         this.playwrightProvider = playwrightProvider;
     }
