@@ -18,7 +18,12 @@ const { environment, sha, type } = await yargs(hideBin(process.argv))
     default: "",
   })
   .option("type", {
-    choices: ["standup-bot", "web", "leetcode-auth-stealer-service"] satisfies Type[],
+    choices: [
+      "standup-bot",
+      "web",
+      "leetcode-auth-stealer-service",
+      "leetcode-auth-service",
+    ] satisfies Type[],
     describe: "Type to build",
     demandOption: true,
     default: "web" as Type,

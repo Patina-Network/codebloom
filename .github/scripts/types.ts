@@ -2,4 +2,8 @@ export type Environment = "staging" | "production";
 
 export type Location = "backend" | "frontend";
 
-export type Type = "web" | "standup-bot" | "leetcode-auth-stealer-service";
+export type Type =
+  | "web"
+  | "standup-bot"
+  | "leetcode-auth-stealer-service"
+  | "leetcode-auth-service";

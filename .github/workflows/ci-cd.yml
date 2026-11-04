@@ -179,6 +179,54 @@ jobs:
           ENVIRONMENT: staging
           SHA: ${{ github.sha }}
 
+  buildStagingLasImage:
+    name: Build staging image for codebloom-leetcode-auth-service (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+
+    if: github.event_name == 'pull_request'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/build-image/internal/leetcode-auth-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: staging
+          DOCKER_UPLOAD: "true"
+          ARCH: ${{ matrix.arch }}
+
+  deployStagingLas:
+    name: Deploy staging codebloom-leetcode-auth-service to K8s
+    runs-on: ubuntu-26.04
+    needs: buildStagingLasImage
+
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/redeploy/internal/leetcode-auth-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: staging
+          SHA: ${{ github.sha }}
+
   validateDBSchema:
     name: Validate DB Schema on Prod DB
     runs-on: ubuntu-26.04
@@ -289,6 +337,54 @@ jobs:
 
       - name: Run workflow
         uses: ./.github/composite/redeploy/internal/leetcode-auth-stealer-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: production
+          SHA: ${{ github.sha }}
+
+  buildLasImage:
+    name: Build codebloom-leetcode-auth-service Docker Image & Upload to Registry (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/build-image/internal/leetcode-auth-service
+        with:
+          SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT: production
+          DOCKER_UPLOAD: "true"
+          ARCH: ${{ matrix.arch }}
+
+  deployLas:
+    name: Deploy codebloom-leetcode-auth-service to K8s
+    runs-on: ubuntu-26.04
+    needs: buildLasImage
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Run workflow
+        uses: ./.github/composite/redeploy/internal/leetcode-auth-service
         with:
           SECRETS: ${{ toJSON(secrets) }}
           ENVIRONMENT: production
