@@ -117,10 +117,6 @@ app:
   commit:
     sha: "${VERSION:@commit.sha@}"
 
-playwright:
-  # change to false in application-dev.yaml to see Playwright browser attempting auth
-  headless: true
-
 ff:
   # override per environment as needed
   duels: false

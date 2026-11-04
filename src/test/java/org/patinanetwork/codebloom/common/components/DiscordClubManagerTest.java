@@ -34,7 +34,6 @@ import org.patinanetwork.codebloom.common.page.Indexed;
 import org.patinanetwork.codebloom.common.url.ServerUrlUtils;
 import org.patinanetwork.codebloom.jda.client.JDAClient;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedImagesMessageOptions;
-import org.patinanetwork.codebloom.playwright.PlaywrightClient;
 import org.slf4j.LoggerFactory;
 
 public class DiscordClubManagerTest {
@@ -42,7 +41,6 @@ public class DiscordClubManagerTest {
     private JDAClient jdaClient = mock(JDAClient.class);
     private LeaderboardRepository leaderboardRepository = mock(LeaderboardRepository.class);
     private DiscordClubRepository discordClubRepository = mock(DiscordClubRepository.class);
-    private PlaywrightClient playwrightClient = mock(PlaywrightClient.class);
     private ServerUrlUtils serverUrlUtils = mock(ServerUrlUtils.class);
     private UserRepository userRepository = mock(UserRepository.class);
     private LeaderboardManager leaderboardManager = mock(LeaderboardManager.class);
@@ -633,9 +631,6 @@ public class DiscordClubManagerTest {
         List<UserWithScore> mockUsers = createMockUsers();
         when(leaderboardRepository.getLeaderboardUsersById(eq("leaderboard-id"), any(LeaderboardFilterOptions.class)))
                 .thenReturn(mockUsers);
-
-        when(playwrightClient.getCodebloomLeaderboardScreenshot(anyInt(), any(Tag.class)))
-                .thenReturn("mock-screenshot".getBytes());
 
         when(serverUrlUtils.getUrl()).thenReturn("http://localhost:3000");
     }
