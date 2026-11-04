@@ -10,13 +10,11 @@ import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
-import org.patinanetwork.codebloom.common.email.client.github.GithubOAuthEmailClient;
 import org.patinanetwork.codebloom.common.url.ServerUrlUtils;
 
 public class PlaywrightClientTest {
 
     private ServerUrlUtils serverUrlUtils = mock(ServerUrlUtils.class);
-    private GithubOAuthEmailClient emailClient = mock(GithubOAuthEmailClient.class);
     private PlaywrightProvider playwrightProvider = mock(PlaywrightProvider.class);
 
     private Page page = mock(Page.class);
@@ -25,7 +23,7 @@ public class PlaywrightClientTest {
 
     @BeforeEach
     public void setup() {
-        playwrightClient = new PlaywrightClient(serverUrlUtils, emailClient, playwrightProvider);
+        playwrightClient = new PlaywrightClient(serverUrlUtils, playwrightProvider);
 
         when(playwrightProvider.withPage(anyString(), any())).thenAnswer(p -> {
             Function<Page, Object> fn = p.getArgument(1);

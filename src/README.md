@@ -47,8 +47,7 @@ src/main
 │               │   ├── dto                                         # dtos
 │               │   ├── email
 │               │   │   ├── client
-│               │   │   │   ├── codebloom                           # used to send emails
-│               │   │   │   └── github                              # used to read emails during Leetcode OAuth process
+│               │   │   │   └── codebloom                           # used to send emails
 │               │   │   ├── Email.java                              # base interface used by ./client
 │               │   │   ├── error                                   # shared error used by ./client
 │               │   │   ├── Message.java                            # base message object used by ./client
@@ -56,6 +55,7 @@ src/main
 │               │   │   └── template                                # react email templater
 │               │   ├── jwt                                         # jwt helper class(es)
 │               │   ├── leetcode                                    # leetcode client classes
+│               │   │   ├── auth                                    # credentials supplied by leetcode-auth-service over gRPC
 │               │   │   ├── LeetcodeClient.java
 │               │   │   ├── LeetcodeClientImpl.java
 │               │   │   ├── models                                  # shared objects belonging to leetcode.com
@@ -64,7 +64,6 @@ src/main
 │               │   │   └── throttled                               # throttled to help alleviate rate limits
 │               │   │       ├── ThrottledLeetcodeClient.java
 │               │   │       └── ThrottledLeetcodeClientImpl.java
-│               │   ├── redis                                       # WIP: redis
 │               │   ├── reporter                                    # classes that can be used to report logs & errors to our private Discord server
 │               │   ├── schools                                     # school-specific utils
 │               │   ├── security                                    # security/auth helper utils
@@ -84,7 +83,6 @@ src/main
 │               ├── playwright                                      # external playwright client
 │               │   └── PlaywrightClient.java
 │               ├── scheduled                                       # holds all background processes
-│               │   ├── auth                                        # used to "steal" a leetcode token. this is a special class as runs in the bg and can be imported into other classes (this separation should be more distinct in the future)
 │               │   ├── discord                                     # used to send weekly leaderboard to discord
 │               │   ├── duel                                        # WIP: used to cleanup expired duels
 │               │   ├── leetcode                                    # various bg services related to leetcode.com and Codebloom
@@ -207,7 +205,7 @@ public class ApiController {
 
 ### `LeetcodeClient`
 
-We have a Leetcode client that interfaces with leetcode.com's GraphQL API to fetch question data, user submissions, and other information. It handles authentication by automatically stealing session cookies via Playwright.
+We have a Leetcode client that interfaces with leetcode.com's GraphQL API to fetch question data, user submissions, and other information. It gets session credentials from the external `leetcode-auth-service` over gRPC.
 
 The main client can be found at [`LeetcodeClientImpl.java`](https://github.com/tahminator/codebloom/blob/main/src/main/java/org/patinanetwork/codebloom/common/leetcode/LeetcodeClientImpl.java), though we only use [`ThrottledLeetcodeClient.java`](https://github.com/tahminator/codebloom/blob/main/src/main/java/org/patinanetwork/codebloom/common/leetcode/throttled/ThrottledLeetcodeClientImpl.java) to avoid rate-limiting.
 
@@ -227,12 +225,12 @@ The [`LeetcodeClient.java`](https://github.com/tahminator/codebloom/blob/main/sr
 
 #### Authentication
 
-We have a scheduled task at [`LeetcodeAuthStealer.java`](https://github.com/tahminator/codebloom/blob/main/src/main/java/org/patinanetwork/codebloom/scheduled/auth/LeetcodeAuthStealer.java) that:
+[`DefaultLeetcodeAuthenticationService`](main/java/org/patinanetwork/codebloom/common/leetcode/auth/DefaultLeetcodeAuthenticationService.java) obtains the `LEETCODE_SESSION` and `csrftoken` values through the auth service's `getToken` RPC and requests background refreshes through `refreshToken`.
 
-- Runs every 30 minutes to refresh session cookies
-- Uses Playwright to automate GitHub OAuth login flow
-- Stores the `LEETCODE_SESSION` cookie in our database
-- Falls back to email alerts if authentication fails
+- [`leetcode-auth-service`](../internal/leetcode-auth-service/README.md) owns credential storage in Redis and schedules refreshes.
+- That service calls [`leetcode-auth-stealer-service`](../internal/leetcode-auth-stealer-service/README.md) to authenticate with LeetCode using email and password.
+- The backend no longer runs a scheduled Playwright/GitHub OAuth stealer or stores LeetCode credentials in Postgres. The legacy `Auth` table is retained but unused by the backend; Codebloom user sessions are separate and unchanged.
+- Under the `ci` Spring profile, `CiLeetcodeAuthenticationService` returns empty credentials without calling the auth service.
 
 This is necessary because leetcode.com requires authenticated requests for most API calls.
 
@@ -295,21 +293,18 @@ Codebloom has a hand-rolled error reporter that will report certain logs and err
 
 #### Examples
 
-[Link to Reporter example](https://github.com/tahminator/codebloom/blob/main/src/main/java/org/patinanetwork/codebloom/scheduled/auth/LeetcodeAuthStealer.java#L244-L259)
+[Link to Reporter example](main/java/org/patinanetwork/codebloom/common/utils/log/LogExecutionTimeAspect.java)
 
 ```java
-    public synchronized String getCsrf() {
-        if (csrf == null && !reported) {
-            reported = true;
-            reporter.log(Report.builder()
-                            .environments(env.getActiveProfiles())
-                            .location(Location.BACKEND)
-                            .data("CSRF token is missing inside of LeetcodeAuthStealer. This may be something to look into.")
-                            .build());
-        }
-
-        return csrf;
-    }
+if (logExecutionTime.reportToDiscord()) {
+    reporter.log(
+            "logExecTime",
+            Report.builder()
+                    .data("%s executed in %s ms".formatted(joinPoint.getSignature(), elapsed))
+                    .environments(env.getActiveProfiles())
+                    .location(Location.BACKEND)
+                    .build());
+}
 ```
 
 [Link to ThrottledReporter example](https://github.com/tahminator/codebloom/blob/main/src/main/java/org/patinanetwork/codebloom/common/submissions/SubmissionsHandler.java#L131-L148)
