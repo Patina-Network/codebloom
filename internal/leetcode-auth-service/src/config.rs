@@ -70,7 +70,7 @@ impl Config {
                     .flatten()
                     .unwrap_or_else(|| false);
 
-                format!("{}{host}", if tls { "http://" } else { "https://" })
+                format!("{}{host}", if tls { "https://" } else { "http://" })
             },
             grpc_lass_timeout: lass_timeout,
             refresh_lock_ttl: seconds(
