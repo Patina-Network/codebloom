@@ -121,11 +121,12 @@ dev *args:
 install-pre-scripts:
   just install-pre-commit && just install-pre-push
 
+# `--git-path` resolves the shared hooks dir, so this also works inside a worktree.
 install-pre-commit:
-  cp pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+  cp pre-commit "$(git rev-parse --git-path hooks)/pre-commit" && chmod +x "$(git rev-parse --git-path hooks)/pre-commit"
 
 install-pre-push:
-  cp pre-commit .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+  cp pre-push "$(git rev-parse --git-path hooks)/pre-push" && chmod +x "$(git rev-parse --git-path hooks)/pre-push"
 
 # Run the dev servers (backend & frontend & auth service) but the backend will launch a debugger server.
 devd *args:
