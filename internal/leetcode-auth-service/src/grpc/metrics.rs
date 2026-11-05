@@ -84,6 +84,14 @@ fn status_code_from(headers: &HeaderMap) -> Option<&'static str> {
 }
 
 fn record_grpc_request_metrics(grpc_method: Arc<str>, status: &'static str, start: Instant) {
+    // Unknown services and methods answer UNIMPLEMENTED. Their paths come from the client, so
+    // collapse them into one label value to keep the series count bounded.
+    let grpc_method = if status == "UNIMPLEMENTED" {
+        Arc::from("unknown")
+    } else {
+        grpc_method
+    };
+
     counter!(
         "grpc_requests_total",
         "method" => grpc_method.clone(),
