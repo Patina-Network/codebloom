@@ -1,0 +1,6 @@
+stores:
+    yaml:
+        indent: 2
+creation_rules:
+    - path_regex: .env.shared.yaml
+      azure_keyvault: "https://sops-master.vault.azure.net/keys/sops-key/"

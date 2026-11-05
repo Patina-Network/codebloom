@@ -1,0 +1,15 @@
+#!/bin/bash
+# Checks the staged version of each shared secret file, which is what gets committed.
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.env\.shared\.yaml$')
+EXIT_CODE=0
+for FILE in $FILES; do
+    if ! git show ":$FILE" | grep -q "sops:"; then
+        echo "--------------------------------------------------------"
+        echo "ERROR: Unencrypted secret file staged: $FILE"
+        echo "Please encrypt this file by running \`just encrypt $FILE\`,"
+        echo "then run \`git add $FILE\`."
+        echo "--------------------------------------------------------"
+        EXIT_CODE=1
+    fi
+done
+exit $EXIT_CODE
