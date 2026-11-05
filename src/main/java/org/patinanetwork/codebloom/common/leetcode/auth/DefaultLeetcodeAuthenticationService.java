@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.common.leetcode.auth;
 
+import io.micrometer.core.annotation.Timed;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @AllArgsConstructor
+@Timed
 @Profile("!ci")
 public class DefaultLeetcodeAuthenticationService implements LeetcodeAuthenticationService {
 

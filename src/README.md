@@ -80,8 +80,6 @@ src/main
 │               │   ├── JDAClientManager.java                       # wires up JDAClient
 │               │   ├── JDACommandRegisterHandler.java              # registers slash commands
 │               │   └── properties
-│               ├── playwright                                      # external playwright client
-│               │   └── PlaywrightClient.java
 │               ├── scheduled                                       # holds all background processes
 │               │   ├── discord                                     # used to send weekly leaderboard to discord
 │               │   ├── duel                                        # WIP: used to cleanup expired duels
@@ -229,7 +227,7 @@ The [`LeetcodeClient.java`](https://github.com/tahminator/codebloom/blob/main/sr
 
 - [`leetcode-auth-service`](../internal/leetcode-auth-service/README.md) owns credential storage in Redis and schedules refreshes.
 - That service calls [`leetcode-auth-stealer-service`](../internal/leetcode-auth-stealer-service/README.md) to authenticate with LeetCode using email and password.
-- The backend no longer runs a scheduled Playwright/GitHub OAuth stealer or stores LeetCode credentials in Postgres. The legacy `Auth` table is retained but unused by the backend; Codebloom user sessions are separate and unchanged.
+- The backend no longer runs a scheduled GitHub OAuth stealer or stores LeetCode credentials in Postgres. The legacy `Auth` table is retained but unused by the backend; Codebloom user sessions are separate and unchanged.
 - Under the `ci` Spring profile, `CiLeetcodeAuthenticationService` returns empty credentials without calling the auth service.
 
 This is necessary because leetcode.com requires authenticated requests for most API calls.

@@ -7,7 +7,7 @@ use crate::{
         GetTokenRequest, GetTokenResponse, RefreshTokenRequest, RefreshTokenResponse,
         leetcode_auth_service_server,
     },
-    service::refresh::TokenManager,
+    service::refresh::{RefreshSource, TokenManager},
 };
 
 pub use leetcode_auth_service_server::LeetcodeAuthServiceServer;
@@ -55,7 +55,7 @@ impl<R: AuthRepository, A: LASS> leetcode_auth_service_server::LeetcodeAuthServi
     ) -> Result<Response<RefreshTokenResponse>, Status> {
         let started = self
             .token_manager
-            .trigger()
+            .trigger(RefreshSource::Rpc)
             .await
             .map_err(redis_status)?
             .is_some();

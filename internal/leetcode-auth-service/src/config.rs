@@ -66,9 +66,8 @@ impl Config {
                     .filter(|v| !v.is_empty())
                     .unwrap_or_else(|| "localhost:50051".to_string());
                 let tls = var("GRPC_LASS_TLS")
-                    .map(|b| b.parse::<bool>().ok())
-                    .flatten()
-                    .unwrap_or_else(|| false);
+                    .and_then(|b| b.parse::<bool>().ok())
+                    .unwrap_or(false);
 
                 format!("{}{host}", if tls { "https://" } else { "http://" })
             },
