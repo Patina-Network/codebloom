@@ -69,7 +69,8 @@ grpc:
   leetcode-auth-service:
     host: ${GRPC_LAS_HOST:localhost:50052}
     tls: ${GRPC_LAS_TLS:false}
-    timeout: ${GRPC_LAS_TIMEOUT:20ms}
+    # both RPCs answer from Redis in milliseconds; refreshToken returns before the login runs
+    timeout: ${GRPC_LAS_TIMEOUT:1s}
 
 leetcode:
   auth:
