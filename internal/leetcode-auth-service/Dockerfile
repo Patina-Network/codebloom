@@ -1,5 +1,5 @@
 # build context is internal/
-# `docker build -f leetcode-auth-service/Dockerfile internal`
+# `docker build -f internal/leetcode-auth-service/Dockerfile internal` (from the repo root)
 FROM mirror.gcr.io/library/rust:1-alpine3.24 AS build
 
 WORKDIR /app/leetcode-auth-service

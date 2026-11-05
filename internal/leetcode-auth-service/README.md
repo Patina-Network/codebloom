@@ -37,7 +37,7 @@ grpcurl -plaintext localhost:50052 leetcodeauth.LeetcodeAuthService/refreshToken
 The Docker build context is `internal/`, because `build.rs` needs LASS's proto:
 
 ```bash
-docker build -f leetcode-auth-service/Dockerfile internal
+docker build -f internal/leetcode-auth-service/Dockerfile internal
 ```
 
 ## Configuration
