@@ -26,6 +26,7 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["json", "env-filter"] }
 chrono = { version = "0.4.45", default-features = false, features = ["std", "clock"] }
 redis = { version = "1.8.1", default-features = false, features = ["tokio-comp", "connection-manager", "script"] }
+strum = { version = "0.28.0", features = ["derive"] }
 
 [dev-dependencies]
 parking_lot = "0.12"

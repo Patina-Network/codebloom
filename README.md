@@ -51,7 +51,7 @@ This repository is a monorepo that contains many different pieces of Codebloom, 
 - Our public task board on [Notion](https://www.notion.so/) which is used to define a relationship between tasks and PRs
   - [View public taskboard](https://codebloom.notion.site/)
   - [Goto `.github/scripts/notion/index.ts` to view custom PR/commit check validation implementation](./.github/scripts/notion/index.ts)
-- Our backend which is written in [Java 25](https://dev.java/) and [Spring Boot 3](https://spring.io/projects/spring-boot). The backend interfaces with our database via [pgJDBC](https://jdbc.postgresql.org/), Discord via [JDA](https://jda.wiki/), [leetcode.com](https://leetcode.com) via a custom abstraction over their [GraphQL](https://graphql.org/) API as well as [Playwright](https://playwright.dev/java/) to obtain credentials to [leetcode.com](https://leetcode.com) via [GitHub OAuth](https://github.com).
+- Our backend which is written in [Java 25](https://dev.java/) and [Spring Boot 3](https://spring.io/projects/spring-boot). The backend interfaces with our database via [pgJDBC](https://jdbc.postgresql.org/), Discord via [JDA](https://jda.wiki/), and [leetcode.com](https://leetcode.com) via a custom abstraction over their [GraphQL](https://graphql.org/) API, using credentials from [`leetcode-auth-service`](./internal/leetcode-auth-service/README.md).
   - [Goto `src/`](./src/)
   - [View detailed documentation](./src/README.md)
   - [View OpenAPI schema](https://codebloom.patinanetwork.org/swagger-ui/index.html)
