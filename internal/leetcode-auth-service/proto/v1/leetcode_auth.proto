@@ -1,0 +1,30 @@
+syntax = "proto3";
+package leetcodeauth;
+
+option go_package = "patinanetwork.org/grpc/leetcode-auth-service;leetcodeauth";
+option java_package = "org.patinanetwork.codebloom.grpc.leetcodeauth.v1";
+option java_multiple_files = true;
+
+service LeetcodeAuthService {
+  // may return NOT_FOUND until the first refresh succeeds.
+  rpc getToken(GetTokenRequest) returns (GetTokenResponse);
+
+  // Starts a refresh in the background and returns immediately. Calls made
+  // while a refresh is running are ignored. The stored credentials keep being
+  // served until a refresh succeeds.
+  rpc refreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+}
+
+message GetTokenRequest {}
+
+message GetTokenResponse {
+  string token = 1;
+  string csrf = 2;
+}
+
+message RefreshTokenRequest {}
+
+message RefreshTokenResponse {
+  // false when a refresh was already running and this call was ignored
+  bool started = 1;
+}
