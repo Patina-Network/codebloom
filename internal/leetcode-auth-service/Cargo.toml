@@ -5,7 +5,8 @@ edition = "2024"
 rust-version = "1.94"
 
 [dependencies]
-tonic = "0.14.6"
+# ring + bundled webpki roots: the alpine runtime image has no system CA store
+tonic = { version = "0.14.6", features = ["tls-ring", "tls-webpki-roots"] }
 tonic-health = "0.14.6"
 tonic-reflection = "0.14.6"
 tonic-middleware = "0.4.1"
