@@ -15,7 +15,7 @@ use leetcode_auth_service::{
         metrics::GrpcRequestMetricsMiddleware,
     },
     http::{router, state::AppState},
-    proto,
+    observe, proto,
     service::refresh::TokenManager,
 };
 
@@ -44,9 +44,11 @@ fn init_tracing() {
 async fn main() -> anyhow::Result<()> {
     init_tracing();
 
-    let prom_handle = PrometheusBuilder::new()
+    let prom_handle = observe::configure(PrometheusBuilder::new())
+        .context("failed to configure Prometheus histogram buckets")?
         .install_recorder()
         .context("failed to install Prometheus recorder")?;
+    observe::describe();
     let sys_collector = metrics_process::Collector::default();
     sys_collector.describe();
 
