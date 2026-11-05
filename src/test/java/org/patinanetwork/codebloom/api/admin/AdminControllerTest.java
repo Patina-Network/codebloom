@@ -30,8 +30,8 @@ import org.patinanetwork.codebloom.common.db.repos.user.UserRepository;
 import org.patinanetwork.codebloom.common.dto.ApiResponder;
 import org.patinanetwork.codebloom.common.dto.Empty;
 import org.patinanetwork.codebloom.common.dto.question.QuestionWithUserDto;
+import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationService;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
-import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
 import org.patinanetwork.codebloom.utilities.exception.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +46,8 @@ public class AdminControllerTest {
     private final DiscordClubManager discordClubManager = mock(DiscordClubManager.class);
     private final LeaderboardManager leaderboardManager = mock(LeaderboardManager.class);
     private final DiscordClubRepository discordClubRepository = mock(DiscordClubRepository.class);
-    private final LeetcodeAuthStealer leetcodeAuthStealer = mock(LeetcodeAuthStealer.class);
+    private final LeetcodeAuthenticationService leetcodeAuthenticationService =
+            mock(LeetcodeAuthenticationService.class);
     private final IncompleteQuestionRequeuer incompleteQuestionRequeuer = mock(IncompleteQuestionRequeuer.class);
 
     private final AdminController adminController;
@@ -60,7 +61,7 @@ public class AdminControllerTest {
                 discordClubManager,
                 leaderboardManager,
                 discordClubRepository,
-                leetcodeAuthStealer,
+                leetcodeAuthenticationService,
                 incompleteQuestionRequeuer));
     }
 
@@ -73,7 +74,7 @@ public class AdminControllerTest {
                 questionRepository,
                 discordClubManager,
                 leaderboardManager,
-                leetcodeAuthStealer,
+                leetcodeAuthenticationService,
                 incompleteQuestionRequeuer);
     }
 
@@ -468,7 +469,7 @@ public class AdminControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().isSuccess());
-        verify(leetcodeAuthStealer, times(1)).reloadCookie();
+        verify(leetcodeAuthenticationService, times(1)).refresh();
     }
 
     @Test

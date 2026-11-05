@@ -32,10 +32,10 @@ import org.patinanetwork.codebloom.common.dto.Empty;
 import org.patinanetwork.codebloom.common.dto.autogen.UnsafeGenericFailureResponse;
 import org.patinanetwork.codebloom.common.dto.question.QuestionWithUserDto;
 import org.patinanetwork.codebloom.common.dto.user.UserDto;
+import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationService;
 import org.patinanetwork.codebloom.common.security.AuthenticationObject;
 import org.patinanetwork.codebloom.common.security.annotation.Protected;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
-import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,7 +54,7 @@ public class AdminController {
     private final DiscordClubManager discordClubManager;
     private final LeaderboardManager leaderboardManager;
     private final DiscordClubRepository discordClubRepository;
-    private final LeetcodeAuthStealer leetcodeAuthStealer;
+    private final LeetcodeAuthenticationService leetcodeAuthenticationService;
     private final IncompleteQuestionRequeuer incompleteQuestionRequeuer;
 
     public AdminController(
@@ -65,7 +65,7 @@ public class AdminController {
             final DiscordClubManager discordClubManager,
             final LeaderboardManager leaderboardManager,
             final DiscordClubRepository discordClubRepository,
-            final LeetcodeAuthStealer leetcodeAuthStealer,
+            final LeetcodeAuthenticationService leetcodeAuthenticationService,
             final IncompleteQuestionRequeuer incompleteQuestionRequeuer) {
         this.leaderboardRepository = leaderboardRepository;
         this.userRepository = userRepository;
@@ -74,7 +74,7 @@ public class AdminController {
         this.discordClubManager = discordClubManager;
         this.leaderboardManager = leaderboardManager;
         this.discordClubRepository = discordClubRepository;
-        this.leetcodeAuthStealer = leetcodeAuthStealer;
+        this.leetcodeAuthenticationService = leetcodeAuthenticationService;
         this.incompleteQuestionRequeuer = incompleteQuestionRequeuer;
     }
 
@@ -351,7 +351,7 @@ public class AdminController {
     @PostMapping("/leetcode/token")
     public ResponseEntity<ApiResponder<Empty>> refreshLeetcodeToken(
             @Protected(admin = true) final AuthenticationObject authenticationObject) {
-        leetcodeAuthStealer.reloadCookie();
+        leetcodeAuthenticationService.refresh();
         return ResponseEntity.ok(ApiResponder.success("LeetCode token refresh triggered.", Empty.of()));
     }
 

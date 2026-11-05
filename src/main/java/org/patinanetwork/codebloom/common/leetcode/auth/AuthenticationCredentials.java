@@ -1,3 +1,5 @@
 package org.patinanetwork.codebloom.common.leetcode.auth;
 
-public record AuthenticationCredentials(String token, String csrf) {}
+import java.util.Optional;
+
+public record AuthenticationCredentials(Optional<String> token, Optional<String> csrf) {}
