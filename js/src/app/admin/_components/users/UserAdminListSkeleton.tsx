@@ -2,7 +2,7 @@ import { Box, Flex, Skeleton } from "@mantine/core";
 
 export default function UserAdminListSkeleton() {
   return (
-    <Box p={"xs"}>
+    <Box p={"xs"} data-testId={"user-admin-list-skeleton-board"}>
       <Skeleton height={35} width="20%" mb="md" mt="md" ml="auto" />
       <Skeleton height={35} width="100%" mb="md" mt="md" />
       <Skeleton height={50} mb="sm" radius="md" />

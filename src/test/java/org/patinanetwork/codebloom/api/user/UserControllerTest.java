@@ -70,6 +70,17 @@ public class UserControllerTest {
                 .build();
     }
 
+    private User createRandomAdminUser() {
+        return User.builder()
+                .id(randomUUID())
+                .discordId(String.valueOf(faker.number().randomNumber(18, true)))
+                .discordName(faker.name().username())
+                .leetcodeUsername(Optional.ofNullable(faker.name().username()))
+                .admin(true)
+                .verifyKey(faker.crypto().md5())
+                .build();
+    }
+
     private Question createRandomQuestion(final String userId) {
         return Question.builder()
                 .id(randomUUID())
@@ -362,6 +373,35 @@ public class UserControllerTest {
         assertNotNull(page);
         assertEquals(0, page.getItems().size());
         assertEquals(0, page.getPages());
+    }
+
+    @Test
+    @DisplayName("Get all users - with admin filter on")
+    void getAllUsersWithAdminFilterOn() {
+        String searchQuery = "testuser";
+
+        ArrayList<User> users = new ArrayList<>();
+        User matchingUser = createRandomAdminUser();
+        users.add(matchingUser);
+
+        when(userRepository.getAllUsers(eq(1), eq(20), eq(searchQuery), eq(true)))
+                .thenReturn(users);
+        when(userRepository.getUserCount(eq(searchQuery), eq(true))).thenReturn(1);
+
+        var response = userController.getAllUsers(request, 1, searchQuery, 20, true);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        var apiResponder = response.getBody();
+        assertNotNull(apiResponder);
+        assertTrue(apiResponder.isSuccess());
+
+        Page<UserDto> page = apiResponder.getPayload();
+        assertNotNull(page);
+        assertEquals(1, page.getItems().size());
+
+        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(searchQuery), eq(true));
+        verify(userRepository, times(1)).getUserCount(eq(searchQuery), eq(true));
     }
 
     private UserMetrics createRandomUserMetrics(final String userId) {

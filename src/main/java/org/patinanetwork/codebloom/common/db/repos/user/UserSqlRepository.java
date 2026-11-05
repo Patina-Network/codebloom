@@ -25,6 +25,7 @@ public class UserSqlRepository implements UserRepository {
     private static final String SCHOOL_EMAIL = "schoolEmail";
     private static final String PROFILE_URL = "profileUrl";
     private static final String CREATED_AT = "createdAt";
+    private static final String QUERY = "query";
 
     private final JdbcClient jdbcClient;
     private final UserTagRepository userTagRepository;
@@ -279,7 +280,7 @@ public class UserSqlRepository implements UserRepository {
 
         return new ArrayList<>(jdbcClient
                 .sql(sql)
-                .param("query", "%" + query + "%")
+                .param(QUERY, "%" + query + "%")
                 .param("limit", pageSize)
                 .param("offset", (page - 1) * pageSize)
                 .query(userRowMapper)
@@ -314,7 +315,7 @@ public class UserSqlRepository implements UserRepository {
 
         return new ArrayList<>(jdbcClient
                 .sql(sql)
-                .param("query", "%" + query + "%")
+                .param(QUERY, "%" + query + "%")
                 .param("limit", pageSize)
                 .param("offset", (page - 1) * pageSize)
                 .param("adminFilter", adminFilter)
@@ -418,7 +419,7 @@ public class UserSqlRepository implements UserRepository {
 
         return jdbcClient
                 .sql(sql)
-                .param("query", "%" + query + "%")
+                .param(QUERY, "%" + query + "%")
                 .query((rs, rowNum) -> rs.getInt(1))
                 .single();
     }
@@ -437,7 +438,7 @@ public class UserSqlRepository implements UserRepository {
 
         return jdbcClient
                 .sql(sql)
-                .param("query", "%" + query + "%")
+                .param(QUERY, "%" + query + "%")
                 .param("adminFilter", adminFilter)
                 .query((rs, rowNum) -> rs.getInt(1))
                 .single();

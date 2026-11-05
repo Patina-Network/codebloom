@@ -209,7 +209,7 @@ export const useGetAllUsersQuery = (
   }, [searchQuery, goTo]);
 
   const [adminFilter, setAdminFilter] = useURLState("adminFilter", false, {
-    enabled: tieToUrl,
+    enabled: true,
     debounce: 100,
   });
 

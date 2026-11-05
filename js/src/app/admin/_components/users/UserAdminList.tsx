@@ -56,7 +56,11 @@ export default function UserAdminList() {
   const pageData = data.payload;
 
   const filterDropdown = (
-    <Box pos="relative" display="inline-block">
+    <Box
+      pos="relative"
+      display="inline-block"
+      data-testId={"user-admin-list-filter"}
+    >
       <FilterDropdown buttonName="Filters">
         <FilterDropdownItem
           value={adminFilter}
@@ -82,6 +86,7 @@ export default function UserAdminList() {
         metadata: {
           page,
           debouncedQuery,
+          adminFilter,
         },
       },
       {
@@ -117,7 +122,12 @@ export default function UserAdminList() {
         mt={0}
         mb={0}
       />
-      <Box style={{ overflowX: "auto" }} m={"lg"} mt={0}>
+      <Box
+        style={{ overflowX: "auto" }}
+        m={"lg"}
+        mt={0}
+        data-testId={"user-admin-list-board"}
+      >
         <Table
           verticalSpacing={"lg"}
           horizontalSpacing={"xs"}
@@ -196,6 +206,7 @@ export default function UserAdminList() {
                   <Table.Td>{user.leetcodeUsername}</Table.Td>
                   <Table.Td>
                     <Button
+                      data-testId={user.leetcodeUsername + "-button"}
                       ta="center"
                       color={adminBadgeColor}
                       onClick={() => onToggle(user.id, user.admin)}

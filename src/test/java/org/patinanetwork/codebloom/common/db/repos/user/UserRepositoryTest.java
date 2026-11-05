@@ -29,7 +29,7 @@ public class UserRepositoryTest extends BaseRepositoryTest {
     private UserRepository userRepository;
 
     private User testUser;
-    private User testUserWithAdmin;
+    private User testAdminUser;
 
     @Autowired
     public UserRepositoryTest(final UserRepository userRepository) {
@@ -52,11 +52,11 @@ public class UserRepositoryTest extends BaseRepositoryTest {
                 .tags(new ArrayList<>())
                 .build();
 
-        testUserWithAdmin = User.builder()
+        testAdminUser = User.builder()
                 .discordId(uniqueAdminDiscordId)
-                .discordName("TestUserWithAdmin")
-                .leetcodeUsername(Optional.of("testuserwithadmin"))
-                .nickname(Optional.of("TestNicknameWithAdmin"))
+                .discordName("TestAdminUser")
+                .leetcodeUsername(Optional.of("testadminuser"))
+                .nickname(Optional.of("TestAdminNickname"))
                 .admin(true)
                 .schoolEmail(Optional.of("test@example.com"))
                 .profileUrl(Optional.of(""))
@@ -64,13 +64,13 @@ public class UserRepositoryTest extends BaseRepositoryTest {
                 .build();
 
         userRepository.createUser(testUser);
-        userRepository.createUser(testUserWithAdmin);
+        userRepository.createUser(testAdminUser);
     }
 
     @AfterAll
     void cleanUp() {
-        boolean isSuccessful = userRepository.deleteUserById(testUser.getId())
-                && userRepository.deleteUserById(testUserWithAdmin.getId());
+        boolean isSuccessful =
+                userRepository.deleteUserById(testUser.getId()) && userRepository.deleteUserById(testAdminUser.getId());
         if (!isSuccessful) {
             fail("Failed deleting User by Id.");
         }
@@ -160,8 +160,11 @@ public class UserRepositoryTest extends BaseRepositoryTest {
     @Test
     @Order(10)
     void testGetUserCountWithQueryAndFilter() {
-        int countWithAdminTestUserAndFilter = userRepository.getUserCount("TestUserWithAdmin", true);
+        int countWithAdminTestUserAndFilter = userRepository.getUserCount("TestAdminUser", true);
         assertTrue(countWithAdminTestUserAndFilter > 0);
+
+        int countWithTestUserAndFilter = userRepository.getUserCount("TestUser", true);
+        assertTrue(countWithTestUserAndFilter == 0);
     }
 
     @Test
@@ -171,7 +174,7 @@ public class UserRepositoryTest extends BaseRepositoryTest {
         assertNotNull(users);
         assertTrue(users.size() >= 0);
 
-        ArrayList<User> searchResults = userRepository.getAllUsers(1, 100, "TestUserWithAdmin", true);
-        assertTrue(searchResults.contains(testUserWithAdmin));
+        ArrayList<User> searchResults = userRepository.getAllUsers(1, 100, "TestAdminUser", true);
+        assertTrue(searchResults.contains(testAdminUser));
     }
 }

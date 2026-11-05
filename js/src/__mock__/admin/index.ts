@@ -143,3 +143,43 @@ export const createDiscordAnnouncementServerErrorHandler = http.post(
     );
   },
 );
+
+const toggleAdmin = ApiURL.create("/api/admin/user/admin/toggle", {
+  method: "POST",
+});
+
+const TOGGLE_ADMIN_SUCCESS_MESSAGE =
+  "User with Discord name of discord-4 is no longer an admin";
+
+const TOGGLE_ADMIN_FAILURE_MESSAGE = "Failed to update admin status";
+
+export const createToggleAdminSuccessHandler = http.post(
+  toggleAdmin.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: true,
+      payload: {
+        id: "user-4",
+        discordId: "discord-4",
+        discordName: "persephone",
+        leetcodeUsername: "persephone_lc",
+        nickname: "Verified Persephone",
+        admin: false,
+        profileUrl: null,
+        tags: [],
+        achievements: [],
+      },
+      message: TOGGLE_ADMIN_SUCCESS_MESSAGE,
+    } satisfies ReturnType<typeof toggleAdmin.res>);
+  },
+);
+
+export const createToggleAdminFailureHandler = http.post(
+  toggleAdmin.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: false,
+      message: TOGGLE_ADMIN_FAILURE_MESSAGE,
+    } satisfies ReturnType<typeof toggleAdmin.res>);
+  },
+);

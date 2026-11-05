@@ -47,6 +47,17 @@ export const MOCK_USERS = [
     tags: [],
     achievements: [],
   },
+  {
+    id: "user-4",
+    discordId: "discord-4",
+    discordName: "persephone",
+    leetcodeUsername: "persephone_lc",
+    nickname: "Verified Persephone",
+    admin: true,
+    profileUrl: null,
+    tags: [],
+    achievements: [],
+  },
 ];
 
 export const getAllUsersHandler = http.get(
