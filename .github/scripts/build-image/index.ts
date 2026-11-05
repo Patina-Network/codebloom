@@ -35,7 +35,12 @@ const { environment, dockerUpload, getGhaOutput, githubOutputFile, type, arch, p
     default: process.env.GITHUB_OUTPUT,
   })
   .option("type", {
-    choices: ["standup-bot", "web", "leetcode-auth-stealer-service"] satisfies Type[],
+    choices: [
+      "standup-bot",
+      "web",
+      "leetcode-auth-stealer-service",
+      "leetcode-auth-service",
+    ] satisfies Type[],
     describe: "Type to build",
     demandOption: true,
     default: "web" as Type,
@@ -112,7 +117,9 @@ async function main() {
 
   const buildArgs = {
     ...(type === "web" ? { COMMIT_SHA: gitSha } : {}),
-    ...(environment === "staging" && type !== "leetcode-auth-stealer-service"
+    ...(environment === "staging" &&
+    type !== "leetcode-auth-stealer-service" &&
+    type !== "leetcode-auth-service"
       ? {
           VITE_STAGING: true,
         }
@@ -124,6 +131,10 @@ async function main() {
     if (type === "leetcode-auth-stealer-service") {
       process.chdir("internal/leetcode-auth-stealer-service");
     }
+    // build.rs also compiles LASS's proto, so the build context is internal/
+    if (type === "leetcode-auth-service") {
+      process.chdir("internal");
+    }
     await dockerClient.buildImage({
       dockerRepository,
       dockerFileLocation:
@@ -131,7 +142,9 @@ async function main() {
           ? "infra/Dockerfile"
           : type === "standup-bot"
             ? "internal/standup-bot/Dockerfile"
-            : "Dockerfile",
+            : type === "leetcode-auth-service"
+              ? "leetcode-auth-service/Dockerfile"
+              : "Dockerfile",
       tags,
       shouldUpload: dockerUpload,
       buildArgs,
@@ -161,6 +174,7 @@ async function main() {
         prId,
         owner: "Patina-Network",
         repository: "codebloom",
+        key: `build-${dockerRepository}`,
         message: `The image has been uploaded to https://hub.docker.com/r/patinanetwork/${dockerRepository}/tags under the following tags:
 
 ${tags.map((t) => `- \`${dockerRepository}:${t}\``).join("\n")}

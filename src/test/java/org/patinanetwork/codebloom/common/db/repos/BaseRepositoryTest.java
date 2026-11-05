@@ -1,7 +1,6 @@
 package org.patinanetwork.codebloom.common.db.repos;
 
 import org.patinanetwork.codebloom.common.email.client.codebloom.OfficialCodebloomEmailClient;
-import org.patinanetwork.codebloom.common.email.client.github.GithubOAuthEmailClient;
 import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationService;
 import org.patinanetwork.codebloom.jda.JDAClientManager;
 import org.patinanetwork.codebloom.jda.command.JDASlashCommandInitializer;
@@ -23,9 +22,6 @@ public class BaseRepositoryTest {
 
     @MockitoBean
     private OfficialCodebloomEmailClient codebloomEmailClient;
-
-    @MockitoBean
-    private GithubOAuthEmailClient githubOAuthEmailClient;
 
     @MockitoBean
     private SubmissionScheduler submissionScheduler;

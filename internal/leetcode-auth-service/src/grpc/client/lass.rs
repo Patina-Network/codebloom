@@ -3,7 +3,7 @@ use std::time::Duration;
 use anyhow::Context;
 use tonic::{
     Status,
-    transport::{Channel, Endpoint},
+    transport::{Channel, ClientTlsConfig, Endpoint},
 };
 
 use crate::{
@@ -31,11 +31,18 @@ impl GrpcLASS {
     /// Connects lazily so this service starts, and keeps serving stored credentials, while LASS is
     /// down.
     pub fn new(config: &Config) -> anyhow::Result<Self> {
-        let channel = Endpoint::from_shared(config.grpc_lass_url.clone())
-            .context("LASS_URL must be a valid URI")?
+        let mut endpoint = Endpoint::from_shared(config.grpc_lass_url.clone())
+            .context("GRPC_LASS_HOST must form a valid URI with the GRPC_LASS_TLS scheme")?
             .connect_timeout(Duration::from_secs(5))
-            .timeout(config.grpc_lass_timeout)
-            .connect_lazy();
+            .timeout(config.grpc_lass_timeout);
+
+        if config.grpc_lass_url.starts_with("https://") {
+            endpoint = endpoint
+                .tls_config(ClientTlsConfig::new().with_webpki_roots())
+                .context("failed to configure TLS for LASS")?;
+        }
+
+        let channel = endpoint.connect_lazy();
 
         Ok(Self {
             client: LeetcodeAuthStealerServiceClient::new(channel),

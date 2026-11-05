@@ -35,10 +35,16 @@ updates:
     patterns: ["*"]
     cooldown: { default-days: 7 }
     multi-ecosystem-group: main
+  - package-ecosystem: cargo
+    directory: /internal/leetcode-auth-service
+    patterns: ["*"]
+    cooldown: { default-days: 7 }
+    multi-ecosystem-group: main
   - package-ecosystem: docker
     directories:
       - /infra
       - /internal/leetcode-auth-stealer-service
+      - /internal/leetcode-auth-service
     patterns: ["*"]
     cooldown: { default-days: 7 }
     multi-ecosystem-group: main
