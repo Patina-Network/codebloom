@@ -71,6 +71,7 @@ export default function UserAdminList() {
               Admin Status
             </Flex>
           }
+          data-testId={"user-admin-list-filter-switch"}
         />
       </FilterDropdown>
     </Box>

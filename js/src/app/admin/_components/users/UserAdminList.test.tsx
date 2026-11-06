@@ -128,6 +128,53 @@ describe("UserAdminList API Succeeded", () => {
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
+  it("should show non-admins too if filter is off but only admins if filter is on", async () => {
+    const user = userEvent.setup();
+    renderProviderFn?.(<UserAdminList />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Filters" }),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("user-admin-list-filter-switch"),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId("user-admin-list-filter-switch"));
+
+    await waitFor(() => {
+      expect(screen.getByText("persephone_lc")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("aphrodite_lc")).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Filters" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId("user-admin-list-filter-switch"),
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId("user-admin-list-filter-switch"));
+
+    await waitFor(() => {
+      expect(screen.getByText("persephone_lc")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("aphrodite_lc")).toBeInTheDocument();
+    });
+  });
+
   it("should show error message when toggle API errors", async () => {
     const user = userEvent.setup();
     server.use(createToggleAdminFailureHandler);

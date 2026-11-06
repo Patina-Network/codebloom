@@ -68,15 +68,13 @@ export const getAllUsersHandler = http.get(
     const adminFilter = url.searchParams.get("adminFilter") === "true" || false;
 
     const q = query.toLowerCase();
-    const filteredUsers =
-      query ?
-        MOCK_USERS.filter(
-          (user) =>
-            (user.discordName.toLowerCase().includes(q) ||
-              (user.leetcodeUsername ?? "").toLowerCase().includes(q)) &&
-            (user.admin || !adminFilter),
-        )
-      : MOCK_USERS;
+    const filteredUsers = MOCK_USERS.filter(
+      (user) =>
+        (!query ||
+          user.discordName.toLowerCase().includes(q) ||
+          (user.leetcodeUsername ?? "").toLowerCase().includes(q)) &&
+        (user.admin || !adminFilter),
+    );
 
     filteredUsers.sort((user1, user2) => {
       if (user1.admin == user2.admin) return user1.id < user2.id ? -1 : 1;

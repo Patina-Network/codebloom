@@ -174,7 +174,12 @@ public class UserRepositoryTest extends BaseRepositoryTest {
         assertNotNull(users);
         assertTrue(users.size() >= 0);
 
-        ArrayList<User> searchResults = userRepository.getAllUsers(1, 100, "TestAdminUser", true);
+        ArrayList<User> searchResults = userRepository.getAllUsers(1, 100, "Test", false);
         assertTrue(searchResults.contains(testAdminUser));
+        assertTrue(searchResults.contains(testUser));
+
+        ArrayList<User> searchResultsWithFilter = userRepository.getAllUsers(1, 100, "Test", true);
+        assertTrue(searchResultsWithFilter.contains(testAdminUser));
+        assertTrue(!searchResultsWithFilter.contains(testUser));
     }
 }
