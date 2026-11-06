@@ -70,6 +70,17 @@ public class UserControllerTest {
                 .build();
     }
 
+    private User createRandomAdminUser() {
+        return User.builder()
+                .id(randomUUID())
+                .discordId(String.valueOf(faker.number().randomNumber(18, true)))
+                .discordName(faker.name().username())
+                .leetcodeUsername(Optional.ofNullable(faker.name().username()))
+                .admin(true)
+                .verifyKey(faker.crypto().md5())
+                .build();
+    }
+
     private Question createRandomQuestion(final String userId) {
         return Question.builder()
                 .id(randomUUID())
@@ -274,10 +285,10 @@ public class UserControllerTest {
         users.add(createRandomUser());
         users.add(createRandomUser());
 
-        when(userRepository.getAllUsers(eq(1), eq(20), eq(""))).thenReturn(users);
-        when(userRepository.getUserCount(eq(""))).thenReturn(3);
+        when(userRepository.getAllUsers(eq(1), eq(20), eq(""), eq(false))).thenReturn(users);
+        when(userRepository.getUserCount(eq(""), eq(false))).thenReturn(3);
 
-        var response = userController.getAllUsers(request, 1, "", 20);
+        var response = userController.getAllUsers(request, 1, "", 20, false);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -292,8 +303,8 @@ public class UserControllerTest {
         assertEquals(1, page.getPages());
         assertEquals(20, page.getPageSize());
 
-        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(""));
-        verify(userRepository, times(1)).getUserCount(eq(""));
+        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(""), eq(false));
+        verify(userRepository, times(1)).getUserCount(eq(""), eq(false));
     }
 
     @Test
@@ -305,10 +316,11 @@ public class UserControllerTest {
         User matchingUser = createRandomUser();
         users.add(matchingUser);
 
-        when(userRepository.getAllUsers(eq(1), eq(20), eq(searchQuery))).thenReturn(users);
-        when(userRepository.getUserCount(eq(searchQuery))).thenReturn(1);
+        when(userRepository.getAllUsers(eq(1), eq(20), eq(searchQuery), eq(false)))
+                .thenReturn(users);
+        when(userRepository.getUserCount(eq(searchQuery), eq(false))).thenReturn(1);
 
-        var response = userController.getAllUsers(request, 1, searchQuery, 20);
+        var response = userController.getAllUsers(request, 1, searchQuery, 20, false);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -320,17 +332,17 @@ public class UserControllerTest {
         assertNotNull(page);
         assertEquals(1, page.getItems().size());
 
-        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(searchQuery));
-        verify(userRepository, times(1)).getUserCount(eq(searchQuery));
+        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(searchQuery), eq(false));
+        verify(userRepository, times(1)).getUserCount(eq(searchQuery), eq(false));
     }
 
     @Test
     @DisplayName("Get all users - page size capped at maximum")
     void getAllUsersPageSizeCapped() {
-        when(userRepository.getAllUsers(eq(1), eq(20), eq(""))).thenReturn(new ArrayList<>());
-        when(userRepository.getUserCount(eq(""))).thenReturn(0);
+        when(userRepository.getAllUsers(eq(1), eq(20), eq(""), eq(false))).thenReturn(new ArrayList<>());
+        when(userRepository.getUserCount(eq(""), eq(false))).thenReturn(0);
 
-        var response = userController.getAllUsers(request, 1, "", 100);
+        var response = userController.getAllUsers(request, 1, "", 100, false);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -340,16 +352,16 @@ public class UserControllerTest {
         Page<UserDto> page = apiResponder.getPayload();
         assertEquals(20, page.getPageSize());
 
-        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(""));
+        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(""), eq(false));
     }
 
     @Test
     @DisplayName("Get all users - empty results")
     void getAllUsersEmptyResults() {
-        when(userRepository.getAllUsers(eq(1), eq(20), eq(""))).thenReturn(new ArrayList<>());
-        when(userRepository.getUserCount(eq(""))).thenReturn(0);
+        when(userRepository.getAllUsers(eq(1), eq(20), eq(""), eq(false))).thenReturn(new ArrayList<>());
+        when(userRepository.getUserCount(eq(""), eq(false))).thenReturn(0);
 
-        var response = userController.getAllUsers(request, 1, "", 20);
+        var response = userController.getAllUsers(request, 1, "", 20, false);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -361,6 +373,35 @@ public class UserControllerTest {
         assertNotNull(page);
         assertEquals(0, page.getItems().size());
         assertEquals(0, page.getPages());
+    }
+
+    @Test
+    @DisplayName("Get all users - with admin filter on")
+    void getAllUsersWithAdminFilterOn() {
+        String searchQuery = "testuser";
+
+        ArrayList<User> users = new ArrayList<>();
+        User matchingUser = createRandomAdminUser();
+        users.add(matchingUser);
+
+        when(userRepository.getAllUsers(eq(1), eq(20), eq(searchQuery), eq(true)))
+                .thenReturn(users);
+        when(userRepository.getUserCount(eq(searchQuery), eq(true))).thenReturn(1);
+
+        var response = userController.getAllUsers(request, 1, searchQuery, 20, true);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        var apiResponder = response.getBody();
+        assertNotNull(apiResponder);
+        assertTrue(apiResponder.isSuccess());
+
+        Page<UserDto> page = apiResponder.getPayload();
+        assertNotNull(page);
+        assertEquals(1, page.getItems().size());
+
+        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(searchQuery), eq(true));
+        verify(userRepository, times(1)).getUserCount(eq(searchQuery), eq(true));
     }
 
     private UserMetrics createRandomUserMetrics(final String userId) {
@@ -518,10 +559,10 @@ public class UserControllerTest {
             users.add(createRandomUser());
         }
 
-        when(userRepository.getAllUsers(eq(1), eq(20), eq(""))).thenReturn(users);
-        when(userRepository.getUserCount(eq(""))).thenReturn(45);
+        when(userRepository.getAllUsers(eq(1), eq(20), eq(""), eq(false))).thenReturn(users);
+        when(userRepository.getUserCount(eq(""), eq(false))).thenReturn(45);
 
-        var response = userController.getAllUsers(request, 1, "", 20);
+        var response = userController.getAllUsers(request, 1, "", 20, false);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -535,7 +576,7 @@ public class UserControllerTest {
         assertEquals(3, page.getPages());
         assertTrue(page.isHasNextPage());
 
-        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(""));
-        verify(userRepository, times(1)).getUserCount(eq(""));
+        verify(userRepository, times(1)).getAllUsers(eq(1), eq(20), eq(""), eq(false));
+        verify(userRepository, times(1)).getUserCount(eq(""), eq(false));
     }
 }

@@ -48,9 +48,13 @@ public interface UserRepository {
 
     int getUserCount(String query);
 
+    int getUserCount(String query, boolean adminFilter);
+
     ArrayList<User> getAllUsers();
 
     ArrayList<User> getAllUsers(int page, int pageSize, String query);
+
+    ArrayList<User> getAllUsers(int page, int pageSize, String query, boolean adminFilter);
 
     boolean userExistsByLeetcodeUsername(String leetcodeUsername);
 
