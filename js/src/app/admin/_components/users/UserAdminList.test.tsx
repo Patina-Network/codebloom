@@ -110,6 +110,24 @@ describe("UserAdminList API Succeeded", () => {
     });
   });
 
+  it("should show admins first", async () => {
+    renderProviderFn?.(<UserAdminList />);
+
+    await waitFor(() => {
+      expect(screen.getByText("aphrodite_lc")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("persephone_lc")).toBeInTheDocument();
+    });
+
+    expect(
+      screen
+        .getByText("persephone_lc")
+        .compareDocumentPosition(screen.getByText("aphrodite_lc")),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
   it("should show error message when toggle API errors", async () => {
     const user = userEvent.setup();
     server.use(createToggleAdminFailureHandler);
