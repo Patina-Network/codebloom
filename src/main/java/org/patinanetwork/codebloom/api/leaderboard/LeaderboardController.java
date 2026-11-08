@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.patinanetwork.codebloom.common.components.LeaderboardManager;
 import org.patinanetwork.codebloom.common.db.models.leaderboard.Leaderboard;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
@@ -99,6 +100,9 @@ public class LeaderboardController {
             @Parameter(description = "Discord name", example = "tahmid")
                     @RequestParam(required = false, defaultValue = "")
                     final String query,
+            @Parameter(description = "List of enabled filter tags", example = "nyu,hunter,globalIndex")
+                    @RequestParam(required = false)
+                    final Set<String> filters,
             @Parameter(description = "Filter for Patina users") @RequestParam(required = false, defaultValue = "false")
                     final boolean patina,
             @Parameter(description = "Filter for Hunter College users")
@@ -132,24 +136,46 @@ public class LeaderboardController {
             final HttpServletRequest request) {
 
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
+        
+        final LeaderboardFilterOptions options;
 
-        LeaderboardFilterOptions options = LeaderboardFilterOptions.builder()
-                .page(page)
-                .pageSize(parsedPageSize)
-                .query(query)
-                .patina(patina)
-                .hunter(hunter)
-                .nyu(nyu)
-                .baruch(baruch)
-                .rpi(rpi)
-                .gwc(gwc)
-                .sbu(sbu)
-                .ccny(ccny)
-                .columbia(columbia)
-                .cornell(cornell)
-                .bmcc(bmcc)
-                .mhcplusplus(mhcplusplus)
-                .build();
+        if (filters == null || filters.isEmpty()){
+            options = LeaderboardFilterOptions.builder()
+                    .page(page)
+                    .pageSize(parsedPageSize)
+                    .query(query)
+                    .patina(patina)
+                    .hunter(hunter)
+                    .nyu(nyu)
+                    .baruch(baruch)
+                    .rpi(rpi)
+                    .gwc(gwc)
+                    .sbu(sbu)
+                    .ccny(ccny)
+                    .columbia(columbia)
+                    .cornell(cornell)
+                    .bmcc(bmcc)
+                    .mhcplusplus(mhcplusplus)
+                    .build();
+        }else{
+            options = LeaderboardFilterOptions.builder()
+                    .page(page)
+                    .pageSize(parsedPageSize)
+                    .query(query)
+                    .patina(filters.contains("patina"))
+                    .hunter(filters.contains("hunter"))
+                    .nyu(filters.contains("nyu"))
+                    .baruch(filters.contains("baruch"))
+                    .rpi(filters.contains("rpi"))
+                    .gwc(filters.contains("gwc"))
+                    .sbu(filters.contains("sbu"))
+                    .ccny(filters.contains("ccny"))
+                    .columbia(filters.contains("columbia"))
+                    .cornell(filters.contains("cornell"))
+                    .bmcc(filters.contains("bmcc"))
+                    .mhcplusplus(filters.contains("mhcplusplus"))
+                    .build();
+        }
 
         Page<Indexed<UserWithScoreDto>> createdPage =
                 leaderboardManager.getLeaderboardUsers(leaderboardId, options, globalIndex);
