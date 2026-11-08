@@ -183,13 +183,16 @@ public class UserController {
                     final String query,
             @Parameter(description = "Page size (maximum of " + SUBMISSIONS_PAGE_SIZE)
                     @RequestParam(required = false, defaultValue = "" + SUBMISSIONS_PAGE_SIZE)
-                    final int pageSize) {
+                    final int pageSize,
+            @Parameter(description = "Filter to show only admin users")
+                    @RequestParam(required = false, defaultValue = "false")
+                    final boolean adminFilter) {
 
         final int parsedPageSize = Math.min(pageSize, SUBMISSIONS_PAGE_SIZE);
 
-        List<User> users = userRepository.getAllUsers(page, parsedPageSize, query);
+        List<User> users = userRepository.getAllUsers(page, parsedPageSize, query, adminFilter);
 
-        int totalUsers = userRepository.getUserCount(query);
+        int totalUsers = userRepository.getUserCount(query, adminFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / parsedPageSize);
         boolean hasNextPage = page < totalPages;
 

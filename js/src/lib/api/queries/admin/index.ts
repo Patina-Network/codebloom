@@ -18,6 +18,7 @@ export const useToggleAdminMutation = () => {
           page: metadata.page,
           query: metadata.debouncedQuery,
           pageSize: 5,
+          adminFilter: metadata.adminFilter,
         },
       });
       type AllUsersResponse = ReturnType<typeof _res>;
@@ -78,6 +79,7 @@ export const useToggleAdminMutation = () => {
           page: metadata.page,
           query: metadata.debouncedQuery,
           pageSize: 5,
+          adminFilter: metadata.adminFilter,
         },
       });
       type AllUsersResponse = ReturnType<typeof _res>;
@@ -115,6 +117,7 @@ async function toggleUserAdmin({
   metadata: {
     page: number;
     debouncedQuery: string;
+    adminFilter: boolean;
   };
 }) {
   // If you want to test the optimistic updates, uncomment the lines below.
