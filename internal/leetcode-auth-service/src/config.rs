@@ -12,8 +12,8 @@ pub struct Config {
     /// Identifies this pod as the holder of the refresh lock.
     pub hostname: String,
     pub redis_url: String,
-    pub lass_url: String,
-    pub lass_timeout: Duration,
+    pub grpc_lass_url: String,
+    pub grpc_lass_timeout: Duration,
     /// Defaults to outlasting one LASS call, so the lock does not expire mid-refresh.
     pub refresh_lock_ttl: Duration,
     pub leetcode_auth_username: String,
@@ -30,8 +30,8 @@ impl Config {
             grpc_reflection = self.grpc_reflection,
             version = self.version.as_deref().unwrap_or("N/A"),
             hostname = self.hostname,
-            lass_url = self.lass_url,
-            lass_timeout = ?self.lass_timeout,
+            lass_url = self.grpc_lass_url,
+            lass_timeout = ?self.grpc_lass_timeout,
             refresh_lock_ttl = ?self.refresh_lock_ttl,
             refresh_check_interval = ?self.refresh_check_interval,
             token_max_age = ?self.token_max_age,
@@ -44,7 +44,7 @@ impl Config {
     }
 
     fn from_vars(var: impl Fn(&str) -> Option<String>) -> anyhow::Result<Self> {
-        let lass_timeout = seconds(&var, "LASS_TIMEOUT_SECONDS", 180);
+        let lass_timeout = seconds(&var, "GRPC_LASS_TIMEOUT_SECONDS", 180);
 
         Ok(Self {
             grpc_reflection: var("GRPC_REFLECTION")
@@ -61,10 +61,18 @@ impl Config {
                 .filter(|v| !v.is_empty())
                 .unwrap_or_else(|| "unknown".to_string()),
             redis_url: required(&var, "REDIS_URL")?,
-            lass_url: var("LASS_URL")
-                .filter(|v| !v.is_empty())
-                .unwrap_or_else(|| "http://localhost:50051".to_string()),
-            lass_timeout,
+            grpc_lass_url: {
+                let host = var("GRPC_LASS_HOST")
+                    .filter(|v| !v.is_empty())
+                    .unwrap_or_else(|| "localhost:50051".to_string());
+                let tls = var("GRPC_LASS_TLS")
+                    .map(|b| b.parse::<bool>().ok())
+                    .flatten()
+                    .unwrap_or_else(|| false);
+
+                format!("{}{host}", if tls { "http://" } else { "https://" })
+            },
+            grpc_lass_timeout: lass_timeout,
             refresh_lock_ttl: seconds(
                 &var,
                 "REFRESH_LOCK_TTL_SECONDS",
