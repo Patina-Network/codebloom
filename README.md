@@ -49,35 +49,35 @@ _Last updated: 02/14/2026_
 This repository is a monorepo that contains many different pieces of Codebloom, which include:
 
 - Our public task board on [Notion](https://www.notion.so/) which is used to define a relationship between tasks and PRs
-  - [View public taskboard](https://codebloom.notion.site/)
-  - [Goto `.github/scripts/notion/index.ts` to view custom PR/commit check validation implementation](./.github/scripts/notion/index.ts)
+    - [View public taskboard](https://codebloom.notion.site/)
+    - [Goto `.github/scripts/notion/index.ts` to view custom PR/commit check validation implementation](./.github/scripts/notion/index.ts)
 - Our backend which is written in [Java 25](https://dev.java/) and [Spring Boot 3](https://spring.io/projects/spring-boot). The backend interfaces with our database via [pgJDBC](https://jdbc.postgresql.org/), Discord via [JDA](https://jda.wiki/), [leetcode.com](https://leetcode.com) via a custom abstraction over their [GraphQL](https://graphql.org/) API as well as [Playwright](https://playwright.dev/java/) to obtain credentials to [leetcode.com](https://leetcode.com) via [GitHub OAuth](https://github.com).
-  - [Goto `src/`](./src/)
-  - [View detailed documentation](./src/README.md)
-  - [View OpenAPI schema](https://codebloom.patinanetwork.org/swagger-ui/index.html)
+    - [Goto `src/`](./src/)
+    - [View detailed documentation](./src/README.md)
+    - [View OpenAPI schema](https://codebloom.patinanetwork.org/swagger-ui/index.html)
 - Our main database is [PostgreSQL 16](https://www.postgresql.org/), which is controlled with [Flyway](https://www.red-gate.com/products/flyway/community/) migrations.
-  - [Goto `db/`](./db/)
-  - [View detailed documentation](./db/README.md)
+    - [Goto `db/`](./db/)
+    - [View detailed documentation](./db/README.md)
 - Our frontend which is written in [TypeScript](https://www.typescriptlang.org/) and [React 18](https://www.typescriptlang.org/) + [Vite](https://vite.dev/).
-  - [Goto `js/`](./js/)
-  - [View detailed documentation](./js/README.md)
+    - [Goto `js/`](./js/)
+    - [View detailed documentation](./js/README.md)
 - Our email templater which utilizes [React Email](https://react.email/) and is dynamically parsed & templated at runtime with [JSoup](https://jsoup.org/) in our backend.
-  - [Goto `email/`](./email/)
-  - [View detailed documentation](./email/README.md)
+    - [Goto `email/`](./email/)
+    - [View detailed documentation](./email/README.md)
 - Our CI/CD pipeline which utilizes [GitHub Actions](https://github.com/features/actions) with [TypeScript](https://typescriptlang.org/) + [Bun Shell](https://bun.com/docs/runtime/shell).
-  - [Goto `.github/`](./.github/)
-  - [Goto `.github/scripts/` to view all Bun Shell scripts](./.github/scripts/)
-  - [View detailed documentation](./.github/READMEFIRST.md)
+    - [Goto `.github/`](./.github/)
+    - [Goto `.github/scripts/` to view all Bun Shell scripts](./.github/scripts/)
+    - [View detailed documentation](./.github/READMEFIRST.md)
 - Our service gets deployed to two environments (production & staging) to our Kubernetes cluster (doc update WIP). We containerize the main application with [Docker](https://www.docker.com/) and monitor metrics & logs with [Prometheus](https://prometheus.io/) & [OpenSearch](https://opensearch.org/) which get fed to [Grafana](https://grafana.com/).
-  - [Goto `.github/scripts/redeploy/` to view Bun Shell redeploy scripts](./.github/scripts/redeploy/)
-  - [Goto `infra/`](./infra/)
-  - [View detailed documentation](./infra/README.md)
-  - [View observability documentation](https://docs.patinanetwork.org/codebloom/observability/)
+    - [Goto `.github/scripts/redeploy/` to view Bun Shell redeploy scripts](./.github/scripts/redeploy/)
+    - [Goto `infra/`](./infra/)
+    - [View detailed documentation](./infra/README.md)
+    - [View observability documentation](https://docs.patinanetwork.org/codebloom/observability/)
 - Our internal tools (e.g. custom Ink CLI scripts & our internal standup bot) are currently being written in [Rust](https://rust-lang.org/) and [TypeScript](https://typescriptlang.org)
-  - [Goto `internal/`](./internal/)
-  - [View detailed documentation](./internal/README.md)
+    - [Goto `internal/`](./internal/)
+    - [View detailed documentation](./internal/README.md)
 - Environment secrets live in local env files generated from Azure.
-  - [View detailed documentation](https://docs.patinanetwork.org/codebloom/local/SECRET/)
+    - [View detailed documentation](https://docs.patinanetwork.org/codebloom/local/SECRET/)
 
 ## Setup
 
@@ -85,12 +85,11 @@ Please go to the [local development docs](https://docs.patinanetwork.org/codeblo
 
 ## Authors
 
-The current lead developer of the Codebloom development team is Arshadul Monir. If you have any inquires or questions, please direct them to him.
+The current co-leads of the Codebloom development team are Angela Yu and Tahmid Ahmed. Questions go to either of them.
 
-<!-- TODO: Add new authors -->
-<!-- The current members of the core development team are: -->
-<!---->
-<!-- - Arshadul Monir -->
+- Angela Yu (Co-lead)
+- Tahmid Ahmed (Co-lead, founding member)
+- Nancy Huang
 
 > [!NOTE]
 > Codebloom is open-source and happily accepts contributions from the community. However, all pull requests are subject to review by the development team. Please click [here](./CONTRIBUTING.md) to learn more.
@@ -99,11 +98,9 @@ The current lead developer of the Codebloom development team is Arshadul Monir. 
 
 Thank you to all the previous members of the Codebloom development team that have helped make Codebloom possible <3
 
-- Tahmid Ahmed (Previous lead developer, founding member)
+- Arshadul Monir (Previous lead developer)
 - Alfardil Alam (Previous developer, founding member)
 - Alisha Zaman (Previous developer, founding member)
-- Angela Yu (Previous developer)
-- Nancy Huang (Previous developer)
 
 ## Patina Network
 
