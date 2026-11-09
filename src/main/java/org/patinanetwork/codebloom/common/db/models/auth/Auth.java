@@ -15,6 +15,7 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 @EqualsAndHashCode
 @ToString
+@Deprecated
 public class Auth {
 
     private String id;

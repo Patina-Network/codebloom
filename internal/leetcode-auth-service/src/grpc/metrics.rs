@@ -83,6 +83,28 @@ fn status_code_from(headers: &HeaderMap) -> Option<&'static str> {
         })
 }
 
+pub fn code_name(code: tonic::Code) -> &'static str {
+    match code {
+        tonic::Code::Ok => "OK",
+        tonic::Code::Cancelled => "CANCELLED",
+        tonic::Code::Unknown => "UNKNOWN",
+        tonic::Code::InvalidArgument => "INVALID_ARGUMENT",
+        tonic::Code::DeadlineExceeded => "DEADLINE_EXCEEDED",
+        tonic::Code::NotFound => "NOT_FOUND",
+        tonic::Code::AlreadyExists => "ALREADY_EXISTS",
+        tonic::Code::PermissionDenied => "PERMISSION_DENIED",
+        tonic::Code::ResourceExhausted => "RESOURCE_EXHAUSTED",
+        tonic::Code::FailedPrecondition => "FAILED_PRECONDITION",
+        tonic::Code::Aborted => "ABORTED",
+        tonic::Code::OutOfRange => "OUT_OF_RANGE",
+        tonic::Code::Unimplemented => "UNIMPLEMENTED",
+        tonic::Code::Internal => "INTERNAL",
+        tonic::Code::Unavailable => "UNAVAILABLE",
+        tonic::Code::DataLoss => "DATA_LOSS",
+        tonic::Code::Unauthenticated => "UNAUTHENTICATED",
+    }
+}
+
 fn record_grpc_request_metrics(grpc_method: Arc<str>, status: &'static str, start: Instant) {
     // Unknown services and methods answer UNIMPLEMENTED. Their paths come from the client, so
     // collapse them into one label value to keep the series count bounded.
@@ -160,25 +182,7 @@ impl http_body::Body for ObservedGrpcBody {
                 Poll::Ready(Some(Ok(frame)))
             }
             Poll::Ready(Some(Err(status))) => {
-                let code = match status.code() {
-                    tonic::Code::Ok => "OK",
-                    tonic::Code::Cancelled => "CANCELLED",
-                    tonic::Code::Unknown => "UNKNOWN",
-                    tonic::Code::InvalidArgument => "INVALID_ARGUMENT",
-                    tonic::Code::DeadlineExceeded => "DEADLINE_EXCEEDED",
-                    tonic::Code::NotFound => "NOT_FOUND",
-                    tonic::Code::AlreadyExists => "ALREADY_EXISTS",
-                    tonic::Code::PermissionDenied => "PERMISSION_DENIED",
-                    tonic::Code::ResourceExhausted => "RESOURCE_EXHAUSTED",
-                    tonic::Code::FailedPrecondition => "FAILED_PRECONDITION",
-                    tonic::Code::Aborted => "ABORTED",
-                    tonic::Code::OutOfRange => "OUT_OF_RANGE",
-                    tonic::Code::Unimplemented => "UNIMPLEMENTED",
-                    tonic::Code::Internal => "INTERNAL",
-                    tonic::Code::Unavailable => "UNAVAILABLE",
-                    tonic::Code::DataLoss => "DATA_LOSS",
-                    tonic::Code::Unauthenticated => "UNAUTHENTICATED",
-                };
+                let code = code_name(status.code());
 
                 this.recorder.record(code);
 

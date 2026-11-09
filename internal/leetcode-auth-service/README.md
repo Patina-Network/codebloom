@@ -60,7 +60,13 @@ Zero or unparsable durations fall back to the default.
 
 - `/livez`: always `ok`.
 - `/readyz`: `503` when Redis does not answer `PING` within 3 seconds, so the pod is taken out of the Service until Redis is back. The pod starts and stays alive while Redis is down; the Redis connection opens on first use and reconnects on its own.
-- `/metrics`: Prometheus, including `grpc_requests_total`, `grpc_request_duration_seconds` and `leetcode_auth_refresh_total{result="stored|lass_failed|store_failed"}`.
+- `/metrics`: Prometheus. Besides process metrics, `grpc_requests_total` and `grpc_request_duration_seconds`:
+  - `leetcode_auth_refresh_total{result="stored|lass_failed|store_failed"}`: finished refreshes.
+  - `leetcode_auth_refresh_requests_total{source="rpc|schedule",result="started|locked|lock_error"}`: refresh requests. `locked` means another refresh held the lock and the request was ignored.
+  - `leetcode_auth_refresh_in_progress`: refreshes running in this pod.
+  - `leetcode_auth_lass_request_duration_seconds{status}`: LASS `Authenticate` latency by gRPC status, with buckets from 1s to 240s.
+  - `leetcode_auth_scheduled_checks_total{result="fresh|stale|missing|read_error"}`: scheduled staleness checks.
+  - `leetcode_auth_credentials_stored_timestamp_seconds`: when the stored credentials were written, as last seen by this pod. Credential age is `time() - max(leetcode_auth_credentials_stored_timestamp_seconds)`.
 - `/version`: `VERSION` env var.
 
 ## Code layout
