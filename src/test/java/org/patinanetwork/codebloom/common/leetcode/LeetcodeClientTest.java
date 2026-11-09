@@ -12,31 +12,34 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionDifficulty;
+import org.patinanetwork.codebloom.common.leetcode.auth.AuthenticationCredentials;
+import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationService;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeDetailedQuestion;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeSubmission;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeTopicTag;
 import org.patinanetwork.codebloom.common.leetcode.models.POTD;
 import org.patinanetwork.codebloom.common.leetcode.models.UserProfile;
-import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
 
 public class LeetcodeClientTest {
 
     private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
-    private final LeetcodeAuthStealer leetcodeAuthStealer = mock(LeetcodeAuthStealer.class);
+    private final LeetcodeAuthenticationService leetcodeAuthenticationService =
+            mock(LeetcodeAuthenticationService.class);
     private final HttpClient httpClient = mock(HttpClient.class);
     private final HttpResponse<String> httpResponse = mock(HttpResponse.class);
 
     private final LeetcodeClientImpl leetcodeClient;
 
     public LeetcodeClientTest() throws Exception {
-        leetcodeClient = new LeetcodeClientImpl(meterRegistry, leetcodeAuthStealer);
+        leetcodeClient = new LeetcodeClientImpl(meterRegistry, leetcodeAuthenticationService);
         setupMockHttpClient(leetcodeClient, httpClient);
     }
 
@@ -46,8 +49,8 @@ public class LeetcodeClientTest {
 
     @BeforeEach
     void setup() {
-        when(leetcodeAuthStealer.getCookie()).thenReturn("test-session-cookie");
-        when(leetcodeAuthStealer.getCsrf()).thenReturn(null);
+        when(leetcodeAuthenticationService.getAuthenticationCredentials())
+                .thenReturn(new AuthenticationCredentials(Optional.of("test-session-cookie"), Optional.empty()));
     }
 
     @Test
@@ -109,7 +112,7 @@ public class LeetcodeClientTest {
             fail("Exception expected");
         } catch (RuntimeException e) {
             assertTrue(e.getCause().getMessage().contains(String.valueOf(statusCode)));
-            verify(leetcodeAuthStealer, times(1)).reloadCookie();
+            verify(leetcodeAuthenticationService, times(1)).refresh();
         }
     }
 
@@ -171,7 +174,7 @@ public class LeetcodeClientTest {
             fail("Exception expected");
         } catch (RuntimeException e) {
             assertTrue(e.getCause().getMessage().contains(String.valueOf(statusCode)));
-            verify(leetcodeAuthStealer, times(1)).reloadCookie();
+            verify(leetcodeAuthenticationService, times(1)).refresh();
         }
     }
 
@@ -295,7 +298,7 @@ public class LeetcodeClientTest {
             fail("Exception expected");
         } catch (RuntimeException e) {
             assertTrue(e.getCause().getMessage().contains(String.valueOf(statusCode)));
-            verify(leetcodeAuthStealer, times(1)).reloadCookie();
+            verify(leetcodeAuthenticationService, times(1)).refresh();
         }
     }
 
@@ -348,7 +351,7 @@ public class LeetcodeClientTest {
             fail("Exception expected");
         } catch (RuntimeException e) {
             assertTrue(e.getCause().getMessage().contains(String.valueOf(statusCode)));
-            verify(leetcodeAuthStealer, times(1)).reloadCookie();
+            verify(leetcodeAuthenticationService, times(1)).refresh();
         }
     }
 
@@ -405,7 +408,7 @@ public class LeetcodeClientTest {
             fail("Exception expected");
         } catch (RuntimeException e) {
             assertTrue(e.getCause().getMessage().contains(String.valueOf(statusCode)));
-            verify(leetcodeAuthStealer, times(1)).reloadCookie();
+            verify(leetcodeAuthenticationService, times(1)).refresh();
         }
     }
 
@@ -465,7 +468,7 @@ public class LeetcodeClientTest {
             fail("Exception expected");
         } catch (RuntimeException e) {
             assertTrue(e.getCause().getMessage().contains(String.valueOf(statusCode)));
-            verify(leetcodeAuthStealer, times(1)).reloadCookie();
+            verify(leetcodeAuthenticationService, times(1)).refresh();
         }
     }
 
@@ -572,7 +575,7 @@ public class LeetcodeClientTest {
             fail("Exception expected");
         } catch (RuntimeException e) {
             assertTrue(e.getCause().getMessage().contains(String.valueOf(statusCode)));
-            verify(leetcodeAuthStealer, times(1)).reloadCookie();
+            verify(leetcodeAuthenticationService, times(1)).refresh();
         }
     }
 

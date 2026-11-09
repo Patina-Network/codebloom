@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.patinanetwork.codebloom.common.db.models.question.QuestionDifficulty;
+import org.patinanetwork.codebloom.common.leetcode.auth.LeetcodeAuthenticationService;
 import org.patinanetwork.codebloom.common.leetcode.models.Lang;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeDetailedQuestion;
 import org.patinanetwork.codebloom.common.leetcode.models.LeetcodeQuestion;
@@ -38,7 +39,6 @@ import org.patinanetwork.codebloom.common.leetcode.queries.GetTopics;
 import org.patinanetwork.codebloom.common.leetcode.queries.GetUserProfile;
 import org.patinanetwork.codebloom.common.leetcode.queries.SelectAcceptedSubmisisonsQuery;
 import org.patinanetwork.codebloom.common.leetcode.queries.SelectProblemQuery;
-import org.patinanetwork.codebloom.scheduled.auth.LeetcodeAuthStealer;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +51,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
     private static final String GRAPHQL_ENDPOINT = "https://leetcode.com/graphql";
     private static final String ERROR_COUNT_METRIC_NAME = "leetcode.client.exception";
+    private static final String EMPTY_COOKIE = "";
 
     private final ObjectMapper mapper;
 
@@ -59,14 +60,15 @@ public class LeetcodeClientImpl implements LeetcodeClient {
     @VisibleForTesting
     HttpClient client;
 
-    private final LeetcodeAuthStealer leetcodeAuthStealer;
+    private final LeetcodeAuthenticationService leetcodeAuthenticationService;
 
-    public LeetcodeClientImpl(final MeterRegistry meterRegistry, final LeetcodeAuthStealer leetcodeAuthStealer) {
+    public LeetcodeClientImpl(
+            final MeterRegistry meterRegistry, final LeetcodeAuthenticationService leetcodeAuthenticationService) {
         this.meterRegistry = meterRegistry;
         this.client = HttpClient.newHttpClient();
         this.mapper = new ObjectMapper();
 
-        this.leetcodeAuthStealer = leetcodeAuthStealer;
+        this.leetcodeAuthenticationService = leetcodeAuthenticationService;
     }
 
     private Counter errorCounter() {
@@ -86,16 +88,19 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
     private String buildCookieHeader() {
         List<String> cookies = new ArrayList<>();
+        var authCreds = leetcodeAuthenticationService.getAuthenticationCredentials();
 
-        String session = leetcodeAuthStealer.getCookie();
-        cookies.add("LEETCODE_SESSION=" + session);
+        var session = authCreds.token();
+        session.ifPresent(s -> {
+            cookies.add("LEETCODE_SESSION=" + s);
+        });
 
-        String csrf = leetcodeAuthStealer.getCsrf();
-        if (csrf != null) {
-            cookies.add("csrftoken=" + csrf);
-        }
+        var csrf = authCreds.csrf();
+        csrf.ifPresent(c -> {
+            cookies.add("csrftoken=" + c);
+        });
 
-        return String.join("; ", cookies);
+        return cookies.isEmpty() ? EMPTY_COOKIE : String.join("; ", cookies);
     }
 
     /**
@@ -152,7 +157,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             if (statusCode != 200) {
                 if (isThrottled(statusCode)) {
-                    leetcodeAuthStealer.reloadCookie();
+                    leetcodeAuthenticationService.refresh();
                 }
                 throw new LeetcodeClientException("API Returned status " + statusCode + ": " + body);
             }
@@ -244,7 +249,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             if (statusCode != 200) {
                 if (isThrottled(statusCode)) {
-                    leetcodeAuthStealer.reloadCookie();
+                    leetcodeAuthenticationService.refresh();
                 }
                 throw new LeetcodeClientException("API Returned status " + statusCode + ": " + body);
             }
@@ -304,7 +309,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             if (statusCode != 200) {
                 if (isThrottled(statusCode)) {
-                    leetcodeAuthStealer.reloadCookie();
+                    leetcodeAuthenticationService.refresh();
                 }
                 throw new LeetcodeClientException("API Returned status " + statusCode + ": " + body);
             }
@@ -318,7 +323,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             long memory = baseNode.path("memory").asLong();
             String memoryDisplay = baseNode.path("memoryDisplay").asText();
             float memoryPercentile = (float) baseNode.path("memoryPercentile").asDouble();
-            String code = baseNode.path("code").asText();
+            String code = baseNode.path("code").asText(null);
             String langName = baseNode.path("lang").path("name").asText();
             String langVerboseName = baseNode.path("lang").path("verboseName").asText();
             Lang lang = (Strings.isNullOrEmpty(langName) || Strings.isNullOrEmpty(langVerboseName))
@@ -327,7 +332,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             // if any of these are empty, then extremely likely that we're throttled.
             if (Strings.isNullOrEmpty(runtimeDisplay) || Strings.isNullOrEmpty(memoryDisplay)) {
-                leetcodeAuthStealer.reloadCookie();
+                leetcodeAuthenticationService.refresh();
             }
 
             LeetcodeDetailedQuestion question = new LeetcodeDetailedQuestion(
@@ -366,7 +371,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             if (statusCode != 200) {
                 if (isThrottled(statusCode)) {
-                    leetcodeAuthStealer.reloadCookie();
+                    leetcodeAuthenticationService.refresh();
                 }
                 throw new LeetcodeClientException("API Returned status " + statusCode + ": " + body);
             }
@@ -413,7 +418,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             if (statusCode != 200) {
                 if (isThrottled(statusCode)) {
-                    leetcodeAuthStealer.reloadCookie();
+                    leetcodeAuthenticationService.refresh();
                 }
                 throw new LeetcodeClientException("API Returned status " + statusCode + ": " + body);
             }
@@ -453,7 +458,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
 
             if (statusCode != 200) {
                 if (isThrottled(statusCode)) {
-                    leetcodeAuthStealer.reloadCookie();
+                    leetcodeAuthenticationService.refresh();
                 }
                 throw new LeetcodeClientException(
                         "Non-successful response getting topics from Leetcode API. Status code: " + statusCode);
@@ -501,7 +506,7 @@ public class LeetcodeClientImpl implements LeetcodeClient {
             String body = response.body();
             if (statusCode != 200) {
                 if (isThrottled(statusCode)) {
-                    leetcodeAuthStealer.reloadCookie();
+                    leetcodeAuthenticationService.refresh();
                 }
                 throw new LeetcodeClientException(
                         "Non-successful response getting all questions from Leetcode API. Status code: " + statusCode);

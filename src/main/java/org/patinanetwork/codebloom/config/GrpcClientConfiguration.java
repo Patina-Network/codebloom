@@ -7,15 +7,15 @@ import io.micrometer.core.instrument.binder.grpc.ObservationGrpcClientIntercepto
 import io.micrometer.observation.ObservationRegistry;
 import java.time.Duration;
 import lombok.AllArgsConstructor;
-import org.patinanetwork.codebloom.grpc.leetcode.auth.v1.LeetcodeAuthStealerServiceGrpc;
-import org.patinanetwork.codebloom.grpc.leetcode.auth.v1.LeetcodeAuthStealerServiceGrpc.LeetcodeAuthStealerServiceBlockingStub;
+import org.patinanetwork.codebloom.grpc.leetcodeauth.v1.LeetcodeAuthServiceGrpc;
+import org.patinanetwork.codebloom.grpc.leetcodeauth.v1.LeetcodeAuthServiceGrpc.LeetcodeAuthServiceBlockingStub;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @AllArgsConstructor
-@EnableConfigurationProperties(LeetcodeAuthStealerGrpcClientConfiguration.class)
+@EnableConfigurationProperties(LeetcodeAuthServiceGrpcClientConfiguration.class)
 public class GrpcClientConfiguration {
 
     private final ObservationRegistry observationRegistry;
@@ -41,20 +41,20 @@ public class GrpcClientConfiguration {
     }
 
     @Bean
-    ManagedChannel lassServiceChannel(
-            LeetcodeAuthStealerGrpcClientConfiguration authStealerProps,
+    ManagedChannel lasServiceChannel(
+            LeetcodeAuthServiceGrpcClientConfiguration authProps,
             GrpcRequestIdInterceptor requestIdInterceptor,
             ObservationGrpcClientInterceptor observationInterceptor) {
 
-        var builder = ManagedChannelBuilder.forTarget(authStealerProps.host())
-                .intercept(interceptors(authStealerProps.timeout(), requestIdInterceptor, observationInterceptor));
+        var builder = ManagedChannelBuilder.forTarget(authProps.host())
+                .intercept(interceptors(authProps.timeout(), requestIdInterceptor, observationInterceptor));
 
-        return (authStealerProps.tls() ? builder.useTransportSecurity() : builder.usePlaintext()).build();
+        return (authProps.tls() ? builder.useTransportSecurity() : builder.usePlaintext()).build();
     }
 
     @Bean
-    LeetcodeAuthStealerServiceBlockingStub lassServiceBlockingStub(ManagedChannel lassServiceChannel) {
+    LeetcodeAuthServiceBlockingStub lasServiceBlockingStub(ManagedChannel lasServiceChannel) {
 
-        return LeetcodeAuthStealerServiceGrpc.newBlockingStub(lassServiceChannel);
+        return LeetcodeAuthServiceGrpc.newBlockingStub(lasServiceChannel);
     }
 }
