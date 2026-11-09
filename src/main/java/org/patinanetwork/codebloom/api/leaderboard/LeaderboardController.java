@@ -100,7 +100,7 @@ public class LeaderboardController {
             @Parameter(description = "Discord name", example = "tahmid")
                     @RequestParam(required = false, defaultValue = "")
                     final String query,
-            @Parameter(description = "List of enabled filter tags", example = "nyu,hunter,globalIndex")
+            @Parameter(description = "List of enabled filter tags", example = "nyu,hunter,patina")
                     @RequestParam(required = false)
                     final Set<String> filters,
             @Parameter(description = "Filter for Patina users") @RequestParam(required = false, defaultValue = "false")
@@ -136,46 +136,33 @@ public class LeaderboardController {
             final HttpServletRequest request) {
 
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
-        
+
         final LeaderboardFilterOptions options;
 
-        if (filters == null || filters.isEmpty()){
-            options = LeaderboardFilterOptions.builder()
-                    .page(page)
-                    .pageSize(parsedPageSize)
-                    .query(query)
-                    .patina(patina)
-                    .hunter(hunter)
-                    .nyu(nyu)
-                    .baruch(baruch)
-                    .rpi(rpi)
-                    .gwc(gwc)
-                    .sbu(sbu)
-                    .ccny(ccny)
-                    .columbia(columbia)
-                    .cornell(cornell)
-                    .bmcc(bmcc)
-                    .mhcplusplus(mhcplusplus)
-                    .build();
-        }else{
-            options = LeaderboardFilterOptions.builder()
-                    .page(page)
-                    .pageSize(parsedPageSize)
-                    .query(query)
-                    .patina(filters.contains("patina"))
-                    .hunter(filters.contains("hunter"))
-                    .nyu(filters.contains("nyu"))
-                    .baruch(filters.contains("baruch"))
-                    .rpi(filters.contains("rpi"))
-                    .gwc(filters.contains("gwc"))
-                    .sbu(filters.contains("sbu"))
-                    .ccny(filters.contains("ccny"))
-                    .columbia(filters.contains("columbia"))
-                    .cornell(filters.contains("cornell"))
-                    .bmcc(filters.contains("bmcc"))
-                    .mhcplusplus(filters.contains("mhcplusplus"))
-                    .build();
-        }
+        final Set<String> normalizedFilters = filters == null
+                ? Set.of()
+                : filters.stream()
+                        .filter(java.util.Objects::nonNull)
+                        .map(s -> s.trim().toLowerCase())
+                        .collect(java.util.stream.Collectors.toSet());
+
+        options = LeaderboardFilterOptions.builder()
+                .page(page)
+                .pageSize(parsedPageSize)
+                .query(query)
+                .patina(patina || normalizedFilters.contains("patina"))
+                .hunter(hunter || normalizedFilters.contains("hunter"))
+                .nyu(nyu || normalizedFilters.contains("nyu"))
+                .baruch(baruch || normalizedFilters.contains("baruch"))
+                .rpi(rpi || normalizedFilters.contains("rpi"))
+                .gwc(gwc || normalizedFilters.contains("gwc"))
+                .sbu(sbu || normalizedFilters.contains("sbu"))
+                .ccny(ccny || normalizedFilters.contains("ccny"))
+                .columbia(columbia || normalizedFilters.contains("columbia"))
+                .cornell(cornell || normalizedFilters.contains("cornell"))
+                .bmcc(bmcc || normalizedFilters.contains("bmcc"))
+                .mhcplusplus(mhcplusplus || normalizedFilters.contains("mhcplusplus"))
+                .build();
 
         Page<Indexed<UserWithScoreDto>> createdPage =
                 leaderboardManager.getLeaderboardUsers(leaderboardId, options, globalIndex);

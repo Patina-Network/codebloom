@@ -46,7 +46,6 @@ export default function DashboardPage() {
       />
     );
   }
-
   return (
     <>
       <DocumentTitle title={`CodeBloom - Dashboard`} />
@@ -63,49 +62,19 @@ export default function DashboardPage() {
               <OnboardingLeetcodeUser />
             : <RefreshSubmissions schoolRegistered={schoolRegistered} />}
           </Center>
-          <Flex
-            direction={smallPhone ? "row" : "column"}
-            wrap={smallPhone ? undefined : "wrap"}
-            gap={"md"}
-            align={smallPhone ? "flex-start" : "stretch"}
-          >
-            {smallPhone ?
-              <>
-                {
-                  <Flex direction={"column"}>
-                    <ProblemOfTheDay />
-                  </Flex>
-                }
-                {
-                  <Flex direction={"column"} flex={1}>
-                    <DashboardLeaderboard
-                      userId={data.user.id}
-                      userTags={data.user.tags}
-                    />
-                  </Flex>
-                }
-              </>
-            : <>
-                {
-                  <Flex direction={"column"} flex={1}>
-                    <DashboardLeaderboard
-                      userId={data.user.id}
-                      userTags={data.user.tags}
-                    />
-                  </Flex>
-                }
-                {
-                  <Flex direction={"column"}>
-                    <ProblemOfTheDay />
-                  </Flex>
-                }
-              </>
-            }
-            <div>
-              <Flex direction={"column"} flex={1}>
-                <RecentSubmissions userId={data.user.id} />
-              </Flex>
-            </div>
+          <Flex direction={smallPhone ? "row" : "column"} gap={"md"}>
+            <Flex direction={"column"} flex={1}>
+              <ProblemOfTheDay />
+            </Flex>
+            <Flex direction={"column"} flex={1}>
+              <DashboardLeaderboard
+                userId={data.user.id}
+                userTags={data.user.tags}
+              />
+            </Flex>
+            <Flex direction={"column"} flex={1}>
+              <RecentSubmissions userId={data.user.id} />
+            </Flex>
           </Flex>
         </Flex>
       </Box>

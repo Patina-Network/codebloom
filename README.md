@@ -85,11 +85,12 @@ Please go to the [local development docs](https://docs.patinanetwork.org/codeblo
 
 ## Authors
 
-The current co-leads of the Codebloom development team are Angela Yu and Tahmid Ahmed. Questions go to either of them.
+The current lead developer of the Codebloom development team is Arshadul Monir. If you have any inquires or questions, please direct them to him.
 
-- Angela Yu (Co-lead)
-- Tahmid Ahmed (Co-lead, founding member)
-- Nancy Huang
+<!-- TODO: Add new authors -->
+<!-- The current members of the core development team are: -->
+<!---->
+<!-- - Arshadul Monir -->
 
 > [!NOTE]
 > Codebloom is open-source and happily accepts contributions from the community. However, all pull requests are subject to review by the development team. Please click [here](./CONTRIBUTING.md) to learn more.
@@ -98,9 +99,11 @@ The current co-leads of the Codebloom development team are Angela Yu and Tahmid 
 
 Thank you to all the previous members of the Codebloom development team that have helped make Codebloom possible <3
 
-- Arshadul Monir (Previous lead developer)
+- Tahmid Ahmed (Previous lead developer, founding member)
 - Alfardil Alam (Previous developer, founding member)
 - Alisha Zaman (Previous developer, founding member)
+- Angela Yu (Previous developer)
+- Nancy Huang (Previous developer)
 
 ## Patina Network
 
