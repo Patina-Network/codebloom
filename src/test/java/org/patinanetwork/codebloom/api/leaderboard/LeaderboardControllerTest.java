@@ -9,6 +9,7 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,8 +22,6 @@ import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
 import org.patinanetwork.codebloom.common.db.repos.leaderboard.LeaderboardRepository;
 import org.patinanetwork.codebloom.common.db.repos.leaderboard.options.LeaderboardFilterOptions;
 import org.patinanetwork.codebloom.common.db.repos.user.UserRepository;
-import java.util.Set;
-
 import org.patinanetwork.codebloom.common.dto.ApiResponder;
 import org.patinanetwork.codebloom.common.dto.leaderboard.LeaderboardDto;
 import org.patinanetwork.codebloom.common.dto.user.UserWithScoreDto;
@@ -276,13 +275,7 @@ public class LeaderboardControllerTest {
                 2,
                 10,
                 "tahmid",
-                Set.of(
-                        "patina",
-                        "hunter",
-                        "nyu",
-                        "baruch",
-                        "bmcc",
-                        "mhc++"),
+                Set.of("patina", "hunter", "nyu", "baruch", "bmcc", "mhc++"),
                 false /* patina */,
                 false /* hunter */,
                 false /* nyu */,
