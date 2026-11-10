@@ -26,7 +26,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
+// "test" profile doesn't set codebloom.frontend.index, so point the shell at the source template.
+// TODO: fix this in the future
+@SpringBootTest(properties = "codebloom.frontend.index=file:js/index.html")
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
