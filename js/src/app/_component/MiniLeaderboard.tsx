@@ -5,7 +5,6 @@ import TagList from "@/components/ui/tags/TagList";
 import Toast from "@/components/ui/toast/Toast";
 import { useCurrentLeaderboardUsersQuery } from "@/lib/api/queries/leaderboard";
 import { Tag } from "@/lib/api/types/schema";
-import { tagFF } from "@/lib/ff";
 import getOrdinal from "@/lib/helper/ordinal";
 import { theme } from "@/lib/theme";
 import {
@@ -175,7 +174,7 @@ export default function MiniLeaderboardDesktop() {
                             </Flex>
                           </Flex>
                           {(entry.nickname ||
-                            (tagFF && entry.tags && entry.tags.length > 0)) && (
+                            (entry.tags && entry.tags.length > 0)) && (
                             <Flex align="center" gap={5}>
                               {entry.nickname && (
                                 <Tooltip label="This user is a verified member of the Patina Discord server.">
@@ -188,7 +187,7 @@ export default function MiniLeaderboardDesktop() {
                                   </Flex>
                                 </Tooltip>
                               )}
-                              {tagFF && entry.tags && entry.tags.length > 0 && (
+                              {entry.tags && entry.tags.length > 0 && (
                                 <TagList tags={entry.tags} size={16} gap="xs" />
                               )}
                             </Flex>

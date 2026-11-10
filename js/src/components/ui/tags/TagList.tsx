@@ -1,7 +1,6 @@
 import AchievementCarousel from "@/components/ui/carousel/ItemCarousel";
 import { Api } from "@/lib/api/types";
 import { ApiUtils } from "@/lib/api/utils";
-import { tagFF } from "@/lib/ff";
 import {
   Image,
   Tooltip,
@@ -46,8 +45,6 @@ export default function TagList({
       )),
     [filteredTags, size, onTagClick],
   );
-
-  if (!tagFF) return null;
 
   const hasTags = tagItems.length > 0;
 

@@ -3,7 +3,6 @@ import TagList from "@/components/ui/tags/TagList";
 import Toast from "@/components/ui/toast/Toast";
 import { MM } from "@/components/wrapper";
 import { useGetAllUsersInfiniteQuery } from "@/lib/api/queries/user";
-import { tagFF } from "@/lib/ff";
 import { theme } from "@/lib/theme";
 import {
   Box,
@@ -167,7 +166,7 @@ export default function UserSearch() {
                         )}
                       </Flex>
                       {(user.nickname ||
-                        (tagFF && user.tags && user.tags.length > 0)) && (
+                        (user.tags && user.tags.length > 0)) && (
                         <Flex align="center" gap={6}>
                           {user.nickname && (
                             <Tooltip label="This user is a verified member of the Patina Discord server.">
@@ -183,12 +182,11 @@ export default function UserSearch() {
                             </Tooltip>
                           )}
                           {user.nickname &&
-                            tagFF &&
                             user.tags &&
                             user.tags.length > 0 && (
                               <Divider orientation="vertical" h={18} />
                             )}
-                          {tagFF && user.tags && user.tags.length > 0 && (
+                          {user.tags && user.tags.length > 0 && (
                             <TagList tags={user.tags} size={16} gap="xs" />
                           )}
                         </Flex>

@@ -30,7 +30,7 @@ public class TagMetadataList {
     @Getter
     @Builder
     public static class TagMetadataObject implements TypableObject {
-        public static final String TS_TYPE = """
+        private static final String TS_TYPE = """
                 export type TagMetadataObject = {
                   shortName: string;
                   name: string;

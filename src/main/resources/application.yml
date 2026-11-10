@@ -93,6 +93,8 @@ codebloom:
     type: ${CODEBLOOM_EMAIL_TYPE}
     username: ${CODEBLOOM_EMAIL_USERNAME}
     password: ${CODEBLOOM_EMAIL_PASSWORD}
+  frontend:
+    index: classpath:/static/index.html
   scheduling:
     enabled: true
   notify:
@@ -121,6 +123,10 @@ ff:
   # override per environment as needed
   duels: false
   user-metrics: false
+  # Passed straight through to the UI: keys must be camelCase since they are copied straight to the UI as is.
+  ui:
+    duels: false
+    userMetrics: false
 
 resilience4j:
   retry:

@@ -1,6 +1,13 @@
+codebloom:
+  frontend:
+    index: file:js/index.html
+
 ff:
   duels: true
   user-metrics: true
+  ui:
+    duels: true
+    userMetrics: true
 
 springdoc:
   swagger-ui:

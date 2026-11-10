@@ -115,16 +115,7 @@ async function main() {
   console.log("Building image with following tags:");
   tags.forEach((tag) => console.log(tag));
 
-  const buildArgs = {
-    ...(type === "web" ? { COMMIT_SHA: gitSha } : {}),
-    ...(environment === "staging" &&
-    type !== "leetcode-auth-stealer-service" &&
-    type !== "leetcode-auth-service"
-      ? {
-          VITE_STAGING: true,
-        }
-      : {}),
-  };
+  const buildArgs: Record<string, string> = type === "web" ? { COMMIT_SHA: gitSha } : {};
 
   const originalCwd = process.cwd();
   try {

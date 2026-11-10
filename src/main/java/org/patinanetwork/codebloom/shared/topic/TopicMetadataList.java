@@ -173,7 +173,7 @@ public final class TopicMetadataList {
     @Getter
     @Builder
     public static class TopicMetadataObject implements TypableObject {
-        public static final String TS_TYPE = """
+        private static final String TS_TYPE = """
                 export type TopicMetadataObject = {
                   name: string;
                   aliases?: string[];
