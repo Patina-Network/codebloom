@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.patinanetwork.codebloom.common.ff.FeatureFlagManager;
 import org.patinanetwork.codebloom.shared.tag.ParentTags;
 import org.patinanetwork.codebloom.shared.tag.TagMetadataList;
 import org.patinanetwork.codebloom.shared.topic.TopicMetadataList;
@@ -32,6 +33,9 @@ public class ComplexJSTypesGenerator implements CommandLineRunner {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private FeatureFlagManager featureFlagManager;
 
     private final Set<String> imports = new HashSet<>();
     private final StringBuilder tsContent = new StringBuilder();
@@ -73,10 +77,12 @@ public class ComplexJSTypesGenerator implements CommandLineRunner {
     }
 
     private void generateTypes() {
-        tsContent.append(TagMetadataList.TagMetadataObject.TS_TYPE);
+        tsContent.append(TagMetadataList.TagMetadataObject.builder().build().tsType());
         log.info("Generated type: TagMetadataObject");
-        tsContent.append(TopicMetadataList.TopicMetadataObject.TS_TYPE);
+        tsContent.append(TopicMetadataList.TopicMetadataObject.builder().build().tsType());
         log.info("Generated type: TopicMetadataObject");
+        tsContent.append(featureFlagManager.tsType());
+        log.info("Generated type: UiFeatureFlags");
     }
 
     private void generate(Generator generator) throws Exception {

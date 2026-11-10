@@ -1,2 +1,3 @@
-export const duelFF =
-  import.meta.env.VITE_STAGING === "true" || import.meta.env.DEV;
+import { runtimeConfig } from "@/lib/config";
+
+export const duelFF = runtimeConfig.featureFlags.duels;

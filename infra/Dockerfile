@@ -12,8 +12,6 @@ RUN corepack enable pnpm && corepack use $(node -p "require('./package.json').pa
 
 COPY js/ ./
 
-ARG VITE_STAGING
-ENV VITE_STAGING=${VITE_STAGING}
 RUN pnpm run build
 
 FROM mirror.gcr.io/library/node:22 AS email-build

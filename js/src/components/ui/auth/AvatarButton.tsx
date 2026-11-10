@@ -1,4 +1,3 @@
-import { schoolFF } from "@/lib/ff";
 import { Menu, Avatar } from "@mantine/core";
 import { Link } from "react-router-dom";
 
@@ -26,19 +25,15 @@ export default function AvatarDropdown({
         : <Avatar component="button" src={src} size={"2.75rem"} />}
       </Menu.Target>
       <Menu.Dropdown>
-        {schoolFF && (
-          <>
-            {userId && (
-              <Menu.Item component={Link} to={`/user/${userId}`}>
-                My Profile
-              </Menu.Item>
-            )}
-            <Menu.Item component={Link} to={"/settings"}>
-              Settings
-            </Menu.Item>
-            <Menu.Divider />
-          </>
+        {userId && (
+          <Menu.Item component={Link} to={`/user/${userId}`}>
+            My Profile
+          </Menu.Item>
         )}
+        <Menu.Item component={Link} to={"/settings"}>
+          Settings
+        </Menu.Item>
+        <Menu.Divider />
         <Menu.Item
           component={Link}
           to={"/api/auth/logout"}

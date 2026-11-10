@@ -11,7 +11,6 @@ import {
 } from "@/lib/api/queries/leaderboard";
 import { Api } from "@/lib/api/types";
 import { ApiUtils } from "@/lib/api/utils";
-import { tagFF } from "@/lib/ff/tag";
 import {
   formatLeaderboardDateRange,
   getUserProfileUrl,
@@ -194,7 +193,7 @@ export default function LeaderboardForDashboard({
                         <Text fw={600} size="sm">
                           {user.nickname}
                         </Text>
-                        {tagFF && user.tags && user.tags.length > 0 && (
+                        {user.tags && user.tags.length > 0 && (
                           <TagList tags={user.tags} size={14} gap="xs" />
                         )}
                       </Flex>
@@ -203,12 +202,9 @@ export default function LeaderboardForDashboard({
                   <Flex align="center" gap={4}>
                     <FaDiscord />
                     <Text size="sm">{user.discordName}</Text>
-                    {!user.nickname &&
-                      tagFF &&
-                      user.tags &&
-                      user.tags.length > 0 && (
-                        <TagList tags={user.tags} size={14} gap="xs" />
-                      )}
+                    {!user.nickname && user.tags && user.tags.length > 0 && (
+                      <TagList tags={user.tags} size={14} gap="xs" />
+                    )}
                   </Flex>
                   {user.leetcodeUsername && (
                     <Flex align="center" gap={4}>

@@ -1,3 +1,10 @@
+codebloom:
+  frontend:
+    index: file:js/index.html
+
 ff:
   duels: true
   user-metrics: false
+  ui:
+    duels: true
+    userMetrics: false

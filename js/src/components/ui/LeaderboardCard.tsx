@@ -1,7 +1,6 @@
 import CodebloomCard from "@/components/ui/CodebloomCard";
 import TagList from "@/components/ui/tags/TagList";
 import { Api } from "@/lib/api/types";
-import { tagFF } from "@/lib/ff";
 import { getUserProfileUrl } from "@/lib/helper/leaderboardDateRange";
 import { OrdinalString } from "@/lib/helper/ordinal";
 import { theme } from "@/lib/theme";
@@ -143,7 +142,7 @@ export default function LeaderboardCard({
           >
             <FaDiscord style={{ display: "inline" }} /> {discordName}
           </Text>
-          {tagFF && displayTags && displayTags.length > 0 && (
+          {displayTags && displayTags.length > 0 && (
             <TagList tags={displayTags} size={14} gap="xs" />
           )}
         </Flex>

@@ -1,6 +1,20 @@
 import "@testing-library/jest-dom";
 import "@/patches";
 
+import type { UiFeatureFlags } from "@/lib/api/types/complex";
+
+// Mirrors the backend-rendered #codebloom-config element so flag modules can read it on import.
+const runtimeConfig = document.createElement("script");
+runtimeConfig.id = "codebloom-config";
+runtimeConfig.type = "application/json";
+runtimeConfig.textContent = JSON.stringify({
+  featureFlags: {
+    duels: true,
+    userMetrics: true,
+  } satisfies UiFeatureFlags,
+});
+document.head.append(runtimeConfig);
+
 // Mock ResizeObserver for Mantine ScrollArea
 class ResizeObserverMock {
   observe() {}

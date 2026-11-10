@@ -1,5 +1,7 @@
 package org.patinanetwork.codebloom.jda.properties;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,4 +16,7 @@ public class FeatureFlagConfiguration {
     private boolean duels;
 
     private boolean userMetrics;
+
+    /** no need to track the object, backend just writes this directly to the index.html file */
+    private Map<String, Boolean> ui = new HashMap<>();
 }

@@ -22,7 +22,7 @@ import UserProfilePage from "@/app/user/[userId]/UserProfile.page";
 import UserSearchPage from "@/app/user/all/UserSearch.page";
 import PageShell from "@/components/ui/page/PageShell";
 import ToastWithRedirect from "@/components/ui/toast/ToastWithRedirect";
-import { duelFF, schoolFF } from "@/lib/ff";
+import { duelFF } from "@/lib/ff";
 import { createBrowserRouter } from "react-router-dom";
 
 export const router = createBrowserRouter([
@@ -154,17 +154,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/settings",
-    element:
-      !schoolFF ?
-        <ToastWithRedirect
-          to={"/"}
-          message={
-            "Sorry, this is not available right now. Please try again later."
-          }
-        />
-      : <PageShell>
-          <SettingsPage />
-        </PageShell>,
+    element: (
+      <PageShell>
+        <SettingsPage />
+      </PageShell>
+    ),
     errorElement: <ErrorPage />,
   },
   {

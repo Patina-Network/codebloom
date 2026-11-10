@@ -14,7 +14,6 @@ import {
   useLeaderboardUsersByIdQuery,
 } from "@/lib/api/queries/leaderboard";
 import { ApiUtils } from "@/lib/api/utils";
-import { schoolFF, tagFF } from "@/lib/ff";
 import {
   formatLeaderboardDateRange,
   getUserProfileUrl,
@@ -171,28 +170,27 @@ function LeaderboardIndex({
           style={{ marginLeft: "auto", display: "block" }}
           buttonName="Filters"
         >
-          {schoolFF &&
-            ApiUtils.getAllSupportedTagEnums().map((tagEnum) => (
-              <FilterDropdownItem
-                key={tagEnum}
-                name={() => {
-                  const metadata = ApiUtils.getMetadataByTagEnum(tagEnum);
+          {ApiUtils.getAllSupportedTagEnums().map((tagEnum) => (
+            <FilterDropdownItem
+              key={tagEnum}
+              name={() => {
+                const metadata = ApiUtils.getMetadataByTagEnum(tagEnum);
 
-                  return (
-                    <Flex gap={"xs"} align={"center"}>
-                      {metadata.shortName}
-                      <Image
-                        src={metadata.icon}
-                        alt={metadata.alt}
-                        style={{ height: "2em", width: "auto" }}
-                      />
-                    </Flex>
-                  );
-                }}
-                value={filters[tagEnum]}
-                toggle={() => toggleFilter(tagEnum)}
-              />
-            ))}
+                return (
+                  <Flex gap={"xs"} align={"center"}>
+                    {metadata.shortName}
+                    <Image
+                      src={metadata.icon}
+                      alt={metadata.alt}
+                      style={{ height: "2em", width: "auto" }}
+                    />
+                  </Flex>
+                );
+              }}
+              value={filters[tagEnum]}
+              toggle={() => toggleFilter(tagEnum)}
+            />
+          ))}
           <Divider my="sm" />
           <Menu.Sub
             offset={8}
@@ -326,8 +324,7 @@ function LeaderboardIndex({
                           </Text>
                         </Flex>
                       </Flex>
-                      {(entry.nickname ||
-                        (tagFF && entry.tags?.length > 0)) && (
+                      {(entry.nickname || entry.tags?.length > 0) && (
                         <Flex align="center" gap={5}>
                           {entry.nickname && (
                             <Tooltip label="This user is a verified member of the Patina Discord server.">
@@ -340,12 +337,10 @@ function LeaderboardIndex({
                               </Flex>
                             </Tooltip>
                           )}
-                          {entry.nickname &&
-                            tagFF &&
-                            entry.tags?.length > 0 && (
-                              <Divider orientation="vertical" h={20} />
-                            )}
-                          {tagFF && entry.tags?.length > 0 && (
+                          {entry.nickname && entry.tags?.length > 0 && (
+                            <Divider orientation="vertical" h={20} />
+                          )}
+                          {entry.tags?.length > 0 && (
                             <TagList tags={entry.tags} size={16} gap="xs" />
                           )}
                         </Flex>

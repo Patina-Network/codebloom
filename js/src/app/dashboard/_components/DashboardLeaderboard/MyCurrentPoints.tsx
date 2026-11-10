@@ -1,6 +1,5 @@
 import TagList from "@/components/ui/tags/TagList";
 import { useMyRecentLeaderboardData } from "@/lib/api/queries/leaderboard";
-import { tagFF } from "@/lib/ff/tag";
 import { getUserProfileUrl } from "@/lib/helper/leaderboardDateRange";
 import { theme } from "@/lib/theme";
 import { Flex, Skeleton, Text, Tooltip } from "@mantine/core";
@@ -100,7 +99,7 @@ export default function MyCurrentPoints({
         <Text>Me</Text>
         <Flex direction={"column"}>
           {(userData.nickname ||
-            (tagFF && userData.tags && userData.tags.length > 0)) && (
+            (userData.tags && userData.tags.length > 0)) && (
             <Flex align="center" justify="center" gap={5}>
               {userData.nickname && (
                 <Tooltip
@@ -122,7 +121,6 @@ export default function MyCurrentPoints({
                 </Tooltip>
               )}
               {userData.nickname &&
-                tagFF &&
                 userData.tags &&
                 userData.tags.length > 0 && (
                   <TagList tags={userData.tags} size={16} gap="xs" />
@@ -141,7 +139,6 @@ export default function MyCurrentPoints({
               {userData.discordName}
             </Text>
             {!userData.nickname &&
-              tagFF &&
               userData.tags &&
               userData.tags.length > 0 && (
                 <TagList tags={userData.tags} size={16} gap="xs" />

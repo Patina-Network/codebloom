@@ -22,7 +22,7 @@ class FeatureFlagManagerTest {
 
     @Test
     void getAllFlagsReturnsValuesFromConfiguration() {
-        var flags = featureFlagManager.getAllFlags();
+        var flags = featureFlagManager.getFlags();
 
         assertEquals(2, flags.size());
         assertEquals(Boolean.TRUE, flags.get("duels"));
@@ -31,7 +31,7 @@ class FeatureFlagManagerTest {
 
     @Test
     void getAllFlagsReturnsImmutableView() {
-        var flags = featureFlagManager.getAllFlags();
+        var flags = featureFlagManager.getFlags();
 
         assertThrows(UnsupportedOperationException.class, () -> flags.put("newFlag", true));
         assertFalse(flags.containsKey("newFlag"));

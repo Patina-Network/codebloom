@@ -4,6 +4,7 @@ import UserProfileHeader from "@/app/user/[userId]/_components/UserProfile/UserP
 import UserTags from "@/app/user/[userId]/_components/UserProfile/UserTags/UserTags";
 import MiniUserSubmissions from "@/app/user/[userId]/submissions/_components/UserSubmissions/MiniUserSubmissions";
 import ToastWithRedirect from "@/components/ui/toast/ToastWithRedirect";
+import { userMetricsFF } from "@/lib/ff";
 import { getUserSubmissionsUrl } from "@/lib/helper/leaderboardDateRange";
 import { Center, Button, Flex, Box, Text } from "@mantine/core";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -65,7 +66,7 @@ export default function UserProfilePage() {
               <ProfilePicture userId={userId} />
               <UserProfileHeader userId={userId} />
               <UserTags userId={userId} />
-              <MetricsChart userId={userId} key={userId} />
+              {userMetricsFF && <MetricsChart userId={userId} key={userId} />}
             </Flex>
           </Box>
           <Box

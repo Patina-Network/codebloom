@@ -30,7 +30,7 @@ public class FFAspect {
     public Object gateMethodByFeatureFlags(final ProceedingJoinPoint joinPoint, final FF ff) throws Throwable {
         String expression = ff.value();
 
-        var flags = featureFlagManager.getAllFlags();
+        var flags = featureFlagManager.getFlags();
         StandardEvaluationContext context = new StandardEvaluationContext(flags);
         context.addPropertyAccessor(new MapAccessor());
 
