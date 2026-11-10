@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=./config-schema.json
 codebloom:
   frontend:
     index: file:js/index.html
