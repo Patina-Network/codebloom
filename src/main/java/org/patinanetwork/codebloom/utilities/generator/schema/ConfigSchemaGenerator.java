@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.alexmond.config.json.schema.service.JsonSchemaService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -17,14 +17,25 @@ import org.springframework.stereotype.Component;
 @Profile("dev")
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class ConfigSchemaGenerator implements CommandLineRunner {
 
-    private static final Path OUTPUT_PATH = Path.of("src/main/resources/config-schema.json");
+    private static final Path DEFAULT_OUTPUT_PATH = Path.of("src/main/resources/config-schema.json");
 
     private final JsonSchemaService jsonSchemaService;
 
+    private final Path outputPath;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Autowired
+    public ConfigSchemaGenerator(final JsonSchemaService jsonSchemaService) {
+        this(jsonSchemaService, DEFAULT_OUTPUT_PATH);
+    }
+
+    ConfigSchemaGenerator(final JsonSchemaService jsonSchemaService, final Path outputPath) {
+        this.jsonSchemaService = jsonSchemaService;
+        this.outputPath = outputPath;
+    }
 
     @Override
     public void run(final String... args) {
@@ -32,8 +43,8 @@ public class ConfigSchemaGenerator implements CommandLineRunner {
             JsonNode schema = objectMapper.readTree(jsonSchemaService.generateFullSchemaJson());
             relax(schema);
             Files.writeString(
-                    OUTPUT_PATH, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema) + "\n");
-            log.info("Wrote config schema to {}", OUTPUT_PATH);
+                    outputPath, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema) + "\n");
+            log.info("Wrote config schema to {}", outputPath);
         } catch (Exception e) {
             log.error("Config schema generation failed", e);
         }
