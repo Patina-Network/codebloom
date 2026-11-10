@@ -2,6 +2,7 @@ import {
   currentLeaderboardUsersErrorHandler,
   currentLeaderboardUsersFailedHandler,
   currentLeaderboardUsersHandler,
+  currentLeaderboardUsersWithTagsHandler,
   successfulLeaderboardHandlers,
 } from "@/__mock__/leaderboard";
 import LeaderboardForDashboard from "@/app/dashboard/_components/DashboardLeaderboard/DashboardLeaderboard";
@@ -156,5 +157,17 @@ describe("LeaderboardForDashboard", () => {
     await waitFor(() => {
       expect(screen.getByText("Me")).toBeInTheDocument();
     });
+  });
+
+  it("should render tags beside nicknames or discord names", async () => {
+    server.use(currentLeaderboardUsersWithTagsHandler);
+    renderProviderFn?.(
+      <LeaderboardForDashboard userId={MOCK_USER_IN_TOP5} userTags={[]} />,
+    );
+
+    // aphrodite/athena: tag beside nickname; poseidon/ares: tag beside discord name.
+    expect(await screen.findByText("Aphro")).toBeInTheDocument();
+    expect(screen.getAllByAltText("Hunter College Logo")).toHaveLength(2);
+    expect(screen.getAllByAltText("NYU Logo")).toHaveLength(2);
   });
 });

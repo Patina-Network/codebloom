@@ -1,5 +1,6 @@
 import {
   currentLeaderboardUsersHandler,
+  currentLeaderboardUsersWithTagsHandler,
   successfulLeaderboardHandlers,
 } from "@/__mock__/leaderboard";
 import { CurrentLeaderboard } from "@/app/leaderboard/_components/Leaderboard";
@@ -293,5 +294,17 @@ describe("Leaderboard API Succeeded", () => {
         expect(nextButton).toBeInTheDocument();
       });
     }
+  });
+
+  it("should render nicknames and tags for podium and list entries", async () => {
+    server.use(currentLeaderboardUsersWithTagsHandler);
+    renderProviderFn?.(<CurrentLeaderboard />);
+
+    // athena (list): nickname + tag, ares (list): tag only, apollo (list): nickname only.
+    expect(await screen.findByText("Athena")).toBeInTheDocument();
+    expect(screen.getByText("Apollo")).toBeInTheDocument();
+    // aphrodite (podium) + athena (list) carry Hunter; poseidon (podium) + ares (list) carry NYU.
+    expect(screen.getAllByAltText("Hunter College Logo")).toHaveLength(2);
+    expect(screen.getAllByAltText("NYU Logo")).toHaveLength(2);
   });
 });

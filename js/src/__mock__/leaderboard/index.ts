@@ -1,4 +1,8 @@
+import type { UnknownApiResponse } from "@/lib/api/common/apiResponse";
+import type { Api } from "@/lib/api/types";
+
 import { ApiURL } from "@/lib/api/common/apiURL";
+import { Tag } from "@/lib/api/types/schema";
 import d from "dayjs";
 import { http, HttpResponse } from "msw";
 import { v4 as uuid } from "uuid";
@@ -182,6 +186,54 @@ export const currentLeaderboardUsersHandler = http.get(
         items: filteredUsers,
       },
     } satisfies ReturnType<typeof currentLeaderboardUsers.res>);
+  },
+);
+
+const mockLeaderboardUser = (
+  index: number,
+  name: string,
+  nickname: string | null,
+  tags: Tag[],
+): Api<"IndexedUserWithScoreDto"> => ({
+  index,
+  id: `user-${index}`,
+  discordId: `discord-${index}`,
+  discordName: name,
+  leetcodeUsername: name,
+  nickname,
+  admin: false,
+  profileUrl: null,
+  tags: tags.map((tag) => ({
+    id: `user-${index}-${tag}`,
+    createdAt: "2026-01-01T00:00:00Z",
+    userId: `user-${index}`,
+    tag,
+  })),
+  achievements: [],
+  totalScore: 200 - index * 10,
+});
+
+/** Mixes nicknames and tags so verified-nickname and tag rendering paths are exercised. */
+export const currentLeaderboardUsersWithTagsHandler = http.get(
+  currentLeaderboardUsers.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: true,
+      message: "Leaderboard users loaded!",
+      payload: {
+        hasNextPage: false,
+        pages: 1,
+        pageSize: 20,
+        items: [
+          mockLeaderboardUser(1, "aphrodite", "Aphro", [Tag.Hunter]),
+          mockLeaderboardUser(2, "poseidon", null, [Tag.Nyu]),
+          mockLeaderboardUser(3, "hermes", null, []),
+          mockLeaderboardUser(4, "athena", "Athena", [Tag.Hunter]),
+          mockLeaderboardUser(5, "ares", null, [Tag.Nyu]),
+          mockLeaderboardUser(6, "apollo", "Apollo", []),
+        ],
+      },
+    } satisfies UnknownApiResponse<Api<"PageIndexedUserWithScoreDto">>);
   },
 );
 
