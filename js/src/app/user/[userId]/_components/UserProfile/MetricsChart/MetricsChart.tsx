@@ -50,7 +50,7 @@ export default function MetricsChart({ userId }: { readonly userId: string }) {
           series={[
             { name: "points", label: "Points", color: theme.colors.patina[4] },
           ]}
-          curveType="natural"
+          curveType="monotone"
           tickLine="none"
           gridAxis="xy"
         />
