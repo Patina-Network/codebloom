@@ -33,6 +33,7 @@ import org.patinanetwork.codebloom.common.dto.refresh.RefreshResultDto;
 import org.patinanetwork.codebloom.common.page.Indexed;
 import org.patinanetwork.codebloom.common.url.ServerUrlUtils;
 import org.patinanetwork.codebloom.jda.client.JDAClient;
+import org.patinanetwork.codebloom.jda.client.options.EmbeddedDirectMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedImagesMessageOptions;
 import org.slf4j.LoggerFactory;
 
@@ -193,6 +194,7 @@ public class DiscordClubManagerTest {
         ArgumentCaptor<EmbeddedImagesMessageOptions> captor =
                 ArgumentCaptor.forClass(EmbeddedImagesMessageOptions.class);
         verify(jdaClient).sendEmbedWithImages(captor.capture());
+        verify(jdaClient, never()).sendDirectMessageEmbed(anyString(), any(EmbeddedDirectMessageOptions.class));
 
         String description = captor.getValue().getDescription();
         assertTrue(description.contains("No one claimed a spot on this leaderboard"));
@@ -214,6 +216,7 @@ public class DiscordClubManagerTest {
 
         verify(discordClubRepository).getAllActiveDiscordClubs();
         verify(jdaClient).sendEmbedWithImages(any(EmbeddedImagesMessageOptions.class));
+        verify(jdaClient, never()).sendDirectMessageEmbed(any(String.class), any(EmbeddedDirectMessageOptions.class));
     }
 
     @Test
@@ -229,6 +232,7 @@ public class DiscordClubManagerTest {
         ArgumentCaptor<EmbeddedImagesMessageOptions> captor =
                 ArgumentCaptor.forClass(EmbeddedImagesMessageOptions.class);
         verify(jdaClient).sendEmbedWithImages(captor.capture());
+        verify(jdaClient, never()).sendDirectMessageEmbed(anyString(), any(EmbeddedDirectMessageOptions.class));
 
         String description = captor.getValue().getDescription();
         assertTrue(description.contains("no scores yet"));
@@ -246,14 +250,21 @@ public class DiscordClubManagerTest {
 
         discordClubManager.sendLeaderboardCompletedDiscordMessageToAllClubs();
 
-        ArgumentCaptor<EmbeddedImagesMessageOptions> captor =
+        ArgumentCaptor<EmbeddedImagesMessageOptions> leaderboardCaptor =
                 ArgumentCaptor.forClass(EmbeddedImagesMessageOptions.class);
-        verify(jdaClient).sendEmbedWithImages(captor.capture());
+        ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<EmbeddedDirectMessageOptions> embedCaptor =
+                ArgumentCaptor.forClass(EmbeddedDirectMessageOptions.class);
+        verify(jdaClient).sendEmbedWithImages(leaderboardCaptor.capture());
+        verify(jdaClient).sendDirectMessageEmbed(idCaptor.capture(), embedCaptor.capture());
 
-        String description = captor.getValue().getDescription();
-        assertTrue(description.contains("🥇"));
-        assertFalse(description.contains("🥈"));
-        assertFalse(description.contains("🥉"));
+        String leaderboardDescription = leaderboardCaptor.getValue().getDescription();
+        assertTrue(leaderboardDescription.contains("🥇"));
+        assertFalse(leaderboardDescription.contains("🥈"));
+        assertFalse(leaderboardDescription.contains("🥉"));
+
+        assertEquals("discord1", idCaptor.getValue());
+        assertTrue(embedCaptor.getValue().getTitle().contains("🥇"));
     }
 
     @Test
@@ -265,14 +276,23 @@ public class DiscordClubManagerTest {
 
         discordClubManager.sendLeaderboardCompletedDiscordMessageToAllClubs();
 
-        ArgumentCaptor<EmbeddedImagesMessageOptions> captor =
+        ArgumentCaptor<EmbeddedImagesMessageOptions> leaderboardCaptor =
                 ArgumentCaptor.forClass(EmbeddedImagesMessageOptions.class);
-        verify(jdaClient).sendEmbedWithImages(captor.capture());
+        ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<EmbeddedDirectMessageOptions> embedCaptor =
+                ArgumentCaptor.forClass(EmbeddedDirectMessageOptions.class);
 
-        String description = captor.getValue().getDescription();
-        assertTrue(description.contains("🥇"));
-        assertTrue(description.contains("🥈"));
-        assertFalse(description.contains("🥉"));
+        verify(jdaClient).sendEmbedWithImages(leaderboardCaptor.capture());
+        verify(jdaClient, times(2)).sendDirectMessageEmbed(idCaptor.capture(), embedCaptor.capture());
+
+        String leaderboardDescription = leaderboardCaptor.getValue().getDescription();
+        assertTrue(leaderboardDescription.contains("🥇"));
+        assertTrue(leaderboardDescription.contains("🥈"));
+        assertFalse(leaderboardDescription.contains("🥉"));
+
+        assertEquals(List.of("discord1", "discord2"), idCaptor.getAllValues());
+        assertTrue(embedCaptor.getAllValues().get(0).getTitle().contains("🥇"));
+        assertTrue(embedCaptor.getAllValues().get(1).getTitle().contains("🥈"));
     }
 
     @Test

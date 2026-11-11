@@ -26,6 +26,7 @@ import org.patinanetwork.codebloom.common.time.StandardizedLocalDateTime;
 import org.patinanetwork.codebloom.common.url.ServerUrlUtils;
 import org.patinanetwork.codebloom.common.utils.leaderboard.LeaderboardUtils;
 import org.patinanetwork.codebloom.jda.client.JDAClient;
+import org.patinanetwork.codebloom.jda.client.options.EmbeddedDirectMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedImagesMessageOptions;
 import org.springframework.stereotype.Component;
 
@@ -77,6 +78,44 @@ public class DiscordClubManager {
                             users.get(i).getTotalScore()));
         }
         return sb.toString();
+    }
+
+    private void sendWinnerDiscordMessage(
+            final DiscordClub club, final Leaderboard leaderboard, final List<UserWithScore> winners) {
+        for (int i = 0; i < Math.min(winners.size(), 3); i++) {
+            final UserWithScore winner = winners.get(i);
+            String description = """
+                    Dear %s,
+
+                    Congratulations! You finished #%d on the %s leaderboard for %s users!
+
+                    Your final score is: %d points.
+
+                    Keep up the great work and continue solving problems to maintain your position or climb even higher!
+
+                    View the full leaderboard at %s/leaderboard/%s?%s=true
+
+                    Best regards,
+                    The Codebloom Team
+                    """.formatted(
+                            winner.getDiscordName(),
+                            i + 1,
+                            leaderboard.getName(),
+                            club.getName(),
+                            winner.getTotalScore(),
+                            serverUrlUtils.getUrl(),
+                            leaderboard.getId(),
+                            club.getTag().name().toLowerCase());
+            jdaClient.sendDirectMessageEmbed(
+                    winner.getDiscordId(),
+                    EmbeddedDirectMessageOptions.builder()
+                            .title("%s You placed #%d on %s!".formatted(MEDAL_EMOJIS[i], i + 1, leaderboard.getName()))
+                            .description(description)
+                            .footerText("Codebloom - LeetCode Leaderboard for %s".formatted(club.getName()))
+                            .footerIcon("%s/favicon.ico".formatted(serverUrlUtils.getUrl()))
+                            .color(new Color(69, 129, 103))
+                            .build());
+        }
     }
 
     /**
@@ -153,6 +192,7 @@ public class DiscordClubManager {
                     .footerIcon("%s/favicon.ico".formatted(serverUrlUtils.getUrl()))
                     .color(new Color(69, 129, 103))
                     .build());
+            sendWinnerDiscordMessage(club, currentLeaderboard.get(), users);
         } catch (Exception e) {
             log.error("Exception thrown in DiscordClubManager", e);
         }
