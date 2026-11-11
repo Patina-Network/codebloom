@@ -2,10 +2,15 @@ package org.patinanetwork.codebloom.utilities.generator.schema;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
 import lombok.extern.slf4j.Slf4j;
 import org.alexmond.config.json.schema.service.JsonSchemaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +47,7 @@ public class ConfigSchemaGenerator implements CommandLineRunner {
         try {
             JsonNode schema = objectMapper.readTree(jsonSchemaService.generateFullSchemaJson());
             relax(schema);
+            sort(schema);
             Files.writeString(
                     outputPath, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema) + "\n");
             log.info("Wrote config schema to {}", outputPath);
@@ -74,5 +80,25 @@ public class ConfigSchemaGenerator implements CommandLineRunner {
             }
         }
         node.forEach(ConfigSchemaGenerator::relax);
+    }
+
+    /**
+     * Sorts object keys and array elements at every depth so regenerations are byte-stable. Children are sorted first
+     * so arrays of objects compare by their already-normalized JSON.
+     */
+    private static void sort(final JsonNode node) {
+        node.forEach(ConfigSchemaGenerator::sort);
+        if (node instanceof ObjectNode object) {
+            TreeMap<String, JsonNode> sorted = new TreeMap<>();
+            object.properties().forEach(e -> sorted.put(e.getKey(), e.getValue()));
+            object.removeAll();
+            object.setAll(sorted);
+        } else if (node instanceof ArrayNode array) {
+            List<JsonNode> items = new ArrayList<>(array.size());
+            array.forEach(items::add);
+            items.sort(Comparator.comparing(JsonNode::toString));
+            array.removeAll();
+            array.addAll(items);
+        }
     }
 }
