@@ -123,6 +123,20 @@ class ConfigSchemaGeneratorTest {
     }
 
     @Test
+    void sortsObjectKeysAndArraysAtEveryDepth() throws Exception {
+        when(jsonSchemaService.generateFullSchemaJson()).thenReturn("""
+                        {"z":1,"a":{"y":{"d":1,"c":2},"b":3},"m":[{"q":1,"p":2},"x","w",{"p":1,"q":9}],"enum":["b","a"]}
+                        """);
+
+        generator.run();
+
+        assertEquals(
+                "{\"a\":{\"b\":3,\"y\":{\"c\":2,\"d\":1}},\"enum\":[\"a\",\"b\"],"
+                        + "\"m\":[\"w\",\"x\",{\"p\":1,\"q\":9},{\"p\":2,\"q\":1}],\"z\":1}",
+                MAPPER.writeValueAsString(MAPPER.readTree(Files.readString(outputPath))));
+    }
+
+    @Test
     void generationFailureDoesNotThrowOrWriteFile() {
         when(jsonSchemaService.generateFullSchemaJson()).thenThrow(new IllegalStateException("boom"));
 
