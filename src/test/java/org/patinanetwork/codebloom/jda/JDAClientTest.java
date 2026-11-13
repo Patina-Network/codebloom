@@ -7,25 +7,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.function.Function;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.patinanetwork.codebloom.jda.client.JDAClient;
+import org.patinanetwork.codebloom.jda.client.options.EmbeddedDirectMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedImagesMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedMessageOptions;
 import org.patinanetwork.codebloom.jda.properties.patina.JDAPatinaProperties;
@@ -40,6 +48,9 @@ public class JDAClientTest {
     private JDAClientManager jdaClientManager = mock(JDAClientManager.class);
     private EmbeddedMessageOptions options = mock(EmbeddedMessageOptions.class);
     private EmbeddedImagesMessageOptions imagesOptions = mock(EmbeddedImagesMessageOptions.class);
+    private EmbeddedDirectMessageOptions directOptions = mock(EmbeddedDirectMessageOptions.class);
+    private User user = mock(User.class);
+    private PrivateChannel privateChannel = mock(PrivateChannel.class);
 
     private JDAClient client;
 
@@ -211,6 +222,42 @@ public class JDAClientTest {
         verify(mockChannel).deleteMessageById(1223334444L);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void testDirectMessageWithEmbedSuccess() {
+        setupDirectOptions();
+
+        CacheRestAction<User> action = mock(CacheRestAction.class);
+        when(jda.retrieveUserById("user123")).thenReturn(action);
+        doReturn(action).when(action).flatMap(any());
+
+        client.sendDirectMessageEmbed("user123", directOptions);
+
+        verify(action).queue(any(), any());
+        runFlatMapSteps(action, user, privateChannel);
+        verify(user).openPrivateChannel();
+
+        ArgumentCaptor<MessageEmbed> embedCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
+        verify(privateChannel).sendMessageEmbeds(embedCaptor.capture());
+        MessageEmbed embed = embedCaptor.getValue();
+
+        assertEquals("Title", embed.getTitle());
+        assertEquals("Desc", embed.getDescription());
+        assertEquals("https://codebloom.patinanetwork.org", embed.getUrl());
+        assertEquals(Color.BLACK, embed.getColor());
+        assertEquals("Footer", embed.getFooter().getText());
+        assertEquals("https://example.com/icon.png", embed.getFooter().getIconUrl());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void runFlatMapSteps(RestAction<?> action, Object... inputs) {
+        ArgumentCaptor<Function<Object, RestAction<Object>>> steps = ArgumentCaptor.forClass(Function.class);
+        verify(action, times(inputs.length)).flatMap(steps.capture());
+        for (int i = 0; i < inputs.length; i++) {
+            steps.getAllValues().get(i).apply(inputs[i]);
+        }
+    }
+
     private void setupOptions() {
         when(options.getGuildId()).thenReturn(123456789L);
         when(options.getChannelId()).thenReturn(987654321L);
@@ -235,5 +282,13 @@ public class JDAClientTest {
 
         when(imagesOptions.getFilesBytes()).thenReturn(List.of(new byte[] {1}, new byte[] {2}));
         when(imagesOptions.getFileNames()).thenReturn(List.of("a.png", "b.png"));
+    }
+
+    private void setupDirectOptions() {
+        when(directOptions.getTitle()).thenReturn("Title");
+        when(directOptions.getDescription()).thenReturn("Desc");
+        when(directOptions.getFooterText()).thenReturn("Footer");
+        when(directOptions.getFooterIcon()).thenReturn("https://example.com/icon.png");
+        when(directOptions.getColor()).thenReturn(Color.BLACK);
     }
 }
