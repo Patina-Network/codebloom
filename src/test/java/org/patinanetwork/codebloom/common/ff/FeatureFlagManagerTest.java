@@ -17,6 +17,7 @@ class FeatureFlagManagerTest {
         FeatureFlagConfiguration ff = new FeatureFlagConfiguration();
         ff.setDuels(true);
         ff.setUserMetrics(false);
+        ff.setMessageWinners(true);
         featureFlagManager = new FeatureFlagManager(ff);
     }
 
@@ -24,9 +25,10 @@ class FeatureFlagManagerTest {
     void getAllFlagsReturnsValuesFromConfiguration() {
         var flags = featureFlagManager.getFlags();
 
-        assertEquals(2, flags.size());
+        assertEquals(3, flags.size());
         assertEquals(Boolean.TRUE, flags.get("duels"));
         assertEquals(Boolean.FALSE, flags.get("userMetrics"));
+        assertEquals(Boolean.TRUE, flags.get("messageWinners"));
     }
 
     @Test

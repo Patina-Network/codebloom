@@ -28,6 +28,7 @@ import org.patinanetwork.codebloom.common.utils.leaderboard.LeaderboardUtils;
 import org.patinanetwork.codebloom.jda.client.JDAClient;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedDirectMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedImagesMessageOptions;
+import org.patinanetwork.codebloom.jda.properties.FeatureFlagConfiguration;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -40,6 +41,7 @@ public class DiscordClubManager {
     private final UserRepository userRepository;
     private final ServerUrlUtils serverUrlUtils;
     private final LeaderboardManager leaderboardManager;
+    private final FeatureFlagConfiguration featureFlagConfiguration;
 
     public DiscordClubManager(
             final ServerUrlUtils serverUrlUtils,
@@ -47,13 +49,15 @@ public class DiscordClubManager {
             final LeaderboardRepository leaderboardRepository,
             final DiscordClubRepository discordClubRepository,
             final UserRepository userRepository,
-            final LeaderboardManager leaderboardManager) {
+            final LeaderboardManager leaderboardManager,
+            final FeatureFlagConfiguration featureFlagConfiguration) {
         this.serverUrlUtils = serverUrlUtils;
         this.jdaClient = jdaClient;
         this.leaderboardRepository = leaderboardRepository;
         this.discordClubRepository = discordClubRepository;
         this.userRepository = userRepository;
         this.leaderboardManager = leaderboardManager;
+        this.featureFlagConfiguration = featureFlagConfiguration;
     }
 
     private static final String[] MEDAL_EMOJIS = {"🥇", "🥈", "🥉"};
@@ -192,7 +196,9 @@ public class DiscordClubManager {
                     .footerIcon("%s/favicon.ico".formatted(serverUrlUtils.getUrl()))
                     .color(new Color(69, 129, 103))
                     .build());
-            sendWinnerDiscordMessage(club, currentLeaderboard.get(), users);
+            if (featureFlagConfiguration.isMessageWinners()) {
+                sendWinnerDiscordMessage(club, currentLeaderboard.get(), users);
+            }
         } catch (Exception e) {
             log.error("Exception thrown in DiscordClubManager", e);
         }

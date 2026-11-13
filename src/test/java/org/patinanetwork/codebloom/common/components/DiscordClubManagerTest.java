@@ -35,6 +35,7 @@ import org.patinanetwork.codebloom.common.url.ServerUrlUtils;
 import org.patinanetwork.codebloom.jda.client.JDAClient;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedDirectMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedImagesMessageOptions;
+import org.patinanetwork.codebloom.jda.properties.FeatureFlagConfiguration;
 import org.slf4j.LoggerFactory;
 
 public class DiscordClubManagerTest {
@@ -45,7 +46,7 @@ public class DiscordClubManagerTest {
     private ServerUrlUtils serverUrlUtils = mock(ServerUrlUtils.class);
     private UserRepository userRepository = mock(UserRepository.class);
     private LeaderboardManager leaderboardManager = mock(LeaderboardManager.class);
-
+    private FeatureFlagConfiguration featureFlagConfiguration = mock(FeatureFlagConfiguration.class);
     private DiscordClubManager discordClubManager;
 
     private ListAppender<ILoggingEvent> logWatcher;
@@ -58,7 +59,8 @@ public class DiscordClubManagerTest {
                 leaderboardRepository,
                 discordClubRepository,
                 userRepository,
-                leaderboardManager);
+                leaderboardManager,
+                featureFlagConfiguration);
 
         logWatcher = new ListAppender<>();
         logWatcher.start();
@@ -186,6 +188,7 @@ public class DiscordClubManagerTest {
     void testSendLeaderboardCompletedDiscordMessageAllUsersHaveZeroPoints() {
         DiscordClub mockClub = createMockDiscordClub("Test Club", Tag.Rpi);
         when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Arrays.asList(mockClub));
+        when(featureFlagConfiguration.isMessageWinners()).thenReturn(true);
 
         setupMockLeaderboardDataWithAllZeroScoreUsers();
 
@@ -245,6 +248,7 @@ public class DiscordClubManagerTest {
     void testSendLeaderboardCompletedDiscordMessageOnlyOneUserWithPoints() {
         DiscordClub mockClub = createMockDiscordClub("Test Club", Tag.Rpi);
         when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Arrays.asList(mockClub));
+        when(featureFlagConfiguration.isMessageWinners()).thenReturn(true);
 
         setupMockLeaderboardDataWithOneUser();
 
@@ -268,9 +272,24 @@ public class DiscordClubManagerTest {
     }
 
     @Test
+    void testSendLeaderboardCompletedDiscordMessageMessageWinnersFlagOffSkipsDirectMessages() {
+        DiscordClub mockClub = createMockDiscordClub("Test Club", Tag.Rpi);
+        when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Arrays.asList(mockClub));
+        when(featureFlagConfiguration.isMessageWinners()).thenReturn(false);
+
+        setupMockLeaderboardDataWithOneUser();
+
+        discordClubManager.sendLeaderboardCompletedDiscordMessageToAllClubs();
+
+        verify(jdaClient).sendEmbedWithImages(any(EmbeddedImagesMessageOptions.class));
+        verify(jdaClient, never()).sendDirectMessageEmbed(anyString(), any(EmbeddedDirectMessageOptions.class));
+    }
+
+    @Test
     void testSendLeaderboardCompletedDiscordMessageOnlyTwoUsersWithPoints() {
         DiscordClub mockClub = createMockDiscordClub("Test Club", Tag.Rpi);
         when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(Arrays.asList(mockClub));
+        when(featureFlagConfiguration.isMessageWinners()).thenReturn(true);
 
         setupMockLeaderboardDataWithTwoUsers();
 
