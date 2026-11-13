@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.patinanetwork.codebloom.common.components.LeaderboardManager;
 import org.patinanetwork.codebloom.common.db.models.leaderboard.Leaderboard;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
@@ -99,6 +100,8 @@ public class LeaderboardController {
             @Parameter(description = "Discord name", example = "tahmid")
                     @RequestParam(required = false, defaultValue = "")
                     final String query,
+            @Parameter(description = "Filter for users by institution") @RequestParam(required = false)
+                    final Set<String> filters,
             @Parameter(description = "Filter for Patina users") @RequestParam(required = false, defaultValue = "false")
                     final boolean patina,
             @Parameter(description = "Filter for Hunter College users")
@@ -133,22 +136,31 @@ public class LeaderboardController {
 
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
 
-        LeaderboardFilterOptions options = LeaderboardFilterOptions.builder()
+        final LeaderboardFilterOptions options;
+
+        final Set<String> normalizedFilters = filters == null
+                ? Set.of()
+                : filters.stream()
+                        .filter(java.util.Objects::nonNull)
+                        .map(s -> s.trim().toLowerCase())
+                        .collect(java.util.stream.Collectors.toSet());
+
+        options = LeaderboardFilterOptions.builder()
                 .page(page)
                 .pageSize(parsedPageSize)
                 .query(query)
-                .patina(patina)
-                .hunter(hunter)
-                .nyu(nyu)
-                .baruch(baruch)
-                .rpi(rpi)
-                .gwc(gwc)
-                .sbu(sbu)
-                .ccny(ccny)
-                .columbia(columbia)
-                .cornell(cornell)
-                .bmcc(bmcc)
-                .mhcplusplus(mhcplusplus)
+                .patina(patina || normalizedFilters.contains("patina"))
+                .hunter(hunter || normalizedFilters.contains("hunter"))
+                .nyu(nyu || normalizedFilters.contains("nyu"))
+                .baruch(baruch || normalizedFilters.contains("baruch"))
+                .rpi(rpi || normalizedFilters.contains("rpi"))
+                .gwc(gwc || normalizedFilters.contains("gwc"))
+                .sbu(sbu || normalizedFilters.contains("sbu"))
+                .ccny(ccny || normalizedFilters.contains("ccny"))
+                .columbia(columbia || normalizedFilters.contains("columbia"))
+                .cornell(cornell || normalizedFilters.contains("cornell"))
+                .bmcc(bmcc || normalizedFilters.contains("bmcc"))
+                .mhcplusplus(mhcplusplus || normalizedFilters.contains("mhcplusplus"))
                 .build();
 
         Page<Indexed<UserWithScoreDto>> createdPage =

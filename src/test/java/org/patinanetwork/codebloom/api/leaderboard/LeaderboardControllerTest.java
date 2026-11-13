@@ -1,11 +1,15 @@
 package org.patinanetwork.codebloom.api.leaderboard;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,6 +61,7 @@ public class LeaderboardControllerTest {
                 PAGE,
                 PAGE_SIZE,
                 "",
+                Set.of(),
                 false,
                 false,
                 false,
@@ -138,6 +143,7 @@ public class LeaderboardControllerTest {
                 1,
                 999,
                 "",
+                Set.of(),
                 false,
                 false,
                 false,
@@ -167,6 +173,7 @@ public class LeaderboardControllerTest {
                 2,
                 10,
                 "tahmid",
+                Set.of(),
                 true /* patina */,
                 true /* hunter */,
                 true /* nyu */,
@@ -199,6 +206,108 @@ public class LeaderboardControllerTest {
         assertTrue(opts.isCcny());
         assertTrue(opts.isColumbia());
         assertTrue(opts.isCornell());
+        assertTrue(opts.isBmcc());
+        assertTrue(opts.isMhcplusplus());
+    }
+
+    @Test
+    @DisplayName("passes all filter flags through to LeaderboardFilterOptions through set")
+    void passesAllFiltersThroughSet() {
+        leaderboardController.getLeaderboardUsersById(
+                LEADERBOARD_ID,
+                2,
+                10,
+                "tahmid",
+                Set.of(
+                        "patina",
+                        "hunter",
+                        "nyu",
+                        "baruch",
+                        "rpi",
+                        "gwc",
+                        "sbu",
+                        "ccny",
+                        "columbia",
+                        "cornell",
+                        "bmcc",
+                        "mhcplusplus"),
+                false /* patina */,
+                false /* hunter */,
+                false /* nyu */,
+                false /* baruch */,
+                false /* rpi */,
+                false /* gwc */,
+                false /* sbu */,
+                false /* ccny */,
+                false /* columbia */,
+                false /* cornell */,
+                false /* bmcc */,
+                false /* mhc++ */,
+                true /* globalIndex */,
+                null);
+
+        ArgumentCaptor<LeaderboardFilterOptions> captor = ArgumentCaptor.forClass(LeaderboardFilterOptions.class);
+        verify(leaderboardManager).getLeaderboardUsers(eq(LEADERBOARD_ID), captor.capture(), eq(true));
+
+        var opts = captor.getValue();
+        assertEquals(2, opts.getPage());
+        assertEquals(10, opts.getPageSize());
+        assertEquals("tahmid", opts.getQuery());
+        assertTrue(opts.isPatina());
+        assertTrue(opts.isHunter());
+        assertTrue(opts.isNyu());
+        assertTrue(opts.isBaruch());
+        assertTrue(opts.isRpi());
+        assertTrue(opts.isGwc());
+        assertTrue(opts.isSbu());
+        assertTrue(opts.isCcny());
+        assertTrue(opts.isColumbia());
+        assertTrue(opts.isCornell());
+        assertTrue(opts.isBmcc());
+        assertTrue(opts.isMhcplusplus());
+    }
+
+    @Test
+    @DisplayName("passes certain filter flags through to LeaderboardFilterOptions through set")
+    void passesCertainFiltersThroughSet() {
+        leaderboardController.getLeaderboardUsersById(
+                LEADERBOARD_ID,
+                2,
+                10,
+                "tahmid",
+                Set.of("patina", "hunter", "nyu", "baruch", "bmcc", "mhcplusplus"),
+                false /* patina */,
+                false /* hunter */,
+                false /* nyu */,
+                false /* baruch */,
+                false /* rpi */,
+                false /* gwc */,
+                false /* sbu */,
+                false /* ccny */,
+                false /* columbia */,
+                false /* cornell */,
+                false /* bmcc */,
+                false /* mhc++ */,
+                true /* globalIndex */,
+                null);
+
+        ArgumentCaptor<LeaderboardFilterOptions> captor = ArgumentCaptor.forClass(LeaderboardFilterOptions.class);
+        verify(leaderboardManager).getLeaderboardUsers(eq(LEADERBOARD_ID), captor.capture(), eq(true));
+
+        var opts = captor.getValue();
+        assertEquals(2, opts.getPage());
+        assertEquals(10, opts.getPageSize());
+        assertEquals("tahmid", opts.getQuery());
+        assertTrue(opts.isPatina());
+        assertTrue(opts.isHunter());
+        assertTrue(opts.isNyu());
+        assertTrue(opts.isBaruch());
+        assertFalse(opts.isRpi());
+        assertFalse(opts.isGwc());
+        assertFalse(opts.isSbu());
+        assertFalse(opts.isCcny());
+        assertFalse(opts.isColumbia());
+        assertFalse(opts.isCornell());
         assertTrue(opts.isBmcc());
         assertTrue(opts.isMhcplusplus());
     }
