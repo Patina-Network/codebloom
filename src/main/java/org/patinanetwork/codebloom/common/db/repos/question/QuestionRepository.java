@@ -102,4 +102,6 @@ public interface QuestionRepository {
             Set<String> topics,
             OffsetDateTime startDate,
             OffsetDateTime endDate);
+
+    int getAllIncompleteQuestionsCount();
 }
