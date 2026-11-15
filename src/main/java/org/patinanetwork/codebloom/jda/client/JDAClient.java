@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.patinanetwork.codebloom.jda.JDAClientManager;
+import org.patinanetwork.codebloom.jda.client.options.EmbeddedDirectMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedImagesMessageOptions;
 import org.patinanetwork.codebloom.jda.client.options.EmbeddedMessageOptions;
 import org.patinanetwork.codebloom.jda.properties.patina.JDAPatinaProperties;
@@ -186,5 +187,22 @@ public class JDAClient {
             log.error("Failed to delete message.", e);
             return false;
         }
+    }
+
+    public void sendDirectMessageEmbed(final String userId, final EmbeddedDirectMessageOptions options) {
+        EmbedBuilder embed = new EmbedBuilder()
+                .setColor(options.getColor())
+                .setTitle(options.getTitle())
+                .setUrl("https://codebloom.patinanetwork.org")
+                .setDescription(options.getDescription())
+                .setFooter(options.getFooterText(), options.getFooterIcon());
+
+        jda.retrieveUserById(userId)
+                .flatMap(user -> user.openPrivateChannel())
+                .flatMap(channel -> channel.sendMessageEmbeds(embed.build()))
+                .queue(
+                        msg -> log.info("DM sent to user {}", userId),
+                        // User may have DMs disabled
+                        throwable -> log.warn("Failed to DM user {}", userId, throwable));
     }
 }

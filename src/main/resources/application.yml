@@ -124,6 +124,7 @@ ff:
   # override per environment as needed
   duels: false
   user-metrics: false
+  message-winners: false
   # Passed straight through to the UI: keys must be camelCase since they are copied straight to the UI as is.
   ui:
     duels: false

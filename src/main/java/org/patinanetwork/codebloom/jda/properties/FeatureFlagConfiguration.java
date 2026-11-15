@@ -17,6 +17,8 @@ public class FeatureFlagConfiguration {
 
     private boolean userMetrics;
 
+    private boolean messageWinners;
+
     /** no need to track the object, backend just writes this directly to the index.html file */
     private Map<String, Boolean> ui = new HashMap<>();
 }

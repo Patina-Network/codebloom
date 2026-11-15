@@ -6,6 +6,7 @@ codebloom:
 ff:
   duels: true
   user-metrics: false
+  message-winners: true
   ui:
     duels: true
     userMetrics: false
