@@ -39,11 +39,6 @@ runs:
         JAVA_CACHE_PATH: |
           ~/.m2
           ~/repository
-        INSTALL_PNPM: true
-        PNPM_VERSION: "10.24.0"
-        PNPM_CACHE: true
-        PNPM_CACHE_DEPENDENCY_PATH: js/pnpm-lock.yaml
-        PNPM_PACKAGE_JSON_FILE: js/package.json
 
     - name: Run script
       shell: bash
