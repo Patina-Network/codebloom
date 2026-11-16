@@ -18,6 +18,7 @@ class Config:
     version: str
     environment: Environment
     auth_timeout_seconds: float
+    networkidle_timeout_seconds: float
     grpc_shutdown_grace_seconds: float
     max_challenge_try_clicks: int
     disable_virtual: bool
@@ -37,6 +38,9 @@ class Config:
                 os.environ.get("ENVIRONMENT", "local")
             ),
             auth_timeout_seconds=float(os.environ.get("AUTH_TIMEOUT_SECONDS", "120")),
+            networkidle_timeout_seconds=float(
+                os.environ.get("AUTH_NETWORKIDLE_TIMEOUT_SECONDS", "60")
+            ),
             max_challenge_try_clicks=int(
                 os.environ.get("AUTH_MAX_CHALLENGE_TRY_CLICKS", "20")
             ),
@@ -58,6 +62,7 @@ class Config:
             version=self.version,
             environment=self.environment,
             auth_timeout_seconds=self.auth_timeout_seconds,
+            networkidle_timeout_seconds=self.networkidle_timeout_seconds,
             grpc_shutdown_grace_seconds=self.grpc_shutdown_grace_seconds,
             log_level=self.log_level,
         )

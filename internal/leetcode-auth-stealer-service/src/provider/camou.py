@@ -249,7 +249,7 @@ async def _try_click_challenge(page: Page) -> bool:
     return False
 
 
-async def _wait_for_form(page: Page):
+async def _wait_for_form(page: Page, networkidle_timeout_seconds: float):
     login = page.locator("#id_login")
     spinners = page.locator(SPINNING_INDICATOR_SELECTOR)
     seen_spinner = False
@@ -263,7 +263,9 @@ async def _wait_for_form(page: Page):
     try:
         try:
             _log_decision("_wait_for_form_waiting_networkidle")
-            await page.wait_for_load_state("networkidle")
+            await page.wait_for_load_state(
+                "networkidle", timeout=networkidle_timeout_seconds * 1000
+            )
             _log_decision("_wait_for_form_networkidle_reached")
         except BrowserTimeout:
             _log_decision("_wait_for_form_networkidle_timeout")
@@ -534,7 +536,7 @@ class CamouProvider:
             _log_decision(
                 "login_waiting_for_form",
             )
-            await _wait_for_form(page)
+            await _wait_for_form(page, self.c.networkidle_timeout_seconds)
             _log_decision("login_form_visible")
 
             _log_decision("login_filling_credentials", login=credentials.login)
