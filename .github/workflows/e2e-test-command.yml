@@ -1,0 +1,28 @@
+name: E2E Test Command
+run-name: E2E test command from PR #${{ inputs.prId }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      prId:
+        description: "PR whose head commit should be tested"
+        required: true
+      repository:
+        description: "Repository from which the command was dispatched"
+        required: true
+      comment-id:
+        description: "ID of the command comment"
+        required: true
+      author:
+        description: "User who triggered the command"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  skeleton:
+    name: Dispatch skeleton (no tests run)
+    runs-on: ubuntu-26.04
+    steps:
+      - run: echo "::notice::E2E test execution is not included in this skeleton workflow."
