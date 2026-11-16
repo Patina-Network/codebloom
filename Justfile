@@ -12,7 +12,11 @@ auth:
 
 # Migrate to local DB
 migrate *args:
-  dotenvx run -- bash ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db {{args}}
+  dotenvx run -- bash ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db/migration,filesystem:./db/repeated {{args}}
+
+# Migrate local DB for e2e: schema + e2e seeds only (no db/repeated mock data)
+migrate-e2e *args:
+  dotenvx run -- bash ./mvnw flyway:migrate -Dflyway.locations=filesystem:./db/migration,filesystem:./db/e2e {{args}}
 
 # Drop local DB
 drop *args:
@@ -80,6 +84,10 @@ frontend-dev *args:
 # Builds and installs frontend packages
 frontend-install *args:
   cd js && pnpm i 
+
+# Run e2e tests with local and shared environment variables.
+e2e-dev *args:
+  cd e2e && pnpm i && dotenvx run --overload -f ../.env -- sops exec-env ../.env.shared.yaml 'env -u CI pnpm run e2e {{args}}'
 
 # Frontend tests 
 frontend-test *args:

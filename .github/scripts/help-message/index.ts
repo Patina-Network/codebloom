@@ -29,6 +29,7 @@ export async function main() {
 
 - \`/migrate\` - Applies this PR's database migrations to the staging DB (can only be run by someone on \`@Patina-Network/codebloom\`)
 - \`/copy\` - Triggers copy from production to staging db (can only be run by \`tahminator\` or \`angelayu0530\`)
+- \`/e2e-test\` - Runs E2E tests on this PR's head commit (requires write access to the repo)
 `.trim(),
   });
 }

@@ -100,6 +100,9 @@ codebloom:
     enabled: true
   notify:
     enabled: true
+  schools:
+    # e2e only: accept @gmail.com as NYU. NEVER ENABLE IN PROD.
+    allow-gmail: false
 
 management:
   endpoints:

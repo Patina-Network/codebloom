@@ -1,12 +1,10 @@
+// Must load before any test imports frontend code; Playwright loads this config in every worker.
+// Lives outside src/ because Playwright resolves `@/patches` to js/src/patches.ts.
+// eslint-disable-next-line no-relative-import-paths/no-relative-import-paths
+import "./patches";
 import { defineConfig, devices } from "@playwright/test";
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import { FRONTEND_URL } from "@/const";
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -23,10 +21,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
+  snapshotPathTemplate: "{testDir}/__snapshots__/{testFilePath}/{arg}{ext}",
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
+    baseURL: FRONTEND_URL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -34,18 +32,29 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // Each test consumes seeded one-time state (onboarding, school verification), so no retries.
+    {
+      name: "external",
+      testDir: "./src/external",
+      retries: 0,
+      use: { ...devices["Desktop Chrome"], trace: "retain-on-failure" },
+    },
+
     {
       name: "chromium",
+      testIgnore: "external/**",
       use: { ...devices["Desktop Chrome"] },
     },
 
     {
       name: "firefox",
+      testIgnore: "external/**",
       use: { ...devices["Desktop Firefox"] },
     },
 
     {
       name: "webkit",
+      testIgnore: "external/**",
       use: { ...devices["Desktop Safari"] },
     },
 
@@ -62,10 +71,12 @@ export default defineConfig({
     /* Test against branded browsers. */
     {
       name: "Microsoft Edge",
+      testIgnore: "external/**",
       use: { ...devices["Desktop Edge"], channel: "msedge" },
     },
     {
       name: "Google Chrome",
+      testIgnore: "external/**",
       use: { ...devices["Desktop Chrome"], channel: "chrome" },
     },
   ],
@@ -73,9 +84,10 @@ export default defineConfig({
   webServer: [
     {
       command:
-        process.env.CI ?
-          "cd .. && ./mvnw spring-boot:run -Dspring.profiles.active=ci"
-        : "cd .. && just backend-dev",
+        "cd .. && ./mvnw -B -ntp spring-boot:run -Dspring-boot.run.profiles=ci",
+      env: {
+        SPRING_PROFILES_INCLUDE: "e2e",
+      },
       url: "http://localhost:8080/api",
       stdout: "pipe",
       stderr: "pipe",
@@ -84,11 +96,8 @@ export default defineConfig({
       },
     },
     {
-      command:
-        process.env.CI ?
-          "cd ../js && pnpm i && pnpm run dev"
-        : "cd .. && just frontend-dev",
-      url: "http://localhost:5173",
+      command: "cd ../js && pnpm run dev",
+      url: FRONTEND_URL,
       stdout: "pipe",
       stderr: "pipe",
       wait: {

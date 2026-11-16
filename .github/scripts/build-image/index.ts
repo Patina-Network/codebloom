@@ -7,7 +7,7 @@ import type { Environment, Type } from "@/types";
 
 import { getEnvVariablesByPrefix } from "@/utils/env";
 import { backend } from "@/utils/run-backend-instance";
-import { db } from "@/utils/run-local-db";
+import { parseDbEnv, startLocalDb } from "@/utils/run-local-db";
 
 process.env.TZ = "America/New_York";
 
@@ -76,10 +76,12 @@ async function main() {
 
   if (type === "web") {
     const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
-    const localDbEnv = await db.start();
-    await backend.start(ciAppEnv);
+    await using postgres = await startLocalDb();
+    const localDbEnv = parseDbEnv(postgres);
 
     try {
+      await backend.start({ ...ciAppEnv, ...localDbEnv });
+
       const $$ = $.env({
         ...process.env,
         ...ciAppEnv,
@@ -88,7 +90,6 @@ async function main() {
       await $$`pnpm --dir js run generate`;
     } finally {
       await backend.end();
-      await db.end();
     }
   }
 

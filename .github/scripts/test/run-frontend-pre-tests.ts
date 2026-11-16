@@ -2,11 +2,13 @@ import { $ } from "bun";
 
 import { getEnvVariablesByPrefix } from "@/utils/env";
 import { backend } from "@/utils/run-backend-instance";
-import { db } from "@/utils/run-local-db";
+import { parseDbEnv, startLocalDb } from "@/utils/run-local-db";
 
 async function main() {
   const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
-  const localDbEnv = await db.start();
+  await using postgres = await startLocalDb();
+  const localDbEnv = parseDbEnv(postgres);
+
   await backend.start({ ...ciAppEnv, ...localDbEnv });
 
   const $$ = $.env({
@@ -20,7 +22,6 @@ async function main() {
     await $$`pnpm --dir js run typecheck`;
   } finally {
     await backend.end();
-    await db.end();
   }
 
   // fmt

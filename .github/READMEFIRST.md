@@ -14,6 +14,7 @@ This directory holds the Codebloom infrastructure code. That includes workflows 
 ├── ci-cd.yml                   # Main CI/CD pipeline that runs tests, builds images, triggers deployments, and more.
 ├── copy-db.yml                 # command to copy prod db to staging db
 ├── deploy-stg.yml              # command to deploy to staging
+├── e2e-test-command.yml        # authorized PR command to run E2E tests on the PR head
 ├── help-command.yml            # one-time command on PR launch to show all available slash commands
 ├── pr-verifications.yml        # validates PR & commits against Notion
 └── slash.yml                   # helper workflow to trigger slash command invocations to the right workflow
@@ -34,6 +35,10 @@ To trigger deployment to staging, you just have to comment `/deploy` as a commen
 
 > [!NOTE]
 > It should be a regular comment inside of the first page of the PR; writing the command as a review on a file or line(s) will not trigger deployment.
+
+### E2E tests
+
+Comment `/e2e-test` on a PR to run the E2E tests on its head commit.
 
 ### AI Code Review
 

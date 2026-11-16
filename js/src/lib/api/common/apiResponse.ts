@@ -1,4 +1,4 @@
-import { Prettify } from "@/lib/prettify";
+import type { Prettify } from "@/lib/prettify";
 
 type ApiSuccess<T> = Prettify<{
   success: true;

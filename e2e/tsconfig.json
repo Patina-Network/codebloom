@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         // Environment setup & latest features
-        "lib": ["ESNext"],
+        "lib": ["ESNext", "DOM"],
         "target": "ESNext",
         "module": "Preserve",
         "moduleDetection": "force",
@@ -25,6 +25,10 @@
         "noUnusedLocals": false,
         "noUnusedParameters": false,
         "noPropertyAccessFromIndexSignature": false,
-        "baseUrl": "./"
+        "baseUrl": "./",
+        "paths": {
+            "@/*": ["./src/*", "../js/src/*"],
+            "@codebloom-frontend/*": ["../js/src/*"]
+        }
     }
 }

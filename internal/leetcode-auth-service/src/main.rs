@@ -67,7 +67,11 @@ async fn main() -> anyhow::Result<()> {
         config.hostname.clone(),
     );
 
-    let auth_service = LeetcodeAuthService::new(repository, token_manager.clone());
+    let auth_service = LeetcodeAuthService::new(
+        repository,
+        token_manager.clone(),
+        &config.leetcode_auth_username,
+    );
 
     let grpc_addr = format!("0.0.0.0:{}", config.grpc_port).parse()?;
     let http_addr = format!("0.0.0.0:{}", config.http_port);

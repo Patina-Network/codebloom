@@ -20,6 +20,7 @@ message GetTokenRequest {}
 message GetTokenResponse {
   string token = 1;
   string csrf = 2;
+  string username = 3;
 }
 
 message RefreshTokenRequest {}
