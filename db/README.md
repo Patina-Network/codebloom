@@ -361,3 +361,10 @@ R__Mock_V0005_Insert_mock_users.SQL
 R__Mock_V0011_Add_old_leaderboards.SQL
 R__Mock_V9999_Delete_old_mock_users_and_insert_new_users.SQL
 ```
+
+## E2E Seeds
+
+All E2E seed data lives in one file, [`db/e2e/R__E2E_Create_e2e_data.SQL`](e2e/R__E2E_Create_e2e_data.SQL). Add or update E2E data there instead of creating a new file, so it stays in sync with [`e2e/src/const.ts`](../e2e/src/const.ts).
+
+> [!NOTE]
+> E2E seeds are only applied by `just migrate-e2e` (`db/migration` + `db/e2e`). They never run alongside `db/repeated/`, and are **NOT** applied to the production & staging database.

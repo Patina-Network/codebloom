@@ -5,7 +5,7 @@ import { hideBin } from "yargs/helpers";
 import { getEnvVariablesByPrefix } from "@/utils/env";
 import { backend } from "@/utils/run-backend-instance";
 import { frontend } from "@/utils/run-frontend-instance";
-import { db } from "@/utils/run-local-db";
+import { parseDbEnv, startLocalDb } from "@/utils/run-local-db";
 import { uploadBackendTests } from "@/utils/upload";
 
 const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
@@ -17,18 +17,15 @@ const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
   .parse();
 
 async function main() {
-  try {
-    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
-    const localDbEnv = await db.start();
+  const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
+  await using postgres = await startLocalDb();
+  const localDbEnv = parseDbEnv(postgres);
 
+  try {
     // backend starts so we can generate schema, then kill it.
     await backend.start({ ...ciAppEnv, ...localDbEnv });
     await frontend.start(ciAppEnv);
     await backend.end();
-
-    if (!localDbEnv) {
-      throw new Error("Local db empty when it should not be");
-    }
 
     const $$ = $.env({
       ...process.env,
@@ -47,7 +44,6 @@ async function main() {
       await uploadBackendTests(sonarToken);
     }
   } finally {
-    await db.end();
     await frontend.end();
     await backend.end();
   }

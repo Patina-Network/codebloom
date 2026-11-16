@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @AllArgsConstructor
 @Timed
-@Profile("!ci")
+@Profile("!ci | e2e")
 public class DefaultLeetcodeAuthenticationService implements LeetcodeAuthenticationService {
 
     private final LeetcodeAuthServiceBlockingStub leetcodeAuthGrpcService;

@@ -15,13 +15,19 @@ pub use leetcode_auth_service_server::LeetcodeAuthServiceServer;
 pub struct LeetcodeAuthService<R: AuthRepository, A: LASS> {
     repository: R,
     token_manager: TokenManager<R, A>,
+    leetcode_username: String,
 }
 
 impl<R: AuthRepository, A: LASS> LeetcodeAuthService<R, A> {
-    pub fn new(repository: R, token_manager: TokenManager<R, A>) -> Self {
+    pub fn new(
+        repository: R,
+        token_manager: TokenManager<R, A>,
+        leetcode_username: impl Into<String>,
+    ) -> Self {
         Self {
             repository,
             token_manager,
+            leetcode_username: leetcode_username.into(),
         }
     }
 }
@@ -43,6 +49,7 @@ impl<R: AuthRepository, A: LASS> leetcode_auth_service_server::LeetcodeAuthServi
             .ok_or_else(|| Status::not_found("no leetcode credentials stored yet"))?;
 
         Ok(GetTokenResponse {
+            username: self.leetcode_username.clone(),
             token: auth.token,
             csrf: auth.csrf,
         }
@@ -89,7 +96,7 @@ mod tests {
             Duration::from_secs(60),
             "test-pod".to_string(),
         );
-        LeetcodeAuthService::new(repository, token_refresher)
+        LeetcodeAuthService::new(repository, token_refresher, "")
     }
 
     fn token(value: &str) -> AuthToken {

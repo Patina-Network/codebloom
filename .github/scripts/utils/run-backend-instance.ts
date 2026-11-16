@@ -42,15 +42,13 @@ async function start(env: Record<string, string>) {
     }
 
     if (!ready) {
-      console.error("Backend failed to start in time.");
-      await end();
-      process.exit(1);
+      throw new Error("Backend failed to start in time");
     }
 
     console.log("backend ready");
   } catch (e) {
-    console.error(e);
     await end();
+    throw e;
   }
 }
 

@@ -3,16 +3,26 @@ name: E2E tests
 run-name: Running E2E tests
 
 concurrency:
-  group: deploy-staging-pr-${{ inputs.prId }}
-  cancel-in-progress: true
+  group: e2e-shared-staging-services
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 on:
   schedule:
-    - cron: "18 17 * * *" # 12:17 PM ET daily
+    - cron: "18 17 * * *" # 12:18 PM EST / 1:18 PM EDT daily
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Validated PR head SHA; empty uses the caller's ref"
+        type: string
+        required: false
+      skip_discord:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   runE2E:
@@ -22,12 +32,17 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Setup CI
         uses: tahminator/pipeline/actions/setup@aa4f2ffcca89a9dcad96c1eac1e57b5a533f8c26 # 1.0.100
         with:
           LINT_CI: true
           SECRETS: ${{ toJSON(secrets) }}
+          HEADSCALE_ADDRESS: ${{ secrets.HEADSCALE_ADDRESS }}
+          HEADSCALE_USER: ${{ secrets.HEADSCALE_USER }}
+          HEADSCALE_PREAUTHKEY: ${{ secrets.HEADSCALE_PREAUTHKEY }}
           INSTALL_PNPM: "true"
           PNPM_VERSION: "10.24.0"
           PNPM_CACHE: "true"
@@ -42,5 +57,12 @@ jobs:
 
       - name: Run script
         shell: bash
-        # set --skip-discord-message=true when you want to test this to avoid spamming the server
-        run: bun run .github/scripts/test/run-e2e-tests.ts --skip-discord-message=false --action-url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          E2E_EMAIL_IMAP_HOST: ${{ secrets.E2E_EMAIL_IMAP_HOST }}
+          E2E_EMAIL_IMAP_PORT: ${{ secrets.E2E_EMAIL_IMAP_PORT }}
+          E2E_EMAIL_USERNAME: ${{ secrets.E2E_EMAIL_USERNAME }}
+          E2E_EMAIL_PASSWORD: ${{ secrets.E2E_EMAIL_PASSWORD }}
+          SKIP_DISCORD: ${{ inputs.skip_discord || false }}
+          PR_HEAD_SHA: ${{ inputs.ref || '' }}
+          ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bun run .github/scripts/test/run-e2e-tests.ts --skip-discord-message="$SKIP_DISCORD" --action-url="$ACTION_URL" --sha="$PR_HEAD_SHA"

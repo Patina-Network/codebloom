@@ -1,0 +1,21 @@
+{
+  "fields": [
+    "code",
+    "lang",
+    "memory",
+    "memoryDisplay",
+    "memoryPercentile",
+    "runtime",
+    "runtimeDisplay",
+    "runtimePercentile"
+  ],
+  "code": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        D = {}\n\n        for i in range(len(nums)):\n            if not(nums[i] in D):\n                D[target - nums[i]] = i\n            else:\n                return [D[nums[i]], i]",
+  "lang": {
+    "name": "python3",
+    "verboseName": "Python3"
+  },
+  "runtime": 1,
+  "runtimeDisplay": "1 ms",
+  "memory": 20780000,
+  "memoryDisplay": "20.8 MB"
+}

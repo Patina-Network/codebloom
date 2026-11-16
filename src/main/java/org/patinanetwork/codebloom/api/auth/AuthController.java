@@ -11,9 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.patinanetwork.codebloom.api.auth.body.EmailBody;
 import org.patinanetwork.codebloom.common.db.models.Session;
 import org.patinanetwork.codebloom.common.db.models.user.User;
@@ -32,7 +29,7 @@ import org.patinanetwork.codebloom.common.email.template.ReactEmailTemplater;
 import org.patinanetwork.codebloom.common.jwt.JWTClient;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
 import org.patinanetwork.codebloom.common.reporter.report.Report;
-import org.patinanetwork.codebloom.common.schools.SchoolEnum;
+import org.patinanetwork.codebloom.common.schools.SupportedSchoolDomains;
 import org.patinanetwork.codebloom.common.schools.magic.MagicLink;
 import org.patinanetwork.codebloom.common.security.AuthenticationObject;
 import org.patinanetwork.codebloom.common.security.Protector;
@@ -71,6 +68,7 @@ public class AuthController {
     private final Reporter reporter;
     private final ReactEmailTemplater reactEmailTemplater;
     private final SimpleRedis<Long> simpleRedis;
+    private final SupportedSchoolDomains supportedSchoolDomains;
 
     public AuthController(
             final SessionRepository sessionRepository,
@@ -82,7 +80,8 @@ public class AuthController {
             final UserTagRepository userTagRepository,
             final Reporter reporter,
             final ReactEmailTemplater reactEmailTemplater,
-            final SimpleRedisProvider simpleRedisProvider) {
+            final SimpleRedisProvider simpleRedisProvider,
+            final SupportedSchoolDomains supportedSchoolDomains) {
         this.sessionRepository = sessionRepository;
         this.protector = protector;
         this.userRepository = userRepository;
@@ -93,6 +92,7 @@ public class AuthController {
         this.reporter = reporter;
         this.reactEmailTemplater = reactEmailTemplater;
         this.simpleRedis = simpleRedisProvider.select(SimpleRedisSlot.VERIFICATION_EMAIL_SENDING);
+        this.supportedSchoolDomains = supportedSchoolDomains;
     }
 
     @Operation(
@@ -211,12 +211,8 @@ public class AuthController {
                     "CUNY students: use your college email alias (for example, firstname.lastname##@stu-mail.hunter.cuny.edu). "
                             + "Then sign in to Outlook with your @login.cuny.edu credentials to open the verification link.");
         }
-        Set<String> supportedDomains = Stream.of(SchoolEnum.values())
-                .map(school -> school.getEmailDomain())
-                .collect(Collectors.toSet());
-
-        if (!supportedDomains.contains(domain)) {
-            String supportedSchools = String.join(", ", supportedDomains);
+        if (supportedSchoolDomains.findTag(domain).isEmpty()) {
+            String supportedSchools = String.join(", ", supportedSchoolDomains.getDomains());
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "The email is not part of our supported schools domains: " + supportedSchools);
@@ -297,11 +293,8 @@ public class AuthController {
                 .substring(magicLink.getEmail().indexOf("@"))
                 .toLowerCase();
 
-        SchoolEnum schoolEnum = Stream.of(SchoolEnum.values())
-                .filter(school -> school.getEmailDomain().equals(emailDomain))
-                .findFirst()
-                .orElse(null);
-        if (schoolEnum == null) {
+        var schoolTag = supportedSchoolDomains.findTag(emailDomain);
+        if (schoolTag.isEmpty()) {
             return new RedirectView("/settings?success=false&message=This email is not supported");
         }
 
@@ -312,24 +305,21 @@ public class AuthController {
             throw new RuntimeException("User repository failed to update user and add school email.");
         }
 
-        UserTag schoolTag = UserTag.builder()
-                .userId(user.getId())
-                .tag(schoolEnum.getInternalTag())
-                .build();
+        UserTag userTag =
+                UserTag.builder().userId(user.getId()).tag(schoolTag.get()).build();
 
         if (user.getTags().stream()
-                .anyMatch(tag ->
-                        tag.getTag().name().equals(schoolEnum.getInternalTag().name()))) {
+                .anyMatch(tag -> tag.getTag().name().equals(schoolTag.get().name()))) {
             reporter.log(
                     "auth",
                     Report.builder()
                             .data(String.format(
                                     "User %s\nAlready has tag %s",
                                     user.getNickname().orElse(user.getDiscordName()),
-                                    schoolEnum.getInternalTag().name()))
+                                    schoolTag.get().name()))
                             .build());
         } else {
-            userTagRepository.createTag(schoolTag);
+            userTagRepository.createTag(userTag);
         }
 
         return new RedirectView("/settings?success=true&message=The email has been verified!");

@@ -1,5 +1,5 @@
 name: E2E Test Command
-run-name: E2E test command from PR #${{ inputs.prId }}
+run-name: Run E2E tests from PR #${{ inputs.prId }}
 
 on:
   workflow_dispatch:
@@ -8,21 +8,46 @@ on:
         description: "PR whose head commit should be tested"
         required: true
       repository:
-        description: "Repository from which the command was dispatched"
+        description: "The repository from which the slash command was dispatched"
         required: true
       comment-id:
-        description: "ID of the command comment"
+        description: "The comment-id of the slash command"
         required: true
       author:
-        description: "User who triggered the command"
+        description: "The author that triggered this action"
         required: true
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
-  skeleton:
-    name: Dispatch skeleton (no tests run)
+  pr:
+    name: Get PR head
     runs-on: ubuntu-26.04
+    outputs:
+      sha: ${{ steps.pr-head.outputs.result }}
     steps:
-      - run: echo "::notice::E2E test execution is not included in this skeleton workflow."
+      - name: Get PR head SHA
+        id: pr-head
+        uses: actions/github-script@v9
+        env:
+          PR_ID: ${{ inputs.prId }}
+        with:
+          result-encoding: string
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: Number(process.env.PR_ID),
+            });
+            return pr.head.sha;
+
+  e2e:
+    name: Run E2E tests
+    needs: pr
+    uses: ./.github/workflows/e2e.yml
+    with:
+      ref: ${{ needs.pr.outputs.sha }}
+      skip_discord: true
+    secrets: inherit

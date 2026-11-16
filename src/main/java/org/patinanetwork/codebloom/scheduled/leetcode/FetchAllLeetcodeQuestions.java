@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Profile("!ci")
+@Profile("!ci & !e2e")
 public class FetchAllLeetcodeQuestions {
 
     private final BackgroundTaskRepository backgroundTaskRepository;

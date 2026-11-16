@@ -29,6 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.patinanetwork.codebloom.api.auth.body.EmailBody;
 import org.patinanetwork.codebloom.common.db.models.Session;
 import org.patinanetwork.codebloom.common.db.models.user.User;
+import org.patinanetwork.codebloom.common.db.models.usertag.Tag;
 import org.patinanetwork.codebloom.common.db.models.usertag.UserTag;
 import org.patinanetwork.codebloom.common.db.repos.session.SessionRepository;
 import org.patinanetwork.codebloom.common.db.repos.user.UserRepository;
@@ -40,6 +41,8 @@ import org.patinanetwork.codebloom.common.email.template.ReactEmailTemplater;
 import org.patinanetwork.codebloom.common.jwt.JWTClient;
 import org.patinanetwork.codebloom.common.reporter.Reporter;
 import org.patinanetwork.codebloom.common.schools.SchoolEnum;
+import org.patinanetwork.codebloom.common.schools.SchoolProperties;
+import org.patinanetwork.codebloom.common.schools.SupportedSchoolDomains;
 import org.patinanetwork.codebloom.common.schools.magic.MagicLink;
 import org.patinanetwork.codebloom.common.security.AuthenticationObject;
 import org.patinanetwork.codebloom.common.security.Protector;
@@ -82,7 +85,8 @@ public class AuthControllerTest {
                 userTagRepository,
                 reporter,
                 reactEmailTemplater,
-                simpleRedisProvider);
+                simpleRedisProvider,
+                new SupportedSchoolDomains(new SchoolProperties()));
         this.faker = Faker.instance();
     }
 
@@ -404,6 +408,45 @@ public class AuthControllerTest {
         verify(jwtClient, times(1)).decode("valid-token", MagicLink.class);
         verify(userRepository, times(1)).updateUser(any(User.class));
         verify(userTagRepository, times(1)).createTag(any());
+    }
+
+    @Test
+    @DisplayName("Verify school email - unsupported domain")
+    void verifySchoolEmailUnsupportedDomain() throws Exception {
+        User user = createRandomUser();
+        AuthenticationObject authObj = createAuthenticationObject(user, createRandomSession(user.getId()));
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(protector.validateSession(request)).thenReturn(authObj);
+        when(request.getParameter("state")).thenReturn("valid-token");
+        when(jwtClient.decode("valid-token", MagicLink.class))
+                .thenReturn(new MagicLink("student@gmail.com", user.getId()));
+
+        RedirectView redirectView = authController.verifySchoolEmail(request);
+
+        assertEquals("/settings?success=false&message=This email is not supported", redirectView.getUrl());
+        org.mockito.Mockito.verifyNoInteractions(userRepository, userTagRepository);
+    }
+
+    @Test
+    @DisplayName("Verify school email - user already has the school tag")
+    void verifySchoolEmailExistingTagIsNotDuplicated() throws Exception {
+        User user = createRandomUser();
+        user.addTag(UserTag.builder().userId(user.getId()).tag(Tag.Hunter).build());
+        AuthenticationObject authObj = createAuthenticationObject(user, createRandomSession(user.getId()));
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(protector.validateSession(request)).thenReturn(authObj);
+        when(request.getParameter("state")).thenReturn("valid-token");
+        when(jwtClient.decode("valid-token", MagicLink.class))
+                .thenReturn(new MagicLink("test@stu-mail.hunter.cuny.edu", user.getId()));
+        when(userRepository.updateUser(any(User.class))).thenReturn(true);
+
+        RedirectView redirectView = authController.verifySchoolEmail(request);
+
+        assertEquals("/settings?success=true&message=The email has been verified!", redirectView.getUrl());
+        verify(userTagRepository, times(0)).createTag(any());
+        verify(reporter, times(1)).log(eq("auth"), any());
     }
 
     @ParameterizedTest

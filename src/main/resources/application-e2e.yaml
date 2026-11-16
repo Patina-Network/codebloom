@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=./config-schema.json
+codebloom:
+  scheduling:
+    enabled: false
+  schools:
+    allow-gmail: true
+
+grpc:
+  leetcode-auth-service:
+    host: stg.codebloom-leetcode-auth-service.vpn.patinanetwork.org:50051
+    tls: true

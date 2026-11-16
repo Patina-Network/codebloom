@@ -4,7 +4,7 @@ import { hideBin } from "yargs/helpers";
 
 import { getEnvVariablesByPrefix } from "@/utils/env";
 import { backend } from "@/utils/run-backend-instance";
-import { db } from "@/utils/run-local-db";
+import { parseDbEnv, startLocalDb } from "@/utils/run-local-db";
 import { uploadFrontendTests } from "@/utils/upload";
 
 const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
@@ -16,10 +16,11 @@ const { shouldUploadCoverage } = await yargs(hideBin(process.argv))
   .parse();
 
 async function main() {
-  try {
-    const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
-    const localDbEnv = await db.start();
+  const ciAppEnv = getEnvVariablesByPrefix("CI_APP_");
+  await using postgres = await startLocalDb();
+  const localDbEnv = parseDbEnv(postgres);
 
+  try {
     await backend.start({ ...ciAppEnv, ...localDbEnv });
 
     const $$ = $.env({
@@ -37,7 +38,6 @@ async function main() {
     }
   } finally {
     await backend.end();
-    await db.end();
   }
 }
 

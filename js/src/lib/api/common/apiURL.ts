@@ -1,6 +1,6 @@
-import { UnknownApiResponse } from "@/lib/api/common/apiResponse";
-import { operations, paths } from "@/lib/api/types/schema";
-import { If, Split } from "type-fest";
+import type { UnknownApiResponse } from "@/lib/api/common/apiResponse";
+import type { operations, paths } from "@/lib/api/types/schema";
+import type { If, Split } from "type-fest";
 
 type MaybeParams<T> =
   keyof T extends never ? { params?: undefined } : { params: T };
@@ -211,6 +211,7 @@ export class ApiURL<
    * @param path - The API URL.
    * @param {Object} options - Configuration options for the factory.
    * @param {TCreatePathMethod | PathsKey} options.method - What method will be used for the request.
+   * @param {string} options.origin - Override the browser origin when calling outside a browser.
    * @param {Object} options.params - An object where each key is a path on the URL **IF URL IS DYNAMIC**. If URL is not dynamic, it can stay undefined with no errors thrown.
    * @param {Object} options.queries - An object where each key is a query param on the URL.
    *
@@ -243,6 +244,7 @@ export class ApiURL<
     path: TCreatePathKey,
     opts: {
       method: TCreatePathMethod;
+      origin?: string;
     } & MaybeParams<
       PathOperationsToPathParams<
         PathParamToOperations<TCreatePathKey, Lowercase<TCreatePathMethod>>
@@ -265,6 +267,7 @@ export class ApiURL<
     path: TPathKey,
     options: {
       method: TPathMethod;
+      origin?: string;
     } & MaybeParams<
       PathOperationsToPathParams<PathParamToOperations<TPathKey, TPathMethod>>
     > & {
@@ -273,7 +276,7 @@ export class ApiURL<
         >;
       },
   ) {
-    const { method, params, queries } = options;
+    const { method, params, queries, origin } = options;
     this._method = String(method).toUpperCase() as Uppercase<
       Extract<keyof PathsMethods<TPathKey>, string>
     >;
@@ -293,7 +296,7 @@ export class ApiURL<
 
     let url: URL;
     try {
-      url = new URL(resolved, window.location.origin);
+      url = new URL(resolved, origin ?? window.location.origin);
     } catch (e) {
       console.log(e);
       throw e;
