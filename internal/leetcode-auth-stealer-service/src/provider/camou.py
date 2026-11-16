@@ -9,6 +9,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import structlog
+from camoufox.addons import DefaultAddons
 from camoufox.async_api import AsyncCamoufox
 from playwright.async_api import Browser, BrowserContext, Page, Response, Route
 from playwright.async_api import Error as BrowserError
@@ -69,6 +70,7 @@ async def _browser_session(c: Config) -> AsyncIterator[Browser]:
         geoip=True,
         disable_coop=True,
         i_know_what_im_doing=True,
+        exclude_addons=[DefaultAddons.UBO],
     ) as browser:
         _log_decision("browser_session_created", headless=headless)
         assert isinstance(browser, Browser)
