@@ -1,4 +1,5 @@
 set shell := ["bash", "-uc"]
+set windows-shell := ["C:/Program Files/Git/bin/bash.exe", "-uc"]
 
 ### Azure cmds
 
