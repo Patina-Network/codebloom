@@ -3234,7 +3234,6 @@
         "commit" : {
           "properties" : {
             "sha" : {
-              "default" : "unknown",
               "type" : "string"
             }
           },
@@ -3268,7 +3267,6 @@
         "schools" : {
           "properties" : {
             "allow-gmail" : {
-              "default" : false,
               "type" : [ "boolean", "string" ]
             }
           },
@@ -3280,7 +3278,9 @@
     "ff" : {
       "properties" : {
         "duels" : {
-          "default" : false,
+          "type" : [ "boolean", "string" ]
+        },
+        "message-winners" : {
           "type" : [ "boolean", "string" ]
         },
         "message-winners" : {
@@ -3292,7 +3292,6 @@
           "type" : "object"
         },
         "user-metrics" : {
-          "default" : false,
           "type" : [ "boolean", "string" ]
         }
       },

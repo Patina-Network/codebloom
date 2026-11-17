@@ -55,13 +55,25 @@ export function useFilters({
   | undefined = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useImmer<TagEnumToBooleanFilterObject>(() => {
+    const rawFilters = searchParams.get("filters");
+    const activeFilters = new Set(
+      rawFilters ?
+        rawFilters
+          .split(",")
+          .map((key) => key.trim())
+          .filter(Boolean)
+      : [],
+    );
     // NOTE: We allow all enums so that if a user manually forces a param into the URL
     // (e.g. our backend loading the frontend to take screenshots) it WILL be allowed. However, it will NOT
     // be generated as a filter list or usable in the UI whatsoever.
-    const kvTuples = ApiUtils.getAllTagEnums().map((tagEnum) => [
-      tagEnum,
-      searchParams.get(getUrlKey(tagEnum)) === "true",
-    ]) as [Tag, boolean][]; // slight type trickery because TS
+    const kvTuples = ApiUtils.getAllTagEnums().map((tagEnum) => {
+      const key = getUrlKey(tagEnum);
+      return [
+        tagEnum,
+        activeFilters.has(key) || searchParams.get(key) === "true",
+      ];
+    }) as [Tag, boolean][]; // slight type trickery because TS
     // doesn't know which type is a key and which is a value; we help it out here a little.
 
     return Object.typedFromEntries(kvTuples);
@@ -69,34 +81,54 @@ export function useFilters({
 
   const toggleFilter: ToggleTagEnumFn = useCallback(
     (tagEnum: Tag) => {
-      const key = getUrlKey(tagEnum);
-      const prevValue = filters[tagEnum];
-
+      const nextFilters = {
+        ...filters,
+        [tagEnum]: !filters[tagEnum],
+      };
       setFilters((prev) => {
-        prev[tagEnum] = !prevValue;
+        prev[tagEnum] = !prev[tagEnum];
       });
-
       setSearchParams((prev) => {
-        if (!prevValue) {
-          prev.set(key, "true");
+        const activeKeys = Object.typedKeys(nextFilters)
+          .filter((tag) => nextFilters[tag])
+          .map((tag) => getUrlKey(tag));
+        for (const tag of Object.typedKeys(nextFilters)) {
+          prev.delete(getUrlKey(tag));
+        }
+        if (activeKeys.length > 0) {
+          prev.set("filters", activeKeys.join(","));
         } else {
-          prev.delete(key);
+          prev.delete("filters");
         }
         return prev;
       });
-
       onFilterChange?.(tagEnum);
     },
     [filters, onFilterChange, setFilters, setSearchParams],
   );
 
   const clearFilters = useCallback(() => {
-    for (const tagEnum of Object.typedKeys(filters)) {
-      if (filters[tagEnum]) {
-        toggleFilter(tagEnum);
+    const activeTags = Object.typedKeys(filters).filter((tag) => filters[tag]);
+    if (activeTags.length === 0) return;
+
+    setFilters((prev) => {
+      for (const tagEnum of activeTags) {
+        prev[tagEnum] = false;
       }
+    });
+
+    setSearchParams((prev) => {
+      prev.delete(FILTERS_PARAM_KEY);
+      for (const tagEnum of activeTags) {
+        prev.delete(getUrlKey(tagEnum));
+      }
+      return prev;
+    });
+
+    for (const tagEnum of activeTags) {
+      onFilterChange?.(tagEnum);
     }
-  }, [filters, toggleFilter]);
+  }, [filters, onFilterChange, setFilters, setSearchParams]);
 
   const isAnyFilterEnabled: boolean = useMemo(() => {
     return Object.values(filters).some(Boolean);
