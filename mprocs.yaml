@@ -1,0 +1,11 @@
+# Argument lists make mprocs start `just` directly. A `shell:` string would go through
+# `pwsh.exe` on Windows, which mprocs 0.9.6 fails to launch on some machines (DOWN 255).
+procs:
+  backend:
+    cmd: ["just", "backend-dev"]
+  frontend:
+    cmd: ["just", "frontend-dev"]
+  las:
+    cmd: ["just", "las-dev"]
+  lass:
+    cmd: ["just", "lass-dev"]
