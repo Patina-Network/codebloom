@@ -1,6 +1,6 @@
 import { Tag } from "@/lib/api/types/schema";
 import { ApiUtils } from "@/lib/api/utils";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useImmer } from "use-immer";
 
@@ -78,15 +78,17 @@ export function useFilters({
 
     return Object.typedFromEntries(kvTuples);
   });
+  const latestFilters = useRef(filters);
 
   const toggleFilter: ToggleTagEnumFn = useCallback(
     (tagEnum: Tag) => {
       const nextFilters = {
-        ...filters,
-        [tagEnum]: !filters[tagEnum],
+        ...latestFilters.current,
+        [tagEnum]: !latestFilters.current[tagEnum],
       };
+      latestFilters.current = nextFilters;
       setFilters((prev) => {
-        prev[tagEnum] = !prev[tagEnum];
+        prev[tagEnum] = nextFilters[tagEnum];
       });
       setSearchParams((prev) => {
         const activeKeys = Object.typedKeys(nextFilters)
@@ -104,12 +106,20 @@ export function useFilters({
       });
       onFilterChange?.(tagEnum);
     },
-    [filters, onFilterChange, setFilters, setSearchParams],
+    [onFilterChange, setFilters, setSearchParams],
   );
 
   const clearFilters = useCallback(() => {
-    const activeTags = Object.typedKeys(filters).filter((tag) => filters[tag]);
+    const activeTags = Object.typedKeys(latestFilters.current).filter(
+      (tag) => latestFilters.current[tag],
+    );
     if (activeTags.length === 0) return;
+
+    const nextFilters = { ...latestFilters.current };
+    for (const tagEnum of activeTags) {
+      nextFilters[tagEnum] = false;
+    }
+    latestFilters.current = nextFilters;
 
     setFilters((prev) => {
       for (const tagEnum of activeTags) {
@@ -118,7 +128,7 @@ export function useFilters({
     });
 
     setSearchParams((prev) => {
-      prev.delete(FILTERS_PARAM_KEY);
+      prev.delete("filters");
       for (const tagEnum of activeTags) {
         prev.delete(getUrlKey(tagEnum));
       }
@@ -128,7 +138,7 @@ export function useFilters({
     for (const tagEnum of activeTags) {
       onFilterChange?.(tagEnum);
     }
-  }, [filters, onFilterChange, setFilters, setSearchParams]);
+  }, [onFilterChange, setFilters, setSearchParams]);
 
   const isAnyFilterEnabled: boolean = useMemo(() => {
     return Object.values(filters).some(Boolean);

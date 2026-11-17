@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import org.patinanetwork.codebloom.common.components.LeaderboardManager;
@@ -142,7 +143,7 @@ public class LeaderboardController {
                 ? Set.of()
                 : filters.stream()
                         .filter(java.util.Objects::nonNull)
-                        .map(s -> s.trim().toLowerCase())
+                        .map(s -> s.trim().toLowerCase(Locale.ROOT))
                         .collect(java.util.stream.Collectors.toSet());
 
         options = LeaderboardFilterOptions.builder()

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -310,6 +311,41 @@ public class LeaderboardControllerTest {
         assertFalse(opts.isCornell());
         assertTrue(opts.isBmcc());
         assertTrue(opts.isMhcplusplus());
+    }
+
+    @Test
+    @DisplayName("normalizes filter names independently of the default locale")
+    void normalizesFilterNamesIndependentlyOfDefaultLocale() {
+        Locale originalLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            leaderboardController.getLeaderboardUsersById(
+                    LEADERBOARD_ID,
+                    PAGE,
+                    PAGE_SIZE,
+                    "",
+                    Set.of(" PATINA "),
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    null);
+        } finally {
+            Locale.setDefault(originalLocale);
+        }
+
+        ArgumentCaptor<LeaderboardFilterOptions> captor = ArgumentCaptor.forClass(LeaderboardFilterOptions.class);
+        verify(leaderboardManager).getLeaderboardUsers(eq(LEADERBOARD_ID), captor.capture(), eq(false));
+        assertTrue(captor.getValue().isPatina());
     }
     
     @Test
