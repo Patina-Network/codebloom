@@ -64,8 +64,13 @@ async def serve(c: Config) -> None:
     grpc_started = False
     try:
         for sig in signals:
-            loop.add_signal_handler(sig, shutdown.set)
-            registered_signals.append(sig)
+            try:
+                loop.add_signal_handler(sig, shutdown.set)
+                registered_signals.append(sig)
+            except NotImplementedError:
+                signal.signal(
+                    sig, lambda *_: loop.call_soon_threadsafe(shutdown.set)
+                )
 
         await runner.setup()
         site = web.TCPSite(runner, c.http_host, c.http_port)
