@@ -211,7 +211,7 @@ public class LeaderboardControllerTest {
         assertTrue(opts.isMhcplusplus());
     }
 
-      @Test
+    @Test
     @DisplayName("passes all filter flags through to LeaderboardFilterOptions through set")
     void passesAllFiltersThroughSet() {
         leaderboardController.getLeaderboardUsersById(
@@ -347,7 +347,7 @@ public class LeaderboardControllerTest {
         verify(leaderboardManager).getLeaderboardUsers(eq(LEADERBOARD_ID), captor.capture(), eq(false));
         assertTrue(captor.getValue().isPatina());
     }
-    
+
     @Test
     @DisplayName("returns metadata for the most recent leaderboard")
     void returnsCurrentMetadata() {

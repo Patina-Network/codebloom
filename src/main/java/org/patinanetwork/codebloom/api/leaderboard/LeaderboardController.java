@@ -101,8 +101,7 @@ public class LeaderboardController {
             @Parameter(description = "Discord name", example = "tahmid")
                     @RequestParam(required = false, defaultValue = "")
                     final String query,
-            @Parameter (description = "Filter for users") @RequestParam(required = false)
-                    final Set<String> filters,
+            @Parameter(description = "Filter for users") @RequestParam(required = false) final Set<String> filters,
             @Parameter(description = "Filter for Patina users") @RequestParam(required = false, defaultValue = "false")
                     final boolean patina,
             @Parameter(description = "Filter for Hunter College users")
@@ -136,7 +135,7 @@ public class LeaderboardController {
             final HttpServletRequest request) {
 
         final int parsedPageSize = Math.min(pageSize, MAX_LEADERBOARD_PAGE_SIZE);
-        
+
         final LeaderboardFilterOptions options;
 
         final Set<String> normalizedFilters = filters == null
