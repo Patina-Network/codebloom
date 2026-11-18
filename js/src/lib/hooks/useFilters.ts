@@ -46,35 +46,49 @@ function getUrlKey(tagEnum: Tag) {
  * );
  * ```
  */
+function syncSearchParams(
+  prev: URLSearchParams,
+  nextFilters: TagEnumToBooleanFilterObject,
+) {
+  const allTags = Object.typedKeys(nextFilters);
+  const activeKeys = allTags
+    .filter((tag) => nextFilters[tag])
+    .map((tag) => getUrlKey(tag));
+
+  for (const tag of allTags) {
+    prev.delete(getUrlKey(tag));
+  }
+
+  if (activeKeys.length > 0) {
+    prev.set("filters", activeKeys.join(","));
+  } else {
+    prev.delete("filters");
+  }
+
+  return prev;
+}
+
 export function useFilters({
   onFilterChange,
-}:
-  | {
-      onFilterChange?: (tagEnum: Tag) => void;
-    }
-  | undefined = {}) {
+}: {
+  onFilterChange?: (tagEnum: Tag) => void;
+} = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useImmer<TagEnumToBooleanFilterObject>(() => {
-    const rawFilters = searchParams.get("filters");
     const activeFilters = new Set(
-      rawFilters ?
-        rawFilters
-          .split(",")
-          .map((key) => key.trim())
-          .filter(Boolean)
-      : [],
+      (searchParams.get("filters") ?? "")
+        .split(",")
+        .map((key) => key.trim())
+        .filter(Boolean),
     );
-    // NOTE: We allow all enums so that if a user manually forces a param into the URL
-    // (e.g. our backend loading the frontend to take screenshots) it WILL be allowed. However, it will NOT
-    // be generated as a filter list or usable in the UI whatsoever.
+
     const kvTuples = ApiUtils.getAllTagEnums().map((tagEnum) => {
       const key = getUrlKey(tagEnum);
       return [
         tagEnum,
         activeFilters.has(key) || searchParams.get(key) === "true",
       ];
-    }) as [Tag, boolean][]; // slight type trickery because TS
-    // doesn't know which type is a key and which is a value; we help it out here a little.
+    }) as [Tag, boolean][];
 
     return Object.typedFromEntries(kvTuples);
   });
@@ -87,23 +101,11 @@ export function useFilters({
         [tagEnum]: !latestFilters.current[tagEnum],
       };
       latestFilters.current = nextFilters;
+
       setFilters((prev) => {
         prev[tagEnum] = nextFilters[tagEnum];
       });
-      setSearchParams((prev) => {
-        const activeKeys = Object.typedKeys(nextFilters)
-          .filter((tag) => nextFilters[tag])
-          .map((tag) => getUrlKey(tag));
-        for (const tag of Object.typedKeys(nextFilters)) {
-          prev.delete(getUrlKey(tag));
-        }
-        if (activeKeys.length > 0) {
-          prev.set("filters", activeKeys.join(","));
-        } else {
-          prev.delete("filters");
-        }
-        return prev;
-      });
+      setSearchParams((prev) => syncSearchParams(prev, nextFilters));
       onFilterChange?.(tagEnum);
     },
     [onFilterChange, setFilters, setSearchParams],
@@ -126,23 +128,17 @@ export function useFilters({
         prev[tagEnum] = false;
       }
     });
-
-    setSearchParams((prev) => {
-      prev.delete("filters");
-      for (const tagEnum of activeTags) {
-        prev.delete(getUrlKey(tagEnum));
-      }
-      return prev;
-    });
+    setSearchParams((prev) => syncSearchParams(prev, nextFilters));
 
     for (const tagEnum of activeTags) {
       onFilterChange?.(tagEnum);
     }
   }, [onFilterChange, setFilters, setSearchParams]);
 
-  const isAnyFilterEnabled: boolean = useMemo(() => {
-    return Object.values(filters).some(Boolean);
-  }, [filters]);
+  const isAnyFilterEnabled = useMemo(
+    () => Object.values(filters).some(Boolean),
+    [filters],
+  );
 
   return { filters, toggleFilter, clearFilters, isAnyFilterEnabled };
 }
