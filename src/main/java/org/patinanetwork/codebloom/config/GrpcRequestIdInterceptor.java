@@ -7,9 +7,10 @@ import io.grpc.ClientInterceptor;
 import io.grpc.ForwardingClientCall;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import org.patinanetwork.codebloom.utilities.RequestIdFilter;
 import org.slf4j.MDC;
 
-public class GrpcRequestIdInterceptor implements ClientInterceptor {
+class GrpcRequestIdInterceptor implements ClientInterceptor {
 
     private static final Metadata.Key<String> REQUEST_ID_KEY =
             Metadata.Key.of("x-request-id", Metadata.ASCII_STRING_MARSHALLER);
@@ -22,7 +23,7 @@ public class GrpcRequestIdInterceptor implements ClientInterceptor {
 
             @Override
             public void start(Listener<RespT> listener, Metadata headers) {
-                String requestId = MDC.get("requestId");
+                String requestId = MDC.get(RequestIdFilter.MDC_KEY);
 
                 if (requestId != null && !headers.containsKey(REQUEST_ID_KEY)) {
                     headers.put(REQUEST_ID_KEY, requestId);

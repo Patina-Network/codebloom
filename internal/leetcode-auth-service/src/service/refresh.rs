@@ -4,7 +4,7 @@ use chrono::Utc;
 use redis::RedisError;
 use strum::IntoStaticStr;
 use tokio::{task::JoinHandle, time::MissedTickBehavior};
-use tracing::{debug, error, info, warn};
+use tracing::{Instrument, Span, debug, error, info, warn};
 
 use crate::{
     db::auth::AuthRepository,
@@ -61,6 +61,7 @@ impl<R: AuthRepository, A: LASS> TokenManager<R, A> {
     pub async fn trigger(
         &self,
         source: RefreshSource,
+        request_id: Option<String>,
     ) -> Result<Option<JoinHandle<RefreshOutcome>>, RedisError> {
         let owner = lock_owner(&self.hostname);
         let locked = self.repository.try_lock(&owner, self.lock_ttl).await;
@@ -78,21 +79,24 @@ impl<R: AuthRepository, A: LASS> TokenManager<R, A> {
         }
 
         let this = self.clone();
-        Ok(Some(tokio::spawn(async move {
-            let outcome = observe::track_refresh(this.refresh()).await;
+        Ok(Some(tokio::spawn(
+            async move {
+                let outcome = observe::track_refresh(this.refresh(request_id.as_deref())).await;
 
-            if let Err(error) = this.repository.unlock(&owner).await {
-                warn!(%error, "could not release refresh lock, it will expire on its own");
+                if let Err(error) = this.repository.unlock(&owner).await {
+                    warn!(%error, "could not release refresh lock, it will expire on its own");
+                }
+
+                observe::record_refresh(outcome);
+                outcome
             }
-
-            observe::record_refresh(outcome);
-            outcome
-        })))
+            .instrument(Span::current()),
+        )))
     }
 
-    async fn refresh(&self) -> RefreshOutcome {
+    async fn refresh(&self, request_id: Option<&str>) -> RefreshOutcome {
         info!("requesting new credentials from LASS");
-        let result = observe::time_lass_call(self.authenticator.authenticate()).await;
+        let result = observe::time_lass_call(self.authenticator.authenticate(request_id)).await;
 
         let auth = match result {
             Ok(auth) => auth,
@@ -145,7 +149,7 @@ impl<R: AuthRepository, A: LASS> TokenManager<R, A> {
             ScheduledCheck::Stale
         });
         info!(date_stored = ?stored.date_stored, "stored credentials are stale");
-        match self.trigger(RefreshSource::Schedule).await {
+        match self.trigger(RefreshSource::Schedule, None).await {
             Ok(Some(running)) => Some(running),
             Ok(None) => {
                 info!("another refresh holds the lock, skipping scheduled refresh");
@@ -219,14 +223,14 @@ mod tests {
         let token_refresher = token_refresher(&repository, &lass);
 
         let running = token_refresher
-            .trigger(RefreshSource::Rpc)
+            .trigger(RefreshSource::Rpc, None)
             .await
             .unwrap()
             .expect("first trigger starts a refresh");
         for _ in 0..5 {
             assert!(
                 token_refresher
-                    .trigger(RefreshSource::Rpc)
+                    .trigger(RefreshSource::Rpc, None)
                     .await
                     .unwrap()
                     .is_none()
@@ -241,7 +245,7 @@ mod tests {
 
         lass.release();
         let next = token_refresher
-            .trigger(RefreshSource::Rpc)
+            .trigger(RefreshSource::Rpc, None)
             .await
             .unwrap()
             .expect("a finished refresh allows the next one");
@@ -258,7 +262,7 @@ mod tests {
         let token_refresher = token_refresher(&repository, &lass);
         assert!(
             token_refresher
-                .trigger(RefreshSource::Rpc)
+                .trigger(RefreshSource::Rpc, None)
                 .await
                 .unwrap()
                 .is_none()
@@ -275,7 +279,7 @@ mod tests {
         let lass = FakeAuthenticator::new(Outcome::Fail);
 
         let running = token_refresher(&repository, &lass)
-            .trigger(RefreshSource::Rpc)
+            .trigger(RefreshSource::Rpc, None)
             .await
             .unwrap()
             .unwrap();
@@ -289,7 +293,7 @@ mod tests {
         let repository = FakeAuthRepository::stored(stored("old", TimeDelta::hours(5)));
         let lass = FakeAuthenticator::gated(Outcome::Succeed(token("ours")));
         let running = token_refresher(&repository, &lass)
-            .trigger(RefreshSource::Rpc)
+            .trigger(RefreshSource::Rpc, None)
             .await
             .unwrap()
             .unwrap();
@@ -330,7 +334,12 @@ mod tests {
         let token_refresher = token_refresher(&FakeAuthRepository::Unavailable, &lass);
 
         assert!(token_refresher.refresh_if_stale().await.is_none());
-        assert!(token_refresher.trigger(RefreshSource::Rpc).await.is_err());
+        assert!(
+            token_refresher
+                .trigger(RefreshSource::Rpc, None)
+                .await
+                .is_err()
+        );
         assert_eq!(lass.calls(), 0);
     }
 }

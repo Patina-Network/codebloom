@@ -3,6 +3,7 @@ use tonic::Status;
 pub mod auth;
 pub mod client;
 pub mod metrics;
+pub mod reqid;
 
 pub fn redis_status(error: redis::RedisError) -> Status {
     tracing::error!(%error, "redis operation failed");

@@ -13,6 +13,7 @@ use leetcode_auth_service::{
         auth::{LeetcodeAuthService, LeetcodeAuthServiceServer},
         client::lass::GrpcLASS,
         metrics::GrpcRequestMetricsMiddleware,
+        reqid::GrpcRequestIdMiddleware,
     },
     http::{router, state::AppState},
     observe, proto,
@@ -121,6 +122,7 @@ async fn main() -> anyhow::Result<()> {
         Server::builder()
             .layer(grpc_panic_layer)
             .layer(MiddlewareLayer::new(GrpcRequestMetricsMiddleware))
+            .layer(MiddlewareLayer::new(GrpcRequestIdMiddleware))
             .add_service(grpc_health_svc)
             .add_service(LeetcodeAuthServiceServer::new(auth_service))
             .add_optional_service(grpc_reflection_svc)
