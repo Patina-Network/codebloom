@@ -1,5 +1,6 @@
 package org.patinanetwork.codebloom.utilities.generator.schema;
 
+import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -9,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +49,7 @@ public class ConfigSchemaGenerator implements CommandLineRunner {
         try {
             JsonNode schema = objectMapper.readTree(jsonSchemaService.generateFullSchemaJson());
             relax(schema);
+            applyOverrides(schema);
             sort(schema);
             Files.writeString(
                     outputPath, objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema) + "\n");
@@ -80,6 +83,24 @@ public class ConfigSchemaGenerator implements CommandLineRunner {
             }
         }
         node.forEach(ConfigSchemaGenerator::relax);
+    }
+
+    /** Replaces library output at each JSON Pointer, when present. */
+    private Map<String, JsonNode> overrides() {
+        return Map.of(
+                // enum of the running JDK's locales, which differs between JDK versions
+                "/$defs/java.util.Locale", objectMapper.createObjectNode().put("type", "string"));
+    }
+
+    private void applyOverrides(final JsonNode schema) {
+        overrides().forEach((pointer, replacement) -> {
+            JsonPointer path = JsonPointer.compile(pointer);
+            String name = path.last().getMatchingProperty();
+
+            if (schema.at(path.head()) instanceof ObjectNode parent && parent.has(name)) {
+                parent.set(name, replacement);
+            }
+        });
     }
 
     /**
