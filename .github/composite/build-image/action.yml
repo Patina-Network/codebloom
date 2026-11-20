@@ -56,5 +56,4 @@ runs:
             --docker-upload="${{ inputs.DOCKER_UPLOAD }}" \
             --getGhaOutput=true \
             --arch="${{ inputs.ARCH }}" \
-            --prId="${{ github.event.pull_request.number }}" \
-            --githubToken="${{ github.token }}"
+            --prId="${{ github.event.pull_request.number }}"

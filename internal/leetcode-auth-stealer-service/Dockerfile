@@ -37,8 +37,7 @@ RUN uv sync --frozen --no-dev --no-install-project \
 
 COPY src ./src
 
-RUN --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN,required=true \
-    uv sync --frozen --no-dev --no-editable \
+RUN uv sync --frozen --no-dev --no-editable \
     && /opt/venv/bin/python -m camoufox fetch \
     && chown -R 10001:10001 /home/auth
 

@@ -123,7 +123,7 @@ edit file *args:
 
 # Run the dev servers (backend & frontend & auth service)
 dev *args:
-  just install-pre-scripts && npx mprocs {{args}}
+  just install-pre-scripts && npx mprocs "just backend-dev" "just frontend-dev" "just las-dev" "just lass-dev" {{args}}
 
 # Git hooks are installed on almost every command
 # so that we don't accidentally add unencrypted secrets to the git history.

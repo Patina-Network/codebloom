@@ -11,57 +11,53 @@ import { parseDbEnv, startLocalDb } from "@/utils/run-local-db";
 
 process.env.TZ = "America/New_York";
 
-const { environment, dockerUpload, getGhaOutput, githubOutputFile, type, arch, prId, githubToken } =
-  await yargs(hideBin(process.argv))
-    .option("environment", {
-      choices: ["staging", "production"] satisfies Environment[],
-      describe: "Deployment environment (staging or production)",
-      demandOption: true,
-    })
-    .option("dockerUpload", {
-      type: "boolean",
-      default: false,
-      demandOption: true,
-    })
-    .option("githubToken", {
-      type: "string",
-      default: "",
-      demandOption: true,
-    })
-    .option("getGhaOutput", {
-      type: "boolean",
-      describe: "Enable GitHub Actions output to receive latest built tag version",
-      default: false,
-    })
-    .option("githubOutputFile", {
-      type: "string",
-      describe: "Path to GITHUB_OUTPUT (passed in automatically in CI)",
-      default: process.env.GITHUB_OUTPUT,
-    })
-    .option("type", {
-      choices: [
-        "standup-bot",
-        "web",
-        "leetcode-auth-stealer-service",
-        "leetcode-auth-service",
-      ] satisfies Type[],
-      describe: "Type to build",
-      demandOption: true,
-      default: "web" as Type,
-    })
-    .option("arch", {
-      choices: ["amd64", "arm64"] as const,
-      describe:
-        "Target architecture, built natively (no QEMU) on a matching runner; arm64 pushes to a separate `-arm`-suffixed repository",
-      default: "amd64" as const,
-    })
-    .option("prId", {
-      type: "string",
-      default: "",
-      coerce: (v: string) => (v === "" ? undefined : Number(v)),
-    })
-    .strict()
-    .parse();
+const { environment, dockerUpload, getGhaOutput, githubOutputFile, type, arch, prId } = await yargs(
+  hideBin(process.argv),
+)
+  .option("environment", {
+    choices: ["staging", "production"] satisfies Environment[],
+    describe: "Deployment environment (staging or production)",
+    demandOption: true,
+  })
+  .option("dockerUpload", {
+    type: "boolean",
+    default: false,
+    demandOption: true,
+  })
+  .option("getGhaOutput", {
+    type: "boolean",
+    describe: "Enable GitHub Actions output to receive latest built tag version",
+    default: false,
+  })
+  .option("githubOutputFile", {
+    type: "string",
+    describe: "Path to GITHUB_OUTPUT (passed in automatically in CI)",
+    default: process.env.GITHUB_OUTPUT,
+  })
+  .option("type", {
+    choices: [
+      "standup-bot",
+      "web",
+      "leetcode-auth-stealer-service",
+      "leetcode-auth-service",
+    ] satisfies Type[],
+    describe: "Type to build",
+    demandOption: true,
+    default: "web" as Type,
+  })
+  .option("arch", {
+    choices: ["amd64", "arm64"] as const,
+    describe:
+      "Target architecture, built natively (no QEMU) on a matching runner; arm64 pushes to a separate `-arm`-suffixed repository",
+    default: "amd64" as const,
+  })
+  .option("prId", {
+    type: "string",
+    default: "",
+    coerce: (v: string) => (v === "" ? undefined : Number(v)),
+  })
+  .strict()
+  .parse();
 
 const tagPrefix = environment === "staging" ? "staging-" : "";
 
@@ -145,9 +141,6 @@ async function main() {
       shouldUpload: dockerUpload,
       buildArgs,
       platforms,
-      secrets: {
-        GITHUB_TOKEN: githubToken,
-      },
     });
   } finally {
     process.chdir(originalCwd);

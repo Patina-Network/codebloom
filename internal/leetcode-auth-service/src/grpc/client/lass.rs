@@ -2,14 +2,13 @@ use std::time::Duration;
 
 use anyhow::Context;
 use tonic::{
-    Request, Status,
+    Status,
     transport::{Channel, ClientTlsConfig, Endpoint},
 };
 
 use crate::{
     config::Config,
     domain::auth::AuthToken,
-    grpc::reqid::REQUEST_ID_KEY,
     proto::lass::{
         AuthenticateRequest, leetcode_auth_stealer_service_client::LeetcodeAuthStealerServiceClient,
     },
@@ -18,10 +17,7 @@ use crate::{
 /// Logs into leetcode.com and returns fresh credentials.
 /// Leetcode Auth Stealer Service
 pub trait LASS: Clone + Send + Sync + 'static {
-    fn authenticate(
-        &self,
-        request_id: Option<&str>,
-    ) -> impl Future<Output = Result<AuthToken, Status>> + Send;
+    fn authenticate(&self) -> impl Future<Output = Result<AuthToken, Status>> + Send;
 }
 
 #[derive(Clone)]
@@ -57,20 +53,14 @@ impl GrpcLASS {
 }
 
 impl LASS for GrpcLASS {
-    async fn authenticate(&self, request_id: Option<&str>) -> Result<AuthToken, Status> {
-        let mut request = Request::new(AuthenticateRequest {
-            login: self.login.clone(),
-            password: self.password.clone(),
-        });
-
-        if let Some(value) = request_id.and_then(|id| id.parse().ok()) {
-            request.metadata_mut().insert(REQUEST_ID_KEY, value);
-        }
-
+    async fn authenticate(&self) -> Result<AuthToken, Status> {
         let response = self
             .client
             .clone()
-            .authenticate(request)
+            .authenticate(AuthenticateRequest {
+                login: self.login.clone(),
+                password: self.password.clone(),
+            })
             .await?
             .into_inner();
 
@@ -86,7 +76,6 @@ pub mod fake {
         atomic::{AtomicUsize, Ordering},
     };
 
-    use parking_lot::Mutex;
     use tokio::sync::Semaphore;
 
     use super::*;
@@ -101,7 +90,6 @@ pub mod fake {
     pub struct FakeAuthenticator {
         outcome: Arc<Outcome>,
         calls: Arc<AtomicUsize>,
-        request_ids: Arc<Mutex<Vec<Option<String>>>>,
         gate: Arc<Semaphore>,
     }
 
@@ -118,7 +106,6 @@ pub mod fake {
             Self {
                 outcome: Arc::new(outcome),
                 calls: Arc::new(AtomicUsize::new(0)),
-                request_ids: Arc::new(Mutex::new(Vec::new())),
                 gate: Arc::new(Semaphore::new(permits)),
             }
         }
@@ -131,10 +118,6 @@ pub mod fake {
             self.calls.load(Ordering::SeqCst)
         }
 
-        pub fn request_ids(&self) -> Vec<Option<String>> {
-            self.request_ids.lock().clone()
-        }
-
         pub async fn wait_for_calls(&self, calls: usize) {
             while self.calls() < calls {
                 tokio::task::yield_now().await;
@@ -143,8 +126,7 @@ pub mod fake {
     }
 
     impl LASS for FakeAuthenticator {
-        async fn authenticate(&self, request_id: Option<&str>) -> Result<AuthToken, Status> {
-            self.request_ids.lock().push(request_id.map(str::to_owned));
+        async fn authenticate(&self) -> Result<AuthToken, Status> {
             self.calls.fetch_add(1, Ordering::SeqCst);
             self.gate.acquire().await.unwrap().forget();
 

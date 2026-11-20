@@ -6,49 +6,56 @@ import RequeueIncompleteQuestionsModal from "@/app/admin/_components/incomplete/
 import AllLeaderboardAdmin from "@/app/admin/_components/leaderboards/pagination/AllLeaderboardAdmin";
 import RefreshLeetcodeTokenModal from "@/app/admin/_components/leetcode/RefreshLeetcodeTokenModal";
 import UserAdminList from "@/app/admin/_components/users/UserAdminList";
-import { Flex, SimpleGrid, Title } from "@mantine/core";
+import { Flex, Title } from "@mantine/core";
 
 export default function AdminIndex() {
   return (
     <Flex w={"98vw"} mih={"100vh"} direction={"column"}>
-      <Title order={1} ta="center" mb={"sm"}>
+      <Title order={1} ta="center">
         Admin Page
       </Title>
-      <Flex
-        w={"100%"}
-        direction={"column"}
-        justify={"center"}
-        mb="lg"
-        ta="center"
-      >
-        <Flex w={"100%"} direction={"row"} justify={"center"} mb={"xs"}>
-          <NewAnnouncementModal />
-        </Flex>
-        <Flex w={"100%"} direction={"row"} justify={"center"}>
-          <DeleteAnnouncementButton />
-        </Flex>
-        <Flex w={"100%"} direction={"row"} justify={"center"} mb={"xs"}>
-          <NewDiscordAnnouncementModal />
-        </Flex>
-        <Flex w={"100%"} direction={"row"} justify={"center"} mb={"xs"}>
-          <RefreshLeetcodeTokenModal />
-        </Flex>
+      <Flex w={"100%"} direction={"row"} justify={"center"}>
+        <NewAnnouncementModal />
       </Flex>
-      <SimpleGrid w={"100%"} cols={{ base: 1, md: 3 }} spacing={"sm"}>
-        <Flex w={"100%"} direction={"column"} ta={"center"}>
+      <Flex w={"100%"} direction={"row"} justify={"center"}>
+        <DeleteAnnouncementButton />
+      </Flex>
+      <Flex w={"100%"} direction={"row"} justify={"center"}>
+        <NewDiscordAnnouncementModal />
+      </Flex>
+      <Flex w={"100%"} direction={"row"} justify={"center"}>
+        <RefreshLeetcodeTokenModal />
+      </Flex>
+      <Flex w={"100%"} direction={{ base: "column", sm: "row" }}>
+        <Flex
+          w={{ base: "100%", sm: "50%" }}
+          direction={"column"}
+          ta={"center"}
+          m={"sm"}
+        >
           <Title order={4}>Leaderboards</Title>
           <AllLeaderboardAdmin />
         </Flex>
-        <Flex w={"100%"} direction={"column"} ta={"center"}>
+        <Flex
+          w={{ base: "100%", sm: "50%" }}
+          direction={"column"}
+          ta={"center"}
+          m={"sm"}
+        >
           <Title order={4}>Incomplete Questions</Title>
           <RequeueIncompleteQuestionsModal />
           <IncompleteQuestionList />
         </Flex>
-        <Flex w={"100%"} direction={"column"} ta={"center"}>
+        <Flex
+          w={{ base: "100%", sm: "50%" }}
+          direction={"column"}
+          ta={"center"}
+          m={"sm"}
+        >
           <Title order={4}>Users</Title>
           <UserAdminList />
         </Flex>
-      </SimpleGrid>
+      </Flex>
     </Flex>
   );
 }
