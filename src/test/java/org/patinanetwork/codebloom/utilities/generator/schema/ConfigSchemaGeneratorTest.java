@@ -95,31 +95,6 @@ class ConfigSchemaGeneratorTest {
     }
 
     @Test
-    void omitsNonCanonicalPropertyDefaultsButPreservesOtherDefaults() throws Exception {
-        JsonNode schema = generate("""
-                {
-                  "properties": {
-                    "app": {"properties": {"commit": {"properties": {"sha": {"default": "unknown"}}}}},
-                    "codebloom": {"properties": {"schools": {"properties": {"allow-gmail": {"default": false}}}}},
-                    "ff": {"properties": {
-                      "duels": {"default": false},
-                      "message-winners": {"default": false},
-                      "user-metrics": {"default": false}
-                    }},
-                    "other": {"default": true}
-                  }
-                }
-                """);
-
-        assertFalse(schema.at("/properties/app/properties/commit/properties/sha").has("default"));
-        assertFalse(schema.at("/properties/codebloom/properties/schools/properties/allow-gmail").has("default"));
-        assertFalse(schema.at("/properties/ff/properties/duels").has("default"));
-        assertFalse(schema.at("/properties/ff/properties/message-winners").has("default"));
-        assertFalse(schema.at("/properties/ff/properties/user-metrics").has("default"));
-        assertTrue(schema.at("/properties/other").has("default"));
-    }
-
-    @Test
     void leavesStringAndObjectTypesAlone() throws Exception {
         JsonNode schema = generate("""
                 {

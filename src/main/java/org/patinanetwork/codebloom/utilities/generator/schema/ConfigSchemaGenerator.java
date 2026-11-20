@@ -27,13 +27,6 @@ import org.springframework.stereotype.Component;
 public class ConfigSchemaGenerator implements CommandLineRunner {
 
     private static final Path DEFAULT_OUTPUT_PATH = Path.of("src/main/resources/config-schema.json");
-    // These values are profile-dependent or placeholders, so no single schema default is canonical.
-    private static final List<String> PROPERTIES_WITHOUT_SCHEMA_DEFAULTS = List.of(
-            "/properties/app/properties/commit/properties/sha",
-            "/properties/codebloom/properties/schools/properties/allow-gmail",
-            "/properties/ff/properties/duels",
-            "/properties/ff/properties/message-winners",
-            "/properties/ff/properties/user-metrics");
 
     private final JsonSchemaService jsonSchemaService;
 
@@ -63,15 +56,6 @@ public class ConfigSchemaGenerator implements CommandLineRunner {
             log.info("Wrote config schema to {}", outputPath);
         } catch (Exception e) {
             log.error("Config schema generation failed", e);
-        }
-    }
-
-    private static void removeNonCanonicalDefaults(final JsonNode schema) {
-        for (String propertyPath : PROPERTIES_WITHOUT_SCHEMA_DEFAULTS) {
-            JsonNode property = schema.at(propertyPath);
-            if (property instanceof ObjectNode object) {
-                object.remove("default");
-            }
         }
     }
 
