@@ -2,7 +2,7 @@ use tonic::{Request, Response, Status};
 
 use crate::{
     db::auth::AuthRepository,
-    grpc::{client::lass::LASS, redis_status},
+    grpc::{client::lass::LASS, redis_status, reqid::request_id},
     proto::leetcodeauth::{
         GetTokenRequest, GetTokenResponse, RefreshTokenRequest, RefreshTokenResponse,
         leetcode_auth_service_server,
@@ -58,11 +58,11 @@ impl<R: AuthRepository, A: LASS> leetcode_auth_service_server::LeetcodeAuthServi
 
     async fn refresh_token(
         &self,
-        _request: Request<RefreshTokenRequest>,
+        request: Request<RefreshTokenRequest>,
     ) -> Result<Response<RefreshTokenResponse>, Status> {
         let started = self
             .token_manager
-            .trigger(RefreshSource::Rpc)
+            .trigger(RefreshSource::Rpc, request_id(request.metadata()))
             .await
             .map_err(redis_status)?
             .is_some();
@@ -151,6 +151,7 @@ mod tests {
 
         lass.wait_for_calls(1).await;
         assert_eq!(lass.calls(), 1);
+        assert_eq!(lass.request_ids(), vec![None]);
 
         let response = service
             .get_token(Request::new(GetTokenRequest {}))
@@ -160,5 +161,23 @@ mod tests {
         assert_eq!(response.token, "old");
         assert_eq!(response.csrf, "old-csrf");
         assert_eq!(lass.calls(), 1, "get_token must never start a refresh");
+    }
+
+    #[tokio::test]
+    async fn refresh_token_forwards_the_callers_request_id_to_lass() {
+        let lass = FakeAuthenticator::new(Outcome::Succeed(token("new")));
+        let service = service(
+            FakeAuthRepository::stored(StoredAuth::default()),
+            lass.clone(),
+        );
+
+        let mut request = Request::new(RefreshTokenRequest {});
+        request
+            .metadata_mut()
+            .insert("x-request-id", "req-123".parse().unwrap());
+        service.refresh_token(request).await.unwrap();
+
+        lass.wait_for_calls(1).await;
+        assert_eq!(lass.request_ids(), vec![Some("req-123".to_string())]);
     }
 }

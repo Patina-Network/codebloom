@@ -112,6 +112,30 @@ class ConfigSchemaGeneratorTest {
     }
 
     @Test
+    void replacesJdkDependentLocaleEnumWithPlainString() throws Exception {
+        JsonNode schema = generate("""
+                {
+                  "$defs": {
+                    "java.util.Locale": {"type": "string", "enum": ["", "af", "en_US"]},
+                    "java.time.Duration": {"type": "string", "enum": ["keep"]}
+                  }
+                }
+                """);
+
+        assertEquals(MAPPER.readTree("{\"type\":\"string\"}"), schema.at("/$defs/java.util.Locale"));
+        assertEquals("keep", schema.at("/$defs/java.time.Duration/enum/0").asText());
+    }
+
+    @Test
+    void overridesDoNotAddDefinitionsTheLibraryDidNotGenerate() throws Exception {
+        JsonNode schema = generate("""
+                {"$defs": {"java.time.Duration": {"type": "string"}}}
+                """);
+
+        assertFalse(schema.at("/$defs").has("java.util.Locale"));
+    }
+
+    @Test
     void writesPrettyPrintedJsonEndingInNewline() throws Exception {
         when(jsonSchemaService.generateFullSchemaJson()).thenReturn("{\"type\":\"object\"}");
 
