@@ -253,3 +253,50 @@ export const currentLeaderboardUsersErrorHandler = http.get(
     return HttpResponse.error();
   },
 );
+
+const allLeaderboardMetadata = ApiURL.create("/api/leaderboard/all/metadata", {
+  method: "GET",
+});
+
+export const MOCK_LEADERBOARD_ALL_METADATA = [
+  {
+    id: "leaderboard-1",
+    name: "leaderboard-name-1",
+    createdAt: "2026-10-14T21:33:13.032788",
+    deletedAt: null,
+    shouldExpireBy: null,
+    syntaxHighlightingLanguage: "cpp",
+  },
+  {
+    id: "leaderboard-2",
+    name: "leaderboard-name-2",
+    createdAt: "2026-10-15T21:23:13.032788",
+    deletedAt: "2026-10-15T21:28:13.032788",
+    shouldExpireBy: null,
+    syntaxHighlightingLanguage: null,
+  },
+  {
+    id: "leaderboard-3",
+    name: "leaderboard-name-3",
+    createdAt: "2001-01-20T23:55:59",
+    deletedAt: "2001-01-20T23:59:59",
+    shouldExpireBy: null,
+    syntaxHighlightingLanguage: null,
+  },
+];
+
+export const allLeaderboardMetadataSuccessHandler = http.get(
+  allLeaderboardMetadata.url.toString(),
+  () => {
+    return HttpResponse.json({
+      success: true,
+      payload: {
+        hasNextPage: false,
+        items: MOCK_LEADERBOARD_ALL_METADATA,
+        pages: 1,
+        pageSize: 20,
+      },
+      message: "Leaderboard metadata fetched!",
+    });
+  },
+);
