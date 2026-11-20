@@ -174,7 +174,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                                 m."userId"
                         ) AS rank
                     FROM "Metadata" m
-                    JOIN "User" u ON u.id = m."userId"
+                    JOIN "User" u ON u.id = m."userId" AND u."deletedAt" IS NULL
                     WHERE m."leaderboardId" = :leaderboardId
                 )
                 SELECT
@@ -235,7 +235,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                 JOIN
                     "User" u
                 ON
-                    u.id = m."userId"
+                    u.id = m."userId" AND u."deletedAt" IS NULL
                 JOIN
                     "Leaderboard" l
                 ON
@@ -347,7 +347,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                             m."userId"
                     ) AS rank
                 FROM "Metadata" m
-                JOIN "User" u ON u.id = m."userId"
+                JOIN "User" u ON u.id = m."userId" AND u."deletedAt" IS NULL
                 WHERE m."leaderboardId" = :leaderboardId
             )
             SELECT
@@ -403,7 +403,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                 JOIN
                     "User" u
                 ON
-                    u.id = m."userId"
+                    u.id = m."userId" AND u."deletedAt" IS NULL
                 JOIN
                     "Leaderboard" l
                 ON
@@ -506,7 +506,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
             JOIN "Metadata" m ON
                 m."leaderboardId" = ll.id
             JOIN "User" u ON
-                u.id = m."userId"
+                u.id = m."userId" AND u."deletedAt" IS NULL
             WHERE (
                 EXISTS (
                     SELECT 1 FROM "UserTag" ut
@@ -605,7 +605,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
             JOIN "Metadata" m ON
                 m."leaderboardId" = l.id
             JOIN "User" u ON
-                u.id = m."userId"
+                u.id = m."userId" AND u."deletedAt" IS NULL
             WHERE
                 l.id = :leaderboardId
             AND (
@@ -728,8 +728,11 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
         String sql = """
             INSERT INTO "Metadata"
                 (id, "userId", "leaderboardId")
-            VALUES
-                (:id, :userId, :leaderboardId)
+            SELECT :id, :userId, :leaderboardId
+            WHERE NOT EXISTS (
+                SELECT 1 FROM "Metadata"
+                WHERE "userId" = :userId AND "leaderboardId" = :leaderboardId
+            )
             """;
 
         int rowsAffected = jdbcClient
@@ -789,7 +792,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                 JOIN
                     "User" u
                 ON
-                    u.id = m."userId"
+                    u.id = m."userId" AND u."deletedAt" IS NULL
                 WHERE (
                     EXISTS (
                         SELECT 1 FROM "UserTag" ut
@@ -859,7 +862,7 @@ public class LeaderboardSqlRepository implements LeaderboardRepository {
                 JOIN
                     "User" u
                 ON
-                    u.id = m."userId"
+                    u.id = m."userId" AND u."deletedAt" IS NULL
                 WHERE
                     l.id = :leaderboardId
                 AND (

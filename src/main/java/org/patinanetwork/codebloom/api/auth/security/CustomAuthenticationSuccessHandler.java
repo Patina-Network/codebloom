@@ -95,6 +95,14 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
             if (existingUserResult.isPresent()) {
                 existingUser = existingUserResult.get();
+                String userId = existingUser.getId();
+                if (existingUser.getDeletedAt().isPresent() && !userRepository.reactivateUserById(userId)) {
+                    LOGGER.error("User reactivation failed for {}", userId);
+                }
+                // addUserToLeaderboard is idempotent
+                leaderboardRepository
+                        .getRecentLeaderboardMetadata()
+                        .ifPresent(lb -> leaderboardRepository.addUserToLeaderboard(userId, lb.getId()));
                 existingUser.setDiscordName(discordName);
                 if (existingUser.getLeetcodeUsername().isPresent()) {
                     try {

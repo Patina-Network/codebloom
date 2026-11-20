@@ -49,6 +49,9 @@ public class User {
     @Builder.Default
     private Optional<OffsetDateTime> createdAt = Optional.empty();
 
+    @Builder.Default
+    private Optional<OffsetDateTime> deletedAt = Optional.empty();
+
     /**
      * If you want to update tags in the database, you have to use the
      * {@link org.patinanetwork.codebloom.common.db.repos.usertag.UserTagRepository}

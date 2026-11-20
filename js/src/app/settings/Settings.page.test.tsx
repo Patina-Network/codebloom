@@ -104,81 +104,54 @@ describe("SettingsPage API Succeeded", () => {
     });
   });
 
-  it("should render log out all sessions card after successful API call", async () => {
-    renderProviderFn?.(<SettingsPage />);
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: "Log Out All Sessions" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Log Out All Sessions" }),
-      ).toBeInTheDocument();
-    });
-  });
-
-  it("should render log out all sessions button as enabled", async () => {
-    renderProviderFn?.(<SettingsPage />);
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: "Log Out All Sessions" }),
-      ).not.toBeDisabled();
-    });
-  });
-
-  it("should open logout modal when log out all sessions button is clicked", async () => {
-    const user = userEvent.setup();
-    renderProviderFn?.(<SettingsPage />);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId("settings-skeleton-title"),
-      ).not.toBeInTheDocument();
-    });
-
-    const logoutButton = screen.getByRole("button", {
+  describe.each([
+    {
       name: "Log Out All Sessions",
-    });
-    await user.click(logoutButton);
+      modalText: /are you sure you want to log out of all sessions/i,
+    },
+    {
+      name: "Deactivate Account",
+      modalText: /are you sure you want to deactivate your account/i,
+    },
+  ])("$name card", ({ name, modalText }) => {
+    it("should render card after successful API call", async () => {
+      renderProviderFn?.(<SettingsPage />);
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          "Are you sure you want to log out of all sessions? This will sign you out on all devices and browsers.",
-        ),
-      ).toBeInTheDocument();
-    });
-  });
-
-  it("should close logout modal when cancel button is clicked", async () => {
-    const user = userEvent.setup();
-    renderProviderFn?.(<SettingsPage />);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByTestId("settings-skeleton-title"),
-      ).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { name })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name })).toBeInTheDocument();
+      });
     });
 
-    const logoutButton = screen.getByRole("button", {
-      name: "Log Out All Sessions",
-    });
-    await user.click(logoutButton);
+    it("should render button as enabled", async () => {
+      renderProviderFn?.(<SettingsPage />);
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(/are you sure you want to log out of all sessions/i),
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name })).not.toBeDisabled();
+      });
     });
 
-    const cancelButton = screen.getByRole("button", { name: "Cancel" });
-    await user.click(cancelButton);
+    it("should open modal when button is clicked, close on cancel", async () => {
+      const user = userEvent.setup();
+      renderProviderFn?.(<SettingsPage />);
 
-    await waitFor(() => {
-      expect(
-        screen.queryByText(/are you sure you want to log out of all sessions/i),
-      ).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("settings-skeleton-title"),
+        ).not.toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("button", { name }));
+
+      await waitFor(() => {
+        expect(screen.getByText(modalText)).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+      await waitFor(() => {
+        expect(screen.queryByText(modalText)).not.toBeInTheDocument();
+      });
     });
   });
 

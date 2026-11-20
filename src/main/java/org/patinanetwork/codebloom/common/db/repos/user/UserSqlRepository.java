@@ -9,12 +9,14 @@ import java.util.UUID;
 import org.patinanetwork.codebloom.common.db.models.user.User;
 import org.patinanetwork.codebloom.common.db.models.user.UserWithScore;
 import org.patinanetwork.codebloom.common.db.repos.achievements.AchievementRepository;
+import org.patinanetwork.codebloom.common.db.repos.session.SessionRepository;
 import org.patinanetwork.codebloom.common.db.repos.user.options.UserFilterOptions;
 import org.patinanetwork.codebloom.common.db.repos.usertag.UserTagRepository;
 import org.patinanetwork.codebloom.common.time.StandardizedOffsetDateTime;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Timed(value = "repository.execution")
@@ -25,11 +27,13 @@ public class UserSqlRepository implements UserRepository {
     private static final String SCHOOL_EMAIL = "schoolEmail";
     private static final String PROFILE_URL = "profileUrl";
     private static final String CREATED_AT = "createdAt";
+    private static final String DELETED_AT = "deletedAt";
     private static final String QUERY = "query";
 
     private final JdbcClient jdbcClient;
     private final UserTagRepository userTagRepository;
     private final AchievementRepository achievementRepository;
+    private final SessionRepository sessionRepository;
 
     private final RowMapper<User> userRowMapper;
     private final RowMapper<UserWithScore> userWithScoreRowMapper;
@@ -37,10 +41,12 @@ public class UserSqlRepository implements UserRepository {
     public UserSqlRepository(
             final JdbcClient jdbcClient,
             final UserTagRepository userTagRepository,
-            final AchievementRepository achievementRepository) {
+            final AchievementRepository achievementRepository,
+            final SessionRepository sessionRepository) {
         this.jdbcClient = jdbcClient;
         this.userTagRepository = userTagRepository;
         this.achievementRepository = achievementRepository;
+        this.sessionRepository = sessionRepository;
 
         this.userRowMapper = (rs, rowNum) -> {
             var id = rs.getString("id");
@@ -56,6 +62,8 @@ public class UserSqlRepository implements UserRepository {
                     .profileUrl(Optional.ofNullable(rs.getString(PROFILE_URL)))
                     .createdAt(Optional.ofNullable(
                             StandardizedOffsetDateTime.normalize(rs.getObject(CREATED_AT, OffsetDateTime.class))))
+                    .deletedAt(Optional.ofNullable(
+                            StandardizedOffsetDateTime.normalize(rs.getObject(DELETED_AT, OffsetDateTime.class))))
                     .tags(this.userTagRepository.findTagsByUserId(id))
                     .achievements(this.achievementRepository.getAchievementsByUserId(id))
                     .build();
@@ -75,6 +83,8 @@ public class UserSqlRepository implements UserRepository {
                     .profileUrl(Optional.ofNullable(rs.getString(PROFILE_URL)))
                     .createdAt(Optional.ofNullable(
                             StandardizedOffsetDateTime.normalize(rs.getObject(CREATED_AT, OffsetDateTime.class))))
+                    .deletedAt(Optional.ofNullable(
+                            StandardizedOffsetDateTime.normalize(rs.getObject(DELETED_AT, OffsetDateTime.class))))
                     .tags(this.userTagRepository.findTagsByUserId(id))
                     .achievements(this.achievementRepository.getAchievementsByUserId(id))
                     .totalScore(rs.getInt("totalScore"))
@@ -130,10 +140,13 @@ public class UserSqlRepository implements UserRepository {
                 admin,
                 "verifyKey",
                 "profileUrl",
-                "createdAt"
+                "createdAt",
+                "deletedAt"
             FROM "User"
             WHERE
                 id=:id
+                AND
+                "deletedAt" IS NULL
             """;
 
         return jdbcClient
@@ -156,9 +169,13 @@ public class UserSqlRepository implements UserRepository {
                     admin,
                     "verifyKey",
                     "profileUrl",
-                    "createdAt"
+                    "createdAt",
+                    "deletedAt"
                 FROM "User"
-                WHERE "leetcodeUsername" = :leetcodeUsername
+                WHERE
+                    "leetcodeUsername" = :leetcodeUsername
+                    AND
+                    "deletedAt" IS NULL
             """;
 
         return jdbcClient
@@ -181,7 +198,8 @@ public class UserSqlRepository implements UserRepository {
                 admin,
                 "verifyKey",
                 "profileUrl",
-                "createdAt"
+                "createdAt",
+                "deletedAt"
             FROM "User"
             WHERE
                 "discordId" = :discordId
@@ -196,7 +214,7 @@ public class UserSqlRepository implements UserRepository {
 
     @Override
     public int getUserCount() {
-        String sql = "SELECT COUNT(*) FROM \"User\"";
+        String sql = "SELECT COUNT(*) FROM \"User\" WHERE \"deletedAt\" IS NULL";
 
         return jdbcClient.sql(sql).query((rs, rowNum) -> rs.getInt(1)).single();
     }
@@ -215,6 +233,8 @@ public class UserSqlRepository implements UserRepository {
                 "schoolEmail" = :schoolEmail
             WHERE
                 id = :id
+                AND
+                "deletedAt" IS NULL
             """;
 
         // We don't care what this actually returns, it can never be more than 1 anyways
@@ -248,8 +268,11 @@ public class UserSqlRepository implements UserRepository {
                 admin,
                 "verifyKey",
                 "profileUrl",
-                "createdAt"
+                "createdAt",
+                "deletedAt"
             FROM "User"
+            WHERE
+                "deletedAt" IS NULL
             """;
 
         return new ArrayList<>(jdbcClient.sql(sql).query(userRowMapper).list());
@@ -268,11 +291,14 @@ public class UserSqlRepository implements UserRepository {
                     admin,
                     "verifyKey",
                     "profileUrl",
-                    "createdAt"
+                    "createdAt",
+                    "deletedAt"
                 FROM
                     "User"
                 WHERE
                     ("discordName" ILIKE :query OR "leetcodeUsername" ILIKE :query OR "nickname" ILIKE :query)
+                    AND
+                    "deletedAt" IS NULL
                 ORDER BY
                     id
                 LIMIT :limit OFFSET :offset
@@ -301,12 +327,16 @@ public class UserSqlRepository implements UserRepository {
                     admin,
                     "verifyKey",
                     "profileUrl",
-                    "createdAt"
+                    "createdAt",
+                    "deletedAt"
                 FROM
                     "User"
                 WHERE
                     ("discordName" ILIKE :query OR "leetcodeUsername" ILIKE :query OR "nickname" ILIKE :query)
-                    AND (NOT :adminFilter OR admin)
+                    AND
+                    (NOT :adminFilter OR admin)
+                    AND
+                    "deletedAt" IS NULL
                 ORDER BY
                     admin DESC NULLS LAST,
                     id
@@ -329,7 +359,8 @@ public class UserSqlRepository implements UserRepository {
             SELECT
                 1
             FROM "User"
-            WHERE "leetcodeUsername" = ?
+            WHERE
+                "leetcodeUsername" = ?
             LIMIT 1
             """;
 
@@ -356,6 +387,7 @@ public class UserSqlRepository implements UserRepository {
                     u."verifyKey",
                     u."profileUrl",
                     u."createdAt",
+                    u."deletedAt",
                     m."totalScore"
                 FROM
                     "User" u
@@ -364,6 +396,8 @@ public class UserSqlRepository implements UserRepository {
                     u.id = :id
                     AND
                     m."leaderboardId" = :leaderboardId
+                    AND
+                    u."deletedAt" IS NULL
             """;
 
         return jdbcClient
@@ -388,6 +422,7 @@ public class UserSqlRepository implements UserRepository {
                     u."profileUrl",
                     u."createdAt",
                     u."verifyKey",
+                    u."deletedAt",
                     m."totalScore"
                 FROM
                     "User" u
@@ -396,6 +431,8 @@ public class UserSqlRepository implements UserRepository {
                     u."leetcodeUsername" = :leetcodeUsername
                     AND
                     m."leaderboardId" = :leaderboardId
+                    AND
+                    u."deletedAt" IS NULL
             """;
 
         return jdbcClient
@@ -415,6 +452,7 @@ public class UserSqlRepository implements UserRepository {
                 "User"
             WHERE
                 ("discordName" ILIKE :query OR "leetcodeUsername" ILIKE :query OR "nickname" ILIKE :query)
+                AND "deletedAt" IS NULL
             """;
 
         return jdbcClient
@@ -434,6 +472,7 @@ public class UserSqlRepository implements UserRepository {
             WHERE
                 ("discordName" ILIKE :query OR "leetcodeUsername" ILIKE :query OR "nickname" ILIKE :query)
                 AND (NOT :adminFilter OR admin)
+                AND "deletedAt" IS NULL
             """;
 
         return jdbcClient
@@ -451,6 +490,48 @@ public class UserSqlRepository implements UserRepository {
                 WHERE
                     id = :id
             """;
+
+        int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
+
+        return rowsAffected > 0;
+    }
+
+    private boolean deactivateUserById(final String id) {
+        String sql = """
+                    UPDATE "User"
+                    SET
+                        "deletedAt" = :now
+                    WHERE
+                        id = :id
+                """;
+
+        int rowsAffected = jdbcClient
+                .sql(sql)
+                .param("now", StandardizedOffsetDateTime.now())
+                .param("id", UUID.fromString(id))
+                .update();
+
+        return rowsAffected > 0;
+    }
+
+    @Override
+    @Transactional
+    public void deactivateUserAndDeleteSessions(final String id) {
+        if (!this.deactivateUserById(id)) {
+            throw new IllegalStateException("User not found or deactivation failed");
+        }
+        sessionRepository.deleteSessionsByUserId(id);
+    }
+
+    @Override
+    public boolean reactivateUserById(final String id) {
+        String sql = """
+                    UPDATE "User"
+                    SET
+                        "deletedAt" = NULL
+                    WHERE
+                        id = :id
+                """;
 
         int rowsAffected = jdbcClient.sql(sql).param("id", UUID.fromString(id)).update();
 

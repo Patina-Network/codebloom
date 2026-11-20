@@ -182,7 +182,10 @@ public class LeaderboardManager {
                         () -> new LeaderboardException(
                                 "Cannot refresh submissions",
                                 "Please link your account by [logging in to Codebloom](https://codebloom.patinanetwork.org/login) and completing onboarding."));
-
+        if (user.getDeletedAt().isPresent()) {
+            throw new LeaderboardException(
+                    "Cannot refresh submissions", "Your account is deactivated. Log back in to reactivate it.");
+        }
         if (user.getLeetcodeUsername().isEmpty()) {
             throw new LeaderboardException(
                     "Cannot refresh submissions", "Your Discord Account is not linked to a LeetCode username.");

@@ -1,11 +1,14 @@
 package org.patinanetwork.codebloom.api.auth.security;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,6 +74,63 @@ class CustomAuthenticationSuccessHandlerTest {
     void commonStubs() {
         when(jdaClient.getGuilds()).thenReturn(List.of());
         when(discordClubRepository.getAllActiveDiscordClubs()).thenReturn(List.of());
+    }
+
+    @Test
+    @DisplayName("reactivates a deleted user and re-adds them to the leaderboard")
+    void reactivatesUserAndAddsToLeaderboard() throws Exception {
+        User existingUser = User.builder()
+                .id("user-1")
+                .discordId(DISCORD_ID)
+                .discordName(DISCORD_NAME)
+                .deletedAt(Optional.of(OffsetDateTime.parse("2026-01-01T00:00:00Z")))
+                .build();
+        when(authentication.getPrincipal()).thenReturn(oAuth2User);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
+        when(userRepository.reactivateUserById("user-1")).thenReturn(true);
+        Leaderboard lb = Leaderboard.builder().id("lb-1").build();
+        when(leaderboardRepository.getRecentLeaderboardMetadata()).thenReturn(Optional.of(lb));
+        doAnswer(inv -> {
+                    Session s = inv.getArgument(0);
+                    s.setId(Optional.of("new-session-id"));
+                    return null;
+                })
+                .when(sessionRepository)
+                .createSession(any(Session.class));
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        verify(userRepository).reactivateUserById("user-1");
+        verify(leaderboardRepository).addUserToLeaderboard("user-1", "lb-1");
+        verify(userRepository, never()).createUser(any());
+        verify(response).sendRedirect("/dashboard");
+    }
+
+    @Test
+    @DisplayName("ensures an active user is enrolled in the current leaderboard on login")
+    void enrollsActiveUserOnLogin() throws Exception {
+        User existingUser = User.builder()
+                .id("user-1")
+                .discordId(DISCORD_ID)
+                .discordName(DISCORD_NAME)
+                .build();
+        when(authentication.getPrincipal()).thenReturn(oAuth2User);
+        when(userRepository.getUserByDiscordId(DISCORD_ID)).thenReturn(Optional.of(existingUser));
+        Leaderboard lb = Leaderboard.builder().id("lb-1").build();
+        when(leaderboardRepository.getRecentLeaderboardMetadata()).thenReturn(Optional.of(lb));
+        doAnswer(inv -> {
+                    Session s = inv.getArgument(0);
+                    s.setId(Optional.of("new-session-id"));
+                    return null;
+                })
+                .when(sessionRepository)
+                .createSession(any(Session.class));
+
+        handler.onAuthenticationSuccess(request, response, authentication);
+
+        verify(userRepository, never()).reactivateUserById(any());
+        verify(leaderboardRepository).addUserToLeaderboard("user-1", "lb-1");
+        verify(response).sendRedirect("/dashboard");
     }
 
     @Test
