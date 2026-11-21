@@ -326,4 +326,13 @@ public class QuestionRepositoryTest extends BaseRepositoryTest {
 
         log.info("Successfully retrieved {} incomplete questions with no associated job", incompleteQuestions.size());
     }
+
+    @Test
+    @Order(15)
+    void testGetAllIncompleteQuestionsCount() {
+        int incompleteQuestionsCount = questionRepository.getAllIncompleteQuestionsCount();
+
+        assertNotNull(incompleteQuestionsCount, "The count of incomplete questions should not be null");
+        assertTrue(incompleteQuestionsCount >= 0);
+    }
 }

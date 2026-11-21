@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +52,7 @@ public class AdminControllerTest {
     private final LeetcodeAuthenticationService leetcodeAuthenticationService =
             mock(LeetcodeAuthenticationService.class);
     private final IncompleteQuestionRequeuer incompleteQuestionRequeuer = mock(IncompleteQuestionRequeuer.class);
+    private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     private final AdminController adminController;
 
@@ -62,7 +66,8 @@ public class AdminControllerTest {
                 leaderboardManager,
                 discordClubRepository,
                 leetcodeAuthenticationService,
-                incompleteQuestionRequeuer));
+                incompleteQuestionRequeuer,
+                meterRegistry));
     }
 
     @BeforeEach
@@ -645,5 +650,14 @@ public class AdminControllerTest {
             assertTrue(e.getMessage().contains("The expiration date must be in the future"));
             assertInstanceOf(ValidationException.class, e);
         }
+    }
+
+    @Test
+    void testGetIncompleteQuestionCountMetric() {
+        when(questionRepository.getAllIncompleteQuestionsCount()).thenReturn(1);
+        Gauge gauge = meterRegistry.find("incomplete.questions.count").gauge();
+
+        assertNotNull(gauge);
+        assertEquals(1.0, gauge.value());
     }
 }

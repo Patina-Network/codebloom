@@ -1,6 +1,8 @@
 package org.patinanetwork.codebloom.api.admin;
 
 import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -66,7 +68,8 @@ public class AdminController {
             final LeaderboardManager leaderboardManager,
             final DiscordClubRepository discordClubRepository,
             final LeetcodeAuthenticationService leetcodeAuthenticationService,
-            final IncompleteQuestionRequeuer incompleteQuestionRequeuer) {
+            final IncompleteQuestionRequeuer incompleteQuestionRequeuer,
+            final MeterRegistry meterRegistry) {
         this.leaderboardRepository = leaderboardRepository;
         this.userRepository = userRepository;
         this.announcementRepository = announcementRepository;
@@ -76,6 +79,11 @@ public class AdminController {
         this.discordClubRepository = discordClubRepository;
         this.leetcodeAuthenticationService = leetcodeAuthenticationService;
         this.incompleteQuestionRequeuer = incompleteQuestionRequeuer;
+        Gauge.builder(
+                        "incomplete.questions.count",
+                        questionRepository,
+                        questionRepo -> questionRepo.getAllIncompleteQuestionsCount())
+                .register(meterRegistry);
     }
 
     @Operation(summary = "Drops current leaderboard and add new one", description = """

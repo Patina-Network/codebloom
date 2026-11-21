@@ -573,4 +573,22 @@ public class QuestionSqlRepository implements QuestionRepository {
 
         return new ArrayList<>(questions);
     }
+
+    public int getAllIncompleteQuestionsCount() {
+        String sql = """
+            SELECT COUNT(*)
+            FROM
+                "Question"
+            WHERE
+                ("runtime" IS NULL OR "runtime" = '')
+                OR ("memory" IS NULL OR "memory" = '')
+                OR ("code" is NULL OR "code" = '')
+                OR ("language" is NULL OR "language" = '')
+                OR ((description IS NULL OR TRIM(description) = '')
+                    AND NOT EXISTS (SELECT 1 FROM "QuestionBank" qb
+                        WHERE qb."questionSlug" = "Question"."questionSlug" AND qb."isPaidOnly"))
+            """;
+
+        return jdbcClient.sql(sql).query((rs, rowNum) -> rs.getInt(1)).single();
+    }
 }
