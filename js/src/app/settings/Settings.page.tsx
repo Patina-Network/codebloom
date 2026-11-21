@@ -1,4 +1,5 @@
 import ChangeImageSettingsCard from "@/app/settings/_components/ChangeImageSettingsCard";
+import DeactivateAccountCard from "@/app/settings/_components/DeactivateAccountCard";
 import LogoutAllSessionsCard from "@/app/settings/_components/LogoutAllSessionsCard";
 import SchoolVerifySettingsCard from "@/app/settings/_components/SchoolVerifySettingsCard";
 import SettingsSkeleton from "@/app/settings/_components/SettingsSkeleton";
@@ -58,6 +59,7 @@ export default function SettingsPage() {
             <SchoolVerifySettingsCard schoolExists={schoolExists} />
             <ChangeImageSettingsCard />
             <LogoutAllSessionsCard />
+            <DeactivateAccountCard />
           </Stack>
         </Box>
       </Box>

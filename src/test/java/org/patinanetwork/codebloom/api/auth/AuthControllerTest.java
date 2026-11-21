@@ -500,4 +500,71 @@ public class AuthControllerTest {
         assertThrows(ResponseStatusException.class, () -> authController.enrollSchool(new EmailBody(email), auth));
         org.mockito.Mockito.verifyNoInteractions(emailClient);
     }
+
+    @Test
+    @DisplayName("Deactivate - successful deactivation of account")
+    void deactivateHappyPath() {
+        User user = createRandomUser();
+        Session session = createRandomSession(user.getId());
+        AuthenticationObject authObj = createAuthenticationObject(user, session);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(protector.validateSession(request)).thenReturn(authObj);
+
+        RedirectView redirectView = authController.deactivateAccount(request, response);
+
+        assertNotNull(redirectView);
+        assertEquals(
+                "/login?success=true&message=You have deactivated your account! Log back in to restore your data!",
+                redirectView.getUrl());
+
+        verify(protector, times(1)).validateSession(request);
+        verify(userRepository, times(1)).deactivateUserAndDeleteSessions(user.getId());
+        verify(sessionRepository, times(0)).deleteSessionsByUserId(any());
+    }
+
+    @Test
+    @DisplayName("Deactivate - not authenticated")
+    void deactivateNotAuthenticated() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(protector.validateSession(request)).thenThrow(new RuntimeException("Not authenticated"));
+
+        RedirectView redirectView = authController.deactivateAccount(request, response);
+
+        assertNotNull(redirectView);
+        assertEquals("/login?success=false&message=You are not logged in.", redirectView.getUrl());
+
+        verify(protector, times(1)).validateSession(request);
+        verify(userRepository, times(0)).deactivateUserAndDeleteSessions(any());
+        verify(sessionRepository, times(0)).deleteSessionsByUserId(any());
+    }
+
+    @Test
+    @DisplayName("Deactivate - failed to deactivate")
+    void deactivateFailedDeactivate() {
+        User user = createRandomUser();
+        Session session = createRandomSession(user.getId());
+        AuthenticationObject authObj = createAuthenticationObject(user, session);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(protector.validateSession(request)).thenReturn(authObj);
+        doThrow(new IllegalStateException("User not found or deactivation failed"))
+                .when(userRepository)
+                .deactivateUserAndDeleteSessions(user.getId());
+
+        RedirectView redirectView = authController.deactivateAccount(request, response);
+
+        assertNotNull(redirectView);
+        assertEquals("/settings?success=false&message=Failed to deactivate account", redirectView.getUrl());
+
+        verify(protector, times(1)).validateSession(request);
+        verify(userRepository, times(1)).deactivateUserAndDeleteSessions(user.getId());
+        verify(response, times(0)).addHeader(any(), any());
+    }
 }

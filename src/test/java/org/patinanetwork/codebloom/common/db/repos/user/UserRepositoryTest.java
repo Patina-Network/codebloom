@@ -1,6 +1,7 @@
 package org.patinanetwork.codebloom.common.db.repos.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -15,8 +16,11 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.patinanetwork.codebloom.common.db.models.Session;
 import org.patinanetwork.codebloom.common.db.models.user.User;
 import org.patinanetwork.codebloom.common.db.repos.BaseRepositoryTest;
+import org.patinanetwork.codebloom.common.db.repos.session.SessionRepository;
+import org.patinanetwork.codebloom.common.time.StandardizedLocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -27,13 +31,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class UserRepositoryTest extends BaseRepositoryTest {
 
     private UserRepository userRepository;
+    private SessionRepository sessionRepository;
 
     private User testUser;
     private User testAdminUser;
 
     @Autowired
-    public UserRepositoryTest(final UserRepository userRepository) {
+    public UserRepositoryTest(final UserRepository userRepository, final SessionRepository sessionRepository) {
         this.userRepository = userRepository;
+        this.sessionRepository = sessionRepository;
     }
 
     @BeforeAll
@@ -181,5 +187,58 @@ public class UserRepositoryTest extends BaseRepositoryTest {
         ArrayList<User> searchResultsWithFilter = userRepository.getAllUsers(1, 100, "Test", true);
         assertTrue(searchResultsWithFilter.contains(testAdminUser));
         assertTrue(!searchResultsWithFilter.contains(testUser));
+    }
+
+    @Test
+    @Order(12)
+    void testDeactivateReactivateUser() {
+        String id = testUser.getId();
+
+        userRepository.deactivateUserAndDeleteSessions(id);
+        assertTrue(userRepository.getUserById(id).isEmpty());
+        assertFalse(userRepository.getAllUsers().contains(testUser));
+
+        User deactivated =
+                userRepository.getUserByDiscordId(testUser.getDiscordId()).orElse(null);
+        assertNotNull(deactivated);
+        assertTrue(deactivated.getDeletedAt().isPresent());
+
+        assertTrue(userRepository.reactivateUserById(id));
+        User reactivated = userRepository.getUserById(id).orElse(null);
+        assertNotNull(reactivated);
+        assertTrue(reactivated.getDeletedAt().isEmpty());
+    }
+
+    @Test
+    @Order(13)
+    void testGetAllUsersFiltersDeactivated() {
+        int countBefore = userRepository.getUserCount();
+        userRepository.deactivateUserAndDeleteSessions(testUser.getId());
+        try {
+            assertFalse(userRepository.getAllUsers(1, 5, "").contains(testUser));
+            assertEquals(countBefore - 1, userRepository.getUserCount());
+        } finally {
+            userRepository.reactivateUserById(testUser.getId());
+        }
+    }
+
+    @Test
+    @Order(14)
+    void testDeactivateUserAndDeleteSessions() {
+        String id = testUser.getId();
+        Session session = Session.builder()
+                .userId(id)
+                .expiresAt(StandardizedLocalDateTime.now().plusHours(1))
+                .build();
+        sessionRepository.createSession(session);
+
+        try {
+            userRepository.deactivateUserAndDeleteSessions(id);
+
+            assertTrue(userRepository.getUserById(id).isEmpty());
+            assertTrue(sessionRepository.getSessionsByUserId(id).isEmpty());
+        } finally {
+            userRepository.reactivateUserById(id);
+        }
     }
 }

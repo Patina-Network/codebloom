@@ -142,12 +142,7 @@ public class AuthController {
                 return new RedirectView("/login?success=false&message=You are not logged in.");
             }
 
-            ResponseCookie strippedCookie = ResponseCookie.from("session_token", "")
-                    .path("/")
-                    .httpOnly(true)
-                    .maxAge(0)
-                    .build();
-            response.addHeader(HttpHeaders.SET_COOKIE, strippedCookie.toString());
+            clearSessionCookie(response);
 
             return new RedirectView("/login?success=true&message=You have been logged out!");
         } catch (Exception e) {
@@ -175,12 +170,7 @@ public class AuthController {
 
             sessionRepository.deleteSessionsByUserId(userId);
 
-            ResponseCookie strippedCookie = ResponseCookie.from("session_token", "")
-                    .path("/")
-                    .httpOnly(true)
-                    .maxAge(0)
-                    .build();
-            response.addHeader(HttpHeaders.SET_COOKIE, strippedCookie.toString());
+            clearSessionCookie(response);
 
             return new RedirectView("/login?success=true&message=You have been logged out from all devices!");
         } catch (Exception e) {
@@ -323,5 +313,46 @@ public class AuthController {
         }
 
         return new RedirectView("/settings?success=true&message=The email has been verified!");
+    }
+
+    @Operation(
+            summary = "Deactivates user account",
+            description = "Soft-deletes the account, logs out every session. Logging in again reactivates it.",
+            responses = {
+                @ApiResponse(
+                        responseCode = "302",
+                        description = "Redirect to /settings or /login with success or error message"),
+            })
+    @GetMapping("/deactivate")
+    public RedirectView deactivateAccount(final HttpServletRequest request, final HttpServletResponse response) {
+        AuthenticationObject authenticationObject;
+
+        try {
+            authenticationObject = protector.validateSession(request);
+        } catch (Exception e) {
+            return new RedirectView("/login?success=false&message=You are not logged in.");
+        }
+
+        String userId = authenticationObject.getUser().getId();
+
+        try {
+            userRepository.deactivateUserAndDeleteSessions(userId);
+        } catch (RuntimeException e) {
+            return new RedirectView("/settings?success=false&message=Failed to deactivate account");
+        }
+
+        clearSessionCookie(response);
+
+        return new RedirectView(
+                "/login?success=true&message=You have deactivated your account! Log back in to restore your data!");
+    }
+
+    private static void clearSessionCookie(final HttpServletResponse response) {
+        ResponseCookie strippedCookie = ResponseCookie.from("session_token", "")
+                .path("/")
+                .httpOnly(true)
+                .maxAge(0)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, strippedCookie.toString());
     }
 }

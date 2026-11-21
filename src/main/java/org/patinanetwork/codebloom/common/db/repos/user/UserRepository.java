@@ -59,4 +59,8 @@ public interface UserRepository {
     boolean userExistsByLeetcodeUsername(String leetcodeUsername);
 
     boolean deleteUserById(String id);
+
+    void deactivateUserAndDeleteSessions(String id);
+
+    boolean reactivateUserById(String id);
 }
