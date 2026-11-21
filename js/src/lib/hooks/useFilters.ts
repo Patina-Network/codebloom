@@ -1,6 +1,6 @@
 import { Tag } from "@/lib/api/types/schema";
 import { ApiUtils } from "@/lib/api/utils";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useImmer } from "use-immer";
 
@@ -46,61 +46,99 @@ function getUrlKey(tagEnum: Tag) {
  * );
  * ```
  */
+function syncSearchParams(
+  prev: URLSearchParams,
+  nextFilters: TagEnumToBooleanFilterObject,
+) {
+  const allTags = Object.typedKeys(nextFilters);
+  const activeKeys = allTags
+    .filter((tag) => nextFilters[tag])
+    .map((tag) => getUrlKey(tag));
+
+  for (const tag of allTags) {
+    prev.delete(getUrlKey(tag));
+  }
+
+  if (activeKeys.length > 0) {
+    prev.set("filters", activeKeys.join(","));
+  } else {
+    prev.delete("filters");
+  }
+
+  return prev;
+}
+
 export function useFilters({
   onFilterChange,
-}:
-  | {
-      onFilterChange?: (tagEnum: Tag) => void;
-    }
-  | undefined = {}) {
+}: {
+  onFilterChange?: (tagEnum: Tag) => void;
+} = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useImmer<TagEnumToBooleanFilterObject>(() => {
-    // NOTE: We allow all enums so that if a user manually forces a param into the URL
-    // (e.g. our backend loading the frontend to take screenshots) it WILL be allowed. However, it will NOT
-    // be generated as a filter list or usable in the UI whatsoever.
-    const kvTuples = ApiUtils.getAllTagEnums().map((tagEnum) => [
-      tagEnum,
-      searchParams.get(getUrlKey(tagEnum)) === "true",
-    ]) as [Tag, boolean][]; // slight type trickery because TS
-    // doesn't know which type is a key and which is a value; we help it out here a little.
+    const activeFilters = new Set(
+      (searchParams.get("filters") ?? "")
+        .split(",")
+        .map((key) => key.trim())
+        .filter(Boolean),
+    );
+
+    const kvTuples = ApiUtils.getAllTagEnums().map((tagEnum) => {
+      const key = getUrlKey(tagEnum);
+      return [
+        tagEnum,
+        activeFilters.has(key) || searchParams.get(key) === "true",
+      ];
+    }) as [Tag, boolean][];
 
     return Object.typedFromEntries(kvTuples);
   });
+  const latestFilters = useRef(filters);
 
   const toggleFilter: ToggleTagEnumFn = useCallback(
     (tagEnum: Tag) => {
-      const key = getUrlKey(tagEnum);
-      const prevValue = filters[tagEnum];
+      const nextFilters = {
+        ...latestFilters.current,
+        [tagEnum]: !latestFilters.current[tagEnum],
+      };
+      latestFilters.current = nextFilters;
 
       setFilters((prev) => {
-        prev[tagEnum] = !prevValue;
+        prev[tagEnum] = nextFilters[tagEnum];
       });
-
-      setSearchParams((prev) => {
-        if (!prevValue) {
-          prev.set(key, "true");
-        } else {
-          prev.delete(key);
-        }
-        return prev;
-      });
-
+      setSearchParams((prev) => syncSearchParams(prev, nextFilters));
       onFilterChange?.(tagEnum);
     },
-    [filters, onFilterChange, setFilters, setSearchParams],
+    [onFilterChange, setFilters, setSearchParams],
   );
 
   const clearFilters = useCallback(() => {
-    for (const tagEnum of Object.typedKeys(filters)) {
-      if (filters[tagEnum]) {
-        toggleFilter(tagEnum);
-      }
-    }
-  }, [filters, toggleFilter]);
+    const activeTags = Object.typedKeys(latestFilters.current).filter(
+      (tag) => latestFilters.current[tag],
+    );
+    if (activeTags.length === 0) return;
 
-  const isAnyFilterEnabled: boolean = useMemo(() => {
-    return Object.values(filters).some(Boolean);
-  }, [filters]);
+    const nextFilters = { ...latestFilters.current };
+    for (const tagEnum of activeTags) {
+      nextFilters[tagEnum] = false;
+    }
+    latestFilters.current = nextFilters;
+
+    setFilters((prev) => {
+      for (const tagEnum of activeTags) {
+        prev[tagEnum] = false;
+      }
+    });
+    setSearchParams((prev) => syncSearchParams(prev, nextFilters));
+
+    for (const tagEnum of activeTags) {
+      onFilterChange?.(tagEnum);
+    }
+  }, [onFilterChange, setFilters, setSearchParams]);
+
+  const isAnyFilterEnabled = useMemo(
+    () => Object.values(filters).some(Boolean),
+    [filters],
+  );
 
   return { filters, toggleFilter, clearFilters, isAnyFilterEnabled };
 }
