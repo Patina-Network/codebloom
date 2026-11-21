@@ -36,7 +36,10 @@ test("club filter narrows the leaderboard and clearing restores it", async ({
   await page.getByRole("menuitem", { name: /GWC - Hunter College/ }).click();
   expect((await filtered).ok()).toBe(true);
 
-  await expect(page).toHaveURL(/[?&]gwc=true/);
+  await expect(page).toHaveURL(
+    (url) =>
+      url.searchParams.get("filters")?.split(",").includes("gwc") ?? false,
+  );
   await expect(page.getByText(GWC_USER, { exact: true })).toBeVisible();
   await expect(page.getByText(UNTAGGED_LEADER, { exact: true })).toHaveCount(0);
 
@@ -44,6 +47,9 @@ test("club filter narrows the leaderboard and clearing restores it", async ({
   await page.getByRole("menuitem", { name: "Clear Filters" }).click();
   expect((await cleared).ok()).toBe(true);
 
-  await expect(page).not.toHaveURL(/[?&]gwc=true/);
+  await expect(page).not.toHaveURL(
+    (url) =>
+      url.searchParams.get("filters")?.split(",").includes("gwc") ?? false,
+  );
   await expect(page.getByText(UNTAGGED_LEADER, { exact: true })).toBeVisible();
 });
